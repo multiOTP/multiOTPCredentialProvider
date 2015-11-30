@@ -527,12 +527,17 @@ HRESULT CSampleCredential::SetStringValue(DWORD dwFieldID, _In_ PCWSTR pwz)
         CPFT_PASSWORD_TEXT == _rgCredProvFieldDescriptors[dwFieldID].cpft))
     {
 		//validate numbers only for PIN Fields !!!!
+		
 		if ((dwFieldID == SFI_PIN) || (dwFieldID == SFI_PREV_PIN)){
 			int len;
 			
+			if (DEVELOPING) PrintLn(L"Field altered, fieldID:", dwFieldID);
+			if (DEVELOPING) PrintLn(L"New input:", pwz);
+
 			len = wcslen(pwz);
 			for (int i = 0; i < len; i++) {
 				if (!isdigit(pwz[i])) {
+					if (DEVELOPING) PrintLn(L"Invalid field value, fieldID:", dwFieldID);
 					_pCredProvCredentialEvents->SetFieldString(this, dwFieldID, _rgFieldStrings[dwFieldID]);
 					hr = E_INVALIDARG;
 					return hr;
@@ -540,6 +545,7 @@ HRESULT CSampleCredential::SetStringValue(DWORD dwFieldID, _In_ PCWSTR pwz)
 			}
 
 		}
+		
         PWSTR *ppwszStored = &_rgFieldStrings[dwFieldID];
         CoTaskMemFree(*ppwszStored);
         hr = SHStrDupW(pwz, ppwszStored);
@@ -1025,11 +1031,13 @@ HRESULT CSampleCredential::GetFieldOptions(DWORD dwFieldID,
     }
 	else if (dwFieldID == SFI_PREV_PIN)
 	{
-		*pcpcfo = CPCFO_ENABLE_PASSWORD_REVEAL | CPCFO_NUMBERS_ONLY;
+//		*pcpcfo = CPCFO_ENABLE_PASSWORD_REVEAL | CPCFO_NUMBERS_ONLY;
+		*pcpcfo = CPCFO_ENABLE_PASSWORD_REVEAL;
 	}
 	else if (dwFieldID == SFI_PIN)
 	{
-		*pcpcfo = CPCFO_ENABLE_PASSWORD_REVEAL | CPCFO_NUMBERS_ONLY;
+//		*pcpcfo = CPCFO_ENABLE_PASSWORD_REVEAL | CPCFO_NUMBERS_ONLY;
+		*pcpcfo = CPCFO_ENABLE_PASSWORD_REVEAL;
 	}
 	else if (dwFieldID == SFI_TILEIMAGE)
 	{
