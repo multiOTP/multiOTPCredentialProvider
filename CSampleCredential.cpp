@@ -205,10 +205,12 @@ HRESULT CSampleCredential::Initialize(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
     GUID guidProvider;
 
 	if (pcpUser != nullptr) {
+		if (DEVELOPING) PrintLn("pcpUser provided");
 		pcpUser->GetProviderID(&guidProvider);
 		_fIsLocalUser = (guidProvider == Identity_LocalUserProvider);
 	}
 	else {
+		if (DEVELOPING) PrintLn("no pcpUser!!!");
 		_fIsLocalUser = false;
 	}
 
@@ -219,6 +221,8 @@ HRESULT CSampleCredential::Initialize(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
         _rgFieldStatePairs[i] = rgfsp[i];
         hr = FieldDescriptorCopy(rgcpfd[i], &_rgCredProvFieldDescriptors[i]);
     }
+
+	hr = S_OK;
 
     // Initialize the String value of all the fields.
     if (SUCCEEDED(hr))
@@ -257,10 +261,14 @@ HRESULT CSampleCredential::Initialize(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
 	{
 		hr = SHStrDupW(L"Enter PIN", &_rgFieldStrings[SFI_FAILURE_TEXT]);
 	}
+
+	hr = S_OK;
+
 	if (SUCCEEDED(hr))
     {
         //hr = pcpUser->GetStringValue(PKEY_Identity_QualifiedUserName, &_pszQualifiedUserName);
 		if (_fIsLocalUser) {
+			if (DEVELOPING) PrintLn("Local user");
 			hr = pcpUser->GetStringValue(PKEY_Identity_QualifiedUserName, &_pszQualifiedUserName);//get username from the LogonUI user object
 			//local
 			//hr = SHStrDupW(_pszQualifiedUserName, &_rgFieldStrings[SFI_LARGE_TEXT]);//computername\login
@@ -270,8 +278,10 @@ HRESULT CSampleCredential::Initialize(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
 			{
 				wchar_t szString[256];
 				StringCchPrintf(szString, ARRAYSIZE(szString), L"User Name: %s", pszUserName);
+				if (DEVELOPING) PrintLn(szString);
 				hr = SHStrDupW(szString, &_rgFieldStrings[SFI_LARGE_TEXT]);
 				CoTaskMemFree(pszUserName);
+//				hr = pcpUser->GetSid(&_pszUserSid);
 			}
 			else
 			{
@@ -280,6 +290,7 @@ HRESULT CSampleCredential::Initialize(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
 
 		}
 		else {
+			if (DEVELOPING) PrintLn("Domain user");
 			//domain
 			//hr = SHStrDupW(_pszQualifiedUserName, &_rgFieldStrings[SFI_LARGE_TEXT]);//Microsoft\login@domain.com
 			//OTP on the microsoft.com uses account: Microsoft:login@domain.com -> so we have to change \ to :
@@ -335,12 +346,10 @@ HRESULT CSampleCredential::Initialize(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
             hr = SHStrDupW(L"Logon Status is NULL", &_rgFieldStrings[SFI_LOGONSTATUS_TEXT]);
         }
     }
-*/
-    if (SUCCEEDED(hr))
+	*/
+    if (pcpUser != nullptr)
     {
-		if (_fIsLocalUser) {
-			hr = pcpUser->GetSid(&_pszUserSid);
-		}
+		hr = pcpUser->GetSid(&_pszUserSid);
     }
 
     return hr;

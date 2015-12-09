@@ -325,6 +325,7 @@ HRESULT CSampleProvider::GetCredentialCount(
 		}
 
 		if (DEVELOPING) {
+			PrintLn("OTP tile always");
 			*pdwCount = dwUserCount;//development - don't force but allow PIN in all scenarios
 		}
 	}
