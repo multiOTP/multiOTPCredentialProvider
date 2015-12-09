@@ -97,7 +97,6 @@ static const CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR s_rgCredProvFieldDescriptors[]
     { SFI_SUBMIT_BUTTON,     CPFT_SUBMIT_BUTTON, L"Submit"                                                     },
     { SFI_PREV_PIN,          CPFT_PASSWORD_TEXT, L"PREVIOUS PIN"                                               },
 	{ SFI_PIN,               CPFT_PASSWORD_TEXT, L"PIN"                                                        },               
-//	{ SFI_PIN,               CPFT_PASSWORD_TEXT, L"One time password"                                          },
 	{ SFI_SYNCHRONIZE_LINK,  CPFT_COMMAND_LINK,  L"Synchronize MultiOTP"                                       },
 	{ SFI_FAILURE_TEXT,      CPFT_SMALL_TEXT,    L"Logon Failure"                                              },
 	{ SFI_NEXT_LOGIN_ATTEMPT,CPFT_COMMAND_LINK,  L"Next Login attempt"                                         },

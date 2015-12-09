@@ -203,8 +203,14 @@ HRESULT CSampleCredential::Initialize(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
     _cpus = cpus;
 
     GUID guidProvider;
-    pcpUser->GetProviderID(&guidProvider);
-    _fIsLocalUser = (guidProvider == Identity_LocalUserProvider);
+
+	if (pcpUser != nullptr) {
+		pcpUser->GetProviderID(&guidProvider);
+		_fIsLocalUser = (guidProvider == Identity_LocalUserProvider);
+	}
+	else {
+		_fIsLocalUser = false;
+	}
 
     // Copy the field descriptors for each field. This is useful if you want to vary the field
     // descriptors based on what Usage scenario the credential was created for.
@@ -253,8 +259,9 @@ HRESULT CSampleCredential::Initialize(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
 	}
 	if (SUCCEEDED(hr))
     {
-        hr = pcpUser->GetStringValue(PKEY_Identity_QualifiedUserName, &_pszQualifiedUserName);
+        //hr = pcpUser->GetStringValue(PKEY_Identity_QualifiedUserName, &_pszQualifiedUserName);
 		if (_fIsLocalUser) {
+			hr = pcpUser->GetStringValue(PKEY_Identity_QualifiedUserName, &_pszQualifiedUserName);//get username from the LogonUI user object
 			//local
 			//hr = SHStrDupW(_pszQualifiedUserName, &_rgFieldStrings[SFI_LARGE_TEXT]);//computername\login
 			PWSTR pszUserName;
@@ -331,7 +338,9 @@ HRESULT CSampleCredential::Initialize(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
 */
     if (SUCCEEDED(hr))
     {
-        hr = pcpUser->GetSid(&_pszUserSid);
+		if (_fIsLocalUser) {
+			hr = pcpUser->GetSid(&_pszUserSid);
+		}
     }
 
     return hr;

@@ -18,7 +18,7 @@ DWORD readRegistryValueString(_In_ CONF_VALUE conf_value, _Outptr_result_nullonf
 
 	if (hr == S_OK) {
 		wcscpy_s(confKeyNameCLSID, 1024, confKeyName);
-		if (confKeyName == MOTP_SETTINGS) {
+		if (confKeyName == (PWSTR)MOTP_SETTINGS) {
 			wcscat_s(confKeyNameCLSID, 1024, clsid);
 		}
 
@@ -87,7 +87,7 @@ DWORD readRegistryValueInteger(_In_ CONF_VALUE conf_value, _In_ DWORD defaultVal
 
 	if (hr == S_OK) {
 		wcscpy_s(confKeyNameCLSID, 1024, confKeyName);
-		if (confKeyName == MOTP_SETTINGS) {
+		if (confKeyName == (PWSTR)MOTP_SETTINGS) {
 			wcscat_s(confKeyNameCLSID, 1024, clsid);
 		}
 

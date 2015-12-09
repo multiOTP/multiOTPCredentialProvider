@@ -272,9 +272,24 @@ HRESULT CSampleProvider::GetCredentialCount(
         _CreateEnumeratedCredentials();
     }
 	DWORD dwUserCount;
-	_pCredProviderUserArray->GetCount(&dwUserCount);
+	HRESULT hr;
 
-	if (DEVELOPING) PrintLn("User count:%d", dwUserCount);
+	if (_pCredProviderUserArray != nullptr) {
+		hr = _pCredProviderUserArray->GetCount(&dwUserCount);
+		if (hr == 0) {
+			if (DEVELOPING) PrintLn("User count:(%d)", dwUserCount);
+		}
+		else {
+			if (DEVELOPING) PrintLn("UserArray.GetCount Error");
+			dwUserCount = 1;
+		}
+	}
+	else {
+		if (DEVELOPING) PrintLn("Unassigned UserArray");
+		dwUserCount = 1;
+	}
+
+	if (dwUserCount == 0) dwUserCount = 1;//no local accounts we have to display generic tile
 
 	if (GetSystemMetrics(SM_REMOTESESSION)) {
 		//PrintLn("RDP connection");
@@ -284,7 +299,7 @@ HRESULT CSampleProvider::GetCredentialCount(
 		//get RDP port from registry
 		int RDPPort = 3389;//default RDPPort
 		PWSTR ipAddr;
-		HRESULT hr;
+//		HRESULT hr;
 
 		RDPPort = readRegistryValueInteger(CONF_RDP_PORT, RDPPort);
 		PrintLn("RDP connection on port: %d", RDPPort);
@@ -302,17 +317,17 @@ HRESULT CSampleProvider::GetCredentialCount(
 
 		if (readRegistryValueInteger(CONF_RDP_ONLY, 0)) {
 			if (DEVELOPING) PrintLn("Only RDP is PIN protected!!!");
-			*pdwCount = 0;//production
+			*pdwCount = 0;//no filtering no OTP tile
 		}
 		else {
 			if (DEVELOPING) PrintLn("RDP and Local PIN protection");
-			*pdwCount = dwUserCount;//development
+			*pdwCount = dwUserCount;//show OTP tile
 		}
 
 
-		if (DEVELOPING) {
-			*pdwCount = dwUserCount;//development
-		}
+		//if (DEVELOPING) {
+			//*pdwCount = dwUserCount;//development
+		//}
 	}
 
     return S_OK;
@@ -324,13 +339,16 @@ HRESULT CSampleProvider::GetCredentialAt(
     DWORD dwIndex,
     _Outptr_result_nullonfailure_ ICredentialProviderCredential **ppcpc)
 {
-	if (DEVELOPING) PrintLn("GetCredentialAt");
+	if (DEVELOPING) PrintLn("GetCredentialAt:", (int)dwIndex);
 	HRESULT hr = E_INVALIDARG;
     *ppcpc = nullptr;
 
+	if (DEVELOPING) PrintLn("Credential.size():", _pCredential.size());
+
     if ((dwIndex < _pCredential.size()) && ppcpc)
     {
-        hr = _pCredential[dwIndex]->QueryInterface(IID_PPV_ARGS(ppcpc));
+		if (DEVELOPING) PrintLn("QueryInterface");
+		hr = _pCredential[dwIndex]->QueryInterface(IID_PPV_ARGS(ppcpc));
     }
     return hr;
 }
@@ -341,7 +359,7 @@ HRESULT CSampleProvider::SetUserArray(_In_ ICredentialProviderUserArray *users)
 {
 	//logfile << "SetUserArray\n";
 	if (DEVELOPING) PrintLn("SetUserArray");
-    if (_pCredProviderUserArray)
+    if (_pCredProviderUserArray != nullptr)
     {
         _pCredProviderUserArray->Release();
     }
@@ -389,7 +407,7 @@ HRESULT CSampleProvider::_EnumerateCredentials()
 	//logfile << "_EnumerateCredential\n";
     if (_pCredProviderUserArray != nullptr)
     {
-        DWORD dwUserCount;
+        DWORD dwUserCount = 0;
         _pCredProviderUserArray->GetCount(&dwUserCount);
         if (dwUserCount > 0)
         {
@@ -428,8 +446,19 @@ HRESULT CSampleProvider::_EnumerateCredentials()
 					pCredUser->Release();
 				}
 			}
-        }
-    }
+		}
+		else {
+			PrintLn("Empty User List");
+			//create empty user tile
+			_pCredential.push_back(new(std::nothrow) CSampleCredential());
+			if (_pCredential[_pCredential.size()-1] != nullptr) {
+				hr = _pCredential[_pCredential.size()-1]->Initialize(_cpus, s_rgCredProvFieldDescriptors, s_rgFieldStatePairs, nullptr);
+			}
+		}
+	}
+	else {
+		PrintLn("Unassigned User List");
+	}
     return hr;
 }
 
