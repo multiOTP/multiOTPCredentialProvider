@@ -267,34 +267,35 @@ HRESULT CSampleCredential::Initialize(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
 	if (SUCCEEDED(hr))
     {
         //hr = pcpUser->GetStringValue(PKEY_Identity_QualifiedUserName, &_pszQualifiedUserName);
-		if (_fIsLocalUser) {
-			if (DEVELOPING) PrintLn("Local user");
+		if (pcpUser != nullptr) {
+			if (DEVELOPING) PrintLn("Known user");
 			hr = pcpUser->GetStringValue(PKEY_Identity_QualifiedUserName, &_pszQualifiedUserName);//get username from the LogonUI user object
-			//local
-			//hr = SHStrDupW(_pszQualifiedUserName, &_rgFieldStrings[SFI_LARGE_TEXT]);//computername\login
-			PWSTR pszUserName;
-			pcpUser->GetStringValue(PKEY_Identity_UserName, &pszUserName);
-			if (pszUserName != nullptr)
-			{
-				wchar_t szString[256];
-				StringCchPrintf(szString, ARRAYSIZE(szString), L"User Name: %s", pszUserName);
-				if (DEVELOPING) PrintLn(szString);
-				hr = SHStrDupW(szString, &_rgFieldStrings[SFI_LARGE_TEXT]);
-				CoTaskMemFree(pszUserName);
-//				hr = pcpUser->GetSid(&_pszUserSid);
+			if (_fIsLocalUser) {
+				PWSTR pszUserName;
+				pcpUser->GetStringValue(PKEY_Identity_UserName, &pszUserName);
+				if (pszUserName != nullptr)
+				{
+					wchar_t szString[256];
+					StringCchPrintf(szString, ARRAYSIZE(szString), L"User Name: %s", pszUserName);
+					if (DEVELOPING) PrintLn(szString);
+					hr = SHStrDupW(szString, &_rgFieldStrings[SFI_LARGE_TEXT]);
+					CoTaskMemFree(pszUserName);
+					//				hr = pcpUser->GetSid(&_pszUserSid);
+				}
+				else
+				{
+					hr = SHStrDupW(L"User Name is NULL", &_rgFieldStrings[SFI_LARGE_TEXT]);
+				}
 			}
-			else
-			{
-				hr = SHStrDupW(L"User Name is NULL", &_rgFieldStrings[SFI_LARGE_TEXT]);
+			else {
+				//domain
+				//hr = SHStrDupW(_pszQualifiedUserName, &_rgFieldStrings[SFI_LARGE_TEXT]);//Microsoft\login@domain.com
+				//OTP on the microsoft.com uses account: Microsoft:login@domain.com -> so we have to change \ to :
 			}
-
 		}
 		else {
-			if (DEVELOPING) PrintLn("Domain user");
-			//domain
-			//hr = SHStrDupW(_pszQualifiedUserName, &_rgFieldStrings[SFI_LARGE_TEXT]);//Microsoft\login@domain.com
-			//OTP on the microsoft.com uses account: Microsoft:login@domain.com -> so we have to change \ to :
-
+			if (DEVELOPING) PrintLn("Unknown user");
+			//panic!!!
 		}
     }
 	/*
