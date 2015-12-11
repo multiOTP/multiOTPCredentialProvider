@@ -26,7 +26,7 @@
 #define ENDPOINT_AUTH_FAIL		((HRESULT)0x88809001)
 #define ENDPOINT_AUTH_CONTINUE	((HRESULT)0x88809002) 
 
-class CSampleCredential : public ICredentialProviderCredential2, ICredentialProviderCredentialWithFieldOptions
+class CSampleCredential : public ICredentialProviderCredential2, ICredentialProviderCredential, ICredentialProviderCredentialWithFieldOptions
 {
 public:
     // IUnknown
@@ -117,8 +117,9 @@ private:
     FIELD_STATE_PAIR                        _rgFieldStatePairs[SFI_NUM_FIELDS];             // An array holding the state of each field in the tile.
     PWSTR                                   _rgFieldStrings[SFI_NUM_FIELDS];                // An array holding the string value of each field. This is different from the name of the field held in _rgCredProvFieldDescriptors.
     PWSTR                                   _pszQualifiedUserName;                          // The user name that's used to pack the authentication buffer
-    ICredentialProviderCredentialEvents2*    _pCredProvCredentialEvents;                    // Used to update fields.
-                                                                                            // CredentialEvents2 for Begin and EndFieldUpdates.
+	ICredentialProviderCredentialEvents2*   _pCredProvCredentialEventsV2;                   // CredentialEvents2 for Begin and EndFieldUpdates.
+	ICredentialProviderCredentialEvents*    _pCredProvCredentialEventsV1;                   // Old CredentialEvents
+	ICredentialProviderCredentialEvents*    _pCredProvCredentialEvents;                     // Used to update fields.
     BOOL                                    _fChecked;                                      // Tracks the state of our checkbox.
     DWORD                                   _dwComboIndex;                                  // Tracks the current index of our combobox.
     bool                                    _fShowControls;                                 // Tracks the state of our show/hide controls link.

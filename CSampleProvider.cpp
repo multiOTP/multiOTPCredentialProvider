@@ -325,7 +325,7 @@ HRESULT CSampleProvider::GetCredentialCount(
 		}
 
 		if (DEVELOPING) {
-			PrintLn("OTP tile always");
+			PrintLn("OTP tile always visible");
 			*pdwCount = dwUserCount;//development - don't force but allow PIN in all scenarios
 		}
 	}
@@ -339,11 +339,11 @@ HRESULT CSampleProvider::GetCredentialAt(
     DWORD dwIndex,
     _Outptr_result_nullonfailure_ ICredentialProviderCredential **ppcpc)
 {
-	if (DEVELOPING) PrintLn("GetCredentialAt:", (int)dwIndex);
+	if (DEVELOPING) PrintLn("GetCredentialAt: %d", (int)dwIndex);
 	HRESULT hr = E_INVALIDARG;
     *ppcpc = nullptr;
 
-	if (DEVELOPING) PrintLn("Credential.size():", _pCredential.size());
+	if (DEVELOPING) PrintLn("Credential.size(): %d", _pCredential.size());
 
     if ((dwIndex < _pCredential.size()) && ppcpc)
     {
@@ -458,6 +458,12 @@ HRESULT CSampleProvider::_EnumerateCredentials()
 	}
 	else {
 		PrintLn("Unassigned User List");
+		//it is probably Credential Provider V1 System...
+		//create empty user tile
+		_pCredential.push_back(new(std::nothrow) CSampleCredential());
+		if (_pCredential[_pCredential.size() - 1] != nullptr) {
+			hr = _pCredential[_pCredential.size() - 1]->Initialize(_cpus, s_rgCredProvFieldDescriptors, s_rgFieldStatePairs, nullptr);
+		}
 	}
     return hr;
 }

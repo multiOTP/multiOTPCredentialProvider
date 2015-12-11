@@ -48,7 +48,8 @@
 	char NAME[SIZE]; \
 	ZERO(NAME) 
 
-#define DEVELOPING FALSE
+#define DEVELOPING FALSE				//display a lot of debug info
+#define SKIP_OTP_CHECK FALSE			//do not bother with wrong OTP PIN
 
 
 void PrintLn(const wchar_t *message, const wchar_t *message2, const wchar_t *message3, const wchar_t *message4);

@@ -38,15 +38,16 @@ enum SAMPLE_FIELD_ID
 {
 	SFI_TILEIMAGE            = 0,
 	SFI_LABEL                = 1,
-	SFI_LARGE_TEXT           = 2,
-	SFI_PASSWORD             = 3,
-	SFI_SUBMIT_BUTTON        = 4,
-	SFI_PREV_PIN             = 5,
-	SFI_PIN                  = 6,
-    SFI_SYNCHRONIZE_LINK     = 7,
-	SFI_FAILURE_TEXT         = 8,
-	SFI_NEXT_LOGIN_ATTEMPT   = 9,
-	SFI_NUM_FIELDS           = 10,
+	SFI_LOGIN_NAME           = 2,
+	SFI_LARGE_TEXT           = 3,
+	SFI_PASSWORD             = 4,
+	SFI_SUBMIT_BUTTON        = 5,
+	SFI_PREV_PIN             = 6,
+	SFI_PIN                  = 7,
+    SFI_SYNCHRONIZE_LINK     = 8,
+	SFI_FAILURE_TEXT         = 9,
+	SFI_NEXT_LOGIN_ATTEMPT   = 10,
+	SFI_NUM_FIELDS           = 11,
 };
 
 
@@ -69,7 +70,8 @@ static const FIELD_STATE_PAIR s_rgFieldStatePairs[] =
 {
     { CPFS_DISPLAY_IN_BOTH,            CPFIS_NONE    },    // SFI_TILEIMAGE
     { CPFS_HIDDEN,                     CPFIS_NONE    },    // SFI_LABEL
-    { CPFS_DISPLAY_IN_BOTH,            CPFIS_NONE    },    // SFI_LARGE_TEXT
+	{ CPFS_HIDDEN,                     CPFIS_NONE    },    // SFI_LOGIN_NAME
+	{ CPFS_DISPLAY_IN_BOTH,            CPFIS_NONE    },    // SFI_LARGE_TEXT
     { CPFS_DISPLAY_IN_SELECTED_TILE,   CPFIS_FOCUSED },    // SFI_PASSWORD
     { CPFS_DISPLAY_IN_SELECTED_TILE,   CPFIS_NONE    },    // SFI_SUBMIT_BUTTON
     { CPFS_HIDDEN,                     CPFIS_NONE    },    // SFI_PREV_PIN
@@ -92,7 +94,8 @@ static const CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR s_rgCredProvFieldDescriptors[]
 {
     { SFI_TILEIMAGE,         CPFT_TILE_IMAGE,    L"Image",                      CPFG_CREDENTIAL_PROVIDER_LOGO  },
     { SFI_LABEL,             CPFT_SMALL_TEXT,    L"Tooltip",                    CPFG_CREDENTIAL_PROVIDER_LABEL },
-    { SFI_LARGE_TEXT,        CPFT_LARGE_TEXT,    L"MultiOTP Login"                                             },
+	{ SFI_LOGIN_NAME,        CPFT_EDIT_TEXT,     L"Login name"                                                 },
+	{ SFI_LARGE_TEXT,        CPFT_LARGE_TEXT,    L"MultiOTP Login"                                             },
     { SFI_PASSWORD,          CPFT_PASSWORD_TEXT, L"Password text"                                              },
     { SFI_SUBMIT_BUTTON,     CPFT_SUBMIT_BUTTON, L"Submit"                                                     },
     { SFI_PREV_PIN,          CPFT_PASSWORD_TEXT, L"PREVIOUS PIN"                                               },

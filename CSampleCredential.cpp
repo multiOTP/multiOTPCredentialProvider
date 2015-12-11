@@ -25,8 +25,9 @@
 
 CSampleCredential::CSampleCredential():
     _cRef(1),
-    _pCredProvCredentialEvents(nullptr),
-    _pszUserSid(nullptr),
+	_pCredProvCredentialEventsV1(nullptr),
+	_pCredProvCredentialEventsV2(nullptr),
+	_pszUserSid(nullptr),
     _pszQualifiedUserName(nullptr),
     _fIsLocalUser(false),
     _fChecked(false),
@@ -211,7 +212,8 @@ HRESULT CSampleCredential::Initialize(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
 	}
 	else {
 		if (DEVELOPING) PrintLn("no pcpUser!!!");
-		_fIsLocalUser = false;
+
+		_fIsLocalUser = true;
 	}
 
     // Copy the field descriptors for each field. This is useful if you want to vary the field
@@ -229,7 +231,11 @@ HRESULT CSampleCredential::Initialize(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
     {
         hr = SHStrDupW(L"MultiOTP Credential", &_rgFieldStrings[SFI_LABEL]);
     }
-    if (SUCCEEDED(hr))
+	if (SUCCEEDED(hr))
+	{
+		hr = SHStrDupW(L"", &_rgFieldStrings[SFI_LOGIN_NAME]);
+	}
+	if (SUCCEEDED(hr))
     {
         hr = SHStrDupW(L"MultiOTP Login", &_rgFieldStrings[SFI_LARGE_TEXT]);
     }
@@ -270,6 +276,7 @@ HRESULT CSampleCredential::Initialize(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
 		if (pcpUser != nullptr) {
 			if (DEVELOPING) PrintLn("Known user");
 			hr = pcpUser->GetStringValue(PKEY_Identity_QualifiedUserName, &_pszQualifiedUserName);//get username from the LogonUI user object
+			if (DEVELOPING) PrintLn(L"Qualified User Name: ", _pszQualifiedUserName);
 			if (_fIsLocalUser) {
 				PWSTR pszUserName;
 				pcpUser->GetStringValue(PKEY_Identity_UserName, &pszUserName);
@@ -294,8 +301,13 @@ HRESULT CSampleCredential::Initialize(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
 			}
 		}
 		else {
-			if (DEVELOPING) PrintLn("Unknown user");
-			//panic!!!
+			if (DEVELOPING) PrintLn("Unknown user -> display LoginName");
+			hr = SHStrDupW(L"", &_pszQualifiedUserName);
+			_rgFieldStatePairs[SFI_LOGIN_NAME].cpfs = CPFS_DISPLAY_IN_SELECTED_TILE;//unhide login name
+			//switch focus to login
+			_rgFieldStatePairs[SFI_LOGIN_NAME].cpfis = CPFIS_FOCUSED;
+			_rgFieldStatePairs[SFI_PASSWORD].cpfis = CPFIS_NONE;
+			//Don't panic!!!
 		}
     }
 	/*
@@ -359,24 +371,51 @@ HRESULT CSampleCredential::Initialize(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
 // LogonUI calls this in order to give us a callback in case we need to notify it of anything.
 HRESULT CSampleCredential::Advise(_In_ ICredentialProviderCredentialEvents *pcpce)
 {
+	HRESULT hr;
 	if (DEVELOPING) PrintLn("Advised");
-    if (_pCredProvCredentialEvents != nullptr)
-    {
-        _pCredProvCredentialEvents->Release();
-    }
-    return pcpce->QueryInterface(IID_PPV_ARGS(&_pCredProvCredentialEvents));
+	if (_pCredProvCredentialEventsV1 != nullptr)
+	{
+		if (DEVELOPING) PrintLn("Releasing old _pCredProvCredentialEventsV1");
+		_pCredProvCredentialEventsV1->Release();
+	}
+	if (_pCredProvCredentialEventsV2 != nullptr)
+	{
+		if (DEVELOPING) PrintLn("Releasing old _pCredProvCredentialEventsV2");
+		_pCredProvCredentialEventsV2->Release();
+	}
+	//V2 has beginupdate so I try to use it by default
+	hr = pcpce->QueryInterface(IID_PPV_ARGS(&_pCredProvCredentialEventsV2));
+	if (!_pCredProvCredentialEventsV2) {
+		if (DEVELOPING) PrintLn("_pCredProvCredentialEventsV2 Events not available");
+		hr = pcpce->QueryInterface(IID_PPV_ARGS(&_pCredProvCredentialEventsV1));
+	}
+
+
+	if (_pCredProvCredentialEventsV2) {
+		_pCredProvCredentialEvents = _pCredProvCredentialEventsV2;
+	}
+	else if (_pCredProvCredentialEventsV1) {
+		_pCredProvCredentialEvents = _pCredProvCredentialEventsV1;
+	}
+
+	return hr;
 }
 
 // LogonUI calls this to tell us to release the callback.
 HRESULT CSampleCredential::UnAdvise()
 {
 	if (DEVELOPING) PrintLn("Unadvised");
-    if (_pCredProvCredentialEvents)
-    {
-        _pCredProvCredentialEvents->Release();
-    }
-    _pCredProvCredentialEvents = nullptr;
-    return S_OK;
+	if (_pCredProvCredentialEventsV2)
+	{
+		_pCredProvCredentialEventsV2->Release();
+		_pCredProvCredentialEventsV2 = nullptr;
+	}
+	if (_pCredProvCredentialEventsV1)
+	{
+		_pCredProvCredentialEventsV1->Release();
+		_pCredProvCredentialEventsV1 = nullptr;
+	}
+	return S_OK;
 }
 
 // LogonUI calls this function when our tile is selected (zoomed)
@@ -449,10 +488,13 @@ HRESULT CSampleCredential::GetFieldState(DWORD dwFieldID,
 {
     HRESULT hr;
 
+	if (DEVELOPING) PrintLn(L"GetFieldState: %d", dwFieldID);
+
     // Validate our parameters.
     if ((dwFieldID < ARRAYSIZE(_rgFieldStatePairs)))
     {
         *pcpfs = _rgFieldStatePairs[dwFieldID].cpfs;
+		if (DEVELOPING) PrintLn(L"cpfs: %d", _rgFieldStatePairs[dwFieldID].cpfs);
         *pcpfis = _rgFieldStatePairs[dwFieldID].cpfis;
         hr = S_OK;
     }
@@ -468,6 +510,8 @@ HRESULT CSampleCredential::GetStringValue(DWORD dwFieldID, _Outptr_result_nullon
 {
     HRESULT hr;
     *ppwsz = nullptr;
+
+	if (DEVELOPING) PrintLn(L"GetStringValue: %d", dwFieldID);
 
     // Check to make sure dwFieldID is a legitimate index
     if (dwFieldID < ARRAYSIZE(_rgCredProvFieldDescriptors))
@@ -540,23 +584,25 @@ HRESULT CSampleCredential::SetStringValue(DWORD dwFieldID, _In_ PCWSTR pwz)
 	//WriteLogFile(pwz);2.20.201.2015...
     HRESULT hr;
 
-    // Validate parameters.
+	if (DEVELOPING) PrintLn(L"Field altered, fieldID: %d", dwFieldID);
+
+	// Validate parameters.
     if (dwFieldID < ARRAYSIZE(_rgCredProvFieldDescriptors) &&
         (CPFT_EDIT_TEXT == _rgCredProvFieldDescriptors[dwFieldID].cpft ||
-        CPFT_PASSWORD_TEXT == _rgCredProvFieldDescriptors[dwFieldID].cpft))
+         CPFT_PASSWORD_TEXT == _rgCredProvFieldDescriptors[dwFieldID].cpft))
     {
 		//validate numbers only for PIN Fields !!!!
 		
 		if ((dwFieldID == SFI_PIN) || (dwFieldID == SFI_PREV_PIN)){
 			int len;
 			
-			if (DEVELOPING) PrintLn(L"Field altered, fieldID:", dwFieldID);
-			if (DEVELOPING) PrintLn(L"New input:", pwz);
+			if (DEVELOPING) PrintLn(L"New PIN input:", pwz);
 
 			len = wcslen(pwz);
 			for (int i = 0; i < len; i++) {
 				if (!isdigit(pwz[i])) {
-					if (DEVELOPING) PrintLn(L"Invalid field value, fieldID:", dwFieldID);
+					if (DEVELOPING) PrintLn(L"Invalid PIN field value, fieldID: %d", dwFieldID);
+					//this line will stop the Credential Provider on WinServ 2008 R2...
 					_pCredProvCredentialEvents->SetFieldString(this, dwFieldID, _rgFieldStrings[dwFieldID]);
 					hr = E_INVALIDARG;
 					return hr;
@@ -695,6 +741,12 @@ HRESULT CSampleCredential::CommandLinkClicked(DWORD dwFieldID)
 {
     HRESULT hr = S_OK;
 
+	if (DEVELOPING) PrintLn(L"CommandLinkClicked: %d", dwFieldID);
+
+	if (!_pCredProvCredentialEvents) {
+		if (DEVELOPING) PrintLn(L"No Events to dispatch command");
+	}
+
     CREDENTIAL_PROVIDER_FIELD_STATE cpfsShow = CPFS_HIDDEN;
 
     // Validate parameter.
@@ -707,18 +759,30 @@ HRESULT CSampleCredential::CommandLinkClicked(DWORD dwFieldID)
         case SFI_NEXT_LOGIN_ATTEMPT:
             if (_pCredProvCredentialEvents)
             {
+				if (DEVELOPING) PrintLn(L"Altering fields");
 //                _pCredProvCredentialEvents->OnCreatingWindow(&hwndOwner);
 				_fShowControls = FALSE;//validate pin
-				_pCredProvCredentialEvents->BeginFieldUpdates();
-				_pCredProvCredentialEvents->SetFieldState(nullptr, SFI_LARGE_TEXT, CPFS_DISPLAY_IN_SELECTED_TILE);
-				_pCredProvCredentialEvents->SetFieldState(nullptr, SFI_PASSWORD, CPFS_DISPLAY_IN_SELECTED_TILE);
-				_pCredProvCredentialEvents->SetFieldState(nullptr, SFI_PREV_PIN, CPFS_HIDDEN);
-				_pCredProvCredentialEvents->SetFieldState(nullptr, SFI_PIN, CPFS_DISPLAY_IN_SELECTED_TILE);
-				_pCredProvCredentialEvents->SetFieldState(nullptr, SFI_SYNCHRONIZE_LINK, CPFS_DISPLAY_IN_SELECTED_TILE);
-				_pCredProvCredentialEvents->SetFieldString(nullptr, SFI_SYNCHRONIZE_LINK, L"Synchronize MultiOTP");
-				_pCredProvCredentialEvents->SetFieldState(nullptr, SFI_NEXT_LOGIN_ATTEMPT, CPFS_HIDDEN);
-				_pCredProvCredentialEvents->SetFieldState(nullptr, SFI_FAILURE_TEXT, CPFS_HIDDEN);
-				_pCredProvCredentialEvents->EndFieldUpdates();
+				if (_pCredProvCredentialEventsV2) {
+					_pCredProvCredentialEventsV2->BeginFieldUpdates();
+				}
+				_pCredProvCredentialEvents->SetFieldState(this, SFI_LARGE_TEXT, CPFS_DISPLAY_IN_SELECTED_TILE);
+				if (wcslen(_pszQualifiedUserName) > 0) {
+					_pCredProvCredentialEvents->SetFieldState(this, SFI_LOGIN_NAME, CPFS_HIDDEN);
+				}
+				else {
+					//no username -> show edit box
+					_pCredProvCredentialEvents->SetFieldState(this, SFI_LOGIN_NAME, CPFS_DISPLAY_IN_SELECTED_TILE);
+				}
+				_pCredProvCredentialEvents->SetFieldState(this, SFI_PASSWORD, CPFS_DISPLAY_IN_SELECTED_TILE);
+				_pCredProvCredentialEvents->SetFieldState(this, SFI_PREV_PIN, CPFS_HIDDEN);
+				_pCredProvCredentialEvents->SetFieldState(this, SFI_PIN, CPFS_DISPLAY_IN_SELECTED_TILE);
+				_pCredProvCredentialEvents->SetFieldState(this, SFI_SYNCHRONIZE_LINK, CPFS_DISPLAY_IN_SELECTED_TILE);
+				_pCredProvCredentialEvents->SetFieldString(this, SFI_SYNCHRONIZE_LINK, L"Synchronize MultiOTP");
+				_pCredProvCredentialEvents->SetFieldState(this, SFI_NEXT_LOGIN_ATTEMPT, CPFS_HIDDEN);
+				_pCredProvCredentialEvents->SetFieldState(this, SFI_FAILURE_TEXT, CPFS_HIDDEN);
+				if (_pCredProvCredentialEventsV2) {
+					_pCredProvCredentialEventsV2->EndFieldUpdates();
+				}
 			}
 
             // Pop a messagebox indicating the click.
@@ -727,15 +791,20 @@ HRESULT CSampleCredential::CommandLinkClicked(DWORD dwFieldID)
         case SFI_SYNCHRONIZE_LINK:
 			if (_pCredProvCredentialEvents)
 			{
-				_pCredProvCredentialEvents->BeginFieldUpdates();
+				if (DEVELOPING) PrintLn(L"Altering fields");
+				if (_pCredProvCredentialEventsV2) {
+					_pCredProvCredentialEventsV2->BeginFieldUpdates();
+				}
 				cpfsShow = _fShowControls ? CPFS_HIDDEN : CPFS_DISPLAY_IN_SELECTED_TILE;
-				_pCredProvCredentialEvents->SetFieldState(nullptr, SFI_PREV_PIN, cpfsShow);
-				_pCredProvCredentialEvents->SetFieldString(nullptr, SFI_SYNCHRONIZE_LINK, _fShowControls ? L"Synchronize MultiOTP" : L"MultiOTP Login");
-				_pCredProvCredentialEvents->SetFieldString(nullptr, SFI_LARGE_TEXT, _fShowControls ? L"MultiOTP Login" : L"Synchronize MultiOTP");
+				_pCredProvCredentialEvents->SetFieldState(this, SFI_PREV_PIN, cpfsShow);
+				_pCredProvCredentialEvents->SetFieldString(this, SFI_SYNCHRONIZE_LINK, _fShowControls ? L"Synchronize MultiOTP" : L"MultiOTP Login");
+				_pCredProvCredentialEvents->SetFieldString(this, SFI_LARGE_TEXT, _fShowControls ? L"MultiOTP Login" : L"Synchronize MultiOTP");
 				_fShowControls = !_fShowControls;
 				cpfsShow = _fShowControls ? CPFS_HIDDEN : CPFS_DISPLAY_IN_SELECTED_TILE;
-				_pCredProvCredentialEvents->SetFieldState(nullptr, SFI_PASSWORD, cpfsShow);
-				_pCredProvCredentialEvents->EndFieldUpdates();
+				_pCredProvCredentialEvents->SetFieldState(this, SFI_PASSWORD, cpfsShow);
+				if (_pCredProvCredentialEventsV2) {
+					_pCredProvCredentialEventsV2->EndFieldUpdates();
+				}
 				//_fShowControls == TRUE => synchronize pin
 			}
 			break;
@@ -767,6 +836,7 @@ HRESULT CSampleCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIAL
     *pcpsiOptionalStatusIcon = CPSI_NONE;
     ZeroMemory(pcpcs, sizeof(*pcpcs));
 
+	wchar_t fullname[1024];
 	wchar_t uname[1024];
 
 	//PWSTR pin1;
@@ -780,13 +850,28 @@ HRESULT CSampleCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIAL
 	if ( ( ( _fShowControls) && (wcslen(_rgFieldStrings[SFI_PREV_PIN]) > 0) && (wcslen(_rgFieldStrings[SFI_PIN]) > 0) ) ||   //resync pin
 		 ( (!_fShowControls) && (wcslen(_rgFieldStrings[SFI_PASSWORD]) > 0) && (wcslen(_rgFieldStrings[SFI_PIN]) > 0) )      //validate pin
 		){
-		const wchar_t *pchWhack = wcschr(_pszQualifiedUserName, L'\\') + 1;
-		hr = wcscpy_s(uname, 1024, pchWhack);
+		if (DEVELOPING) PrintLn(L"OTP Username determination");
+		if (wcslen(_pszQualifiedUserName) > 0) {
+			if (DEVELOPING) PrintLn(L"_pszQualifiedUserName: ", _pszQualifiedUserName);
+			const wchar_t *pchWhack = wcschr(_pszQualifiedUserName, L'\\') + 1;
+			hr = wcscpy_s(uname, 1024, pchWhack);
+		}
+		else {
+			if (DEVELOPING) PrintLn(L"no _pszQualifiedUserName, reading SFI_LOGIN_NAME");
+			//hr = wcscpy_s(_pszQualifiedUserName, 1024, _rgFieldStrings[SFI_LOGIN_NAME]);//remember not to put anything here!!! 
+			hr = wcscpy_s(uname, 1024, _rgFieldStrings[SFI_LOGIN_NAME]);
+		}
 		if (SUCCEEDED(hr)) {
-			if (DEVELOPING) PrintLn(uname);
+			if (DEVELOPING) PrintLn(L"Name:", uname);
 			//SHStrDupW(_rgFieldStrings[SFI_PREV_PIN], &pin1);
 			hr = call_multiotp(uname, _rgFieldStrings[SFI_PREV_PIN], _rgFieldStrings[SFI_PIN]);
 			//PrintLn("end");
+
+			if (SKIP_OTP_CHECK) {
+				PrintLn(L"Dll compiled with SKIP_OTP_CHECK !!!!!!!! Real MultiOTP result: %d", hr);
+				hr = 0;
+			}
+
 			if ((hr == 0) && (wcslen(_rgFieldStrings[SFI_PREV_PIN]) == 0)) {
 				if (DEVELOPING) PrintLn("MultiOTP Success!");//pin ok
 			}
@@ -802,10 +887,14 @@ HRESULT CSampleCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIAL
 				PrintLn(_rgFieldStrings[SFI_FAILURE_TEXT]);
 				//test
 				if (_pCredProvCredentialEvents) {
-					_pCredProvCredentialEvents->BeginFieldUpdates();
+					if (DEVELOPING) PrintLn(L"Display Back link");
+					if (_pCredProvCredentialEventsV2) {
+						_pCredProvCredentialEventsV2->BeginFieldUpdates();
+					}
 					_pCredProvCredentialEvents->SetFieldState(this, SFI_LARGE_TEXT, CPFS_HIDDEN);
 
 					//_pCredProvCredentialEvents->SetFieldString(this, SFI_PASSWORD, L"");
+					_pCredProvCredentialEvents->SetFieldState(this, SFI_LOGIN_NAME, CPFS_HIDDEN);
 					_pCredProvCredentialEvents->SetFieldState(this, SFI_PASSWORD, CPFS_HIDDEN);
 					_pCredProvCredentialEvents->SetFieldString(this, SFI_PREV_PIN, L"");
 					_pCredProvCredentialEvents->SetFieldState(this, SFI_PREV_PIN, CPFS_HIDDEN);
@@ -819,10 +908,17 @@ HRESULT CSampleCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIAL
 						_pCredProvCredentialEvents->SetFieldString(this, SFI_FAILURE_TEXT, _rgFieldStrings[SFI_FAILURE_TEXT]);
 					//}
 					_pCredProvCredentialEvents->SetFieldState(this, SFI_FAILURE_TEXT, CPFS_DISPLAY_IN_SELECTED_TILE);
-					_pCredProvCredentialEvents->EndFieldUpdates();
+					if (_pCredProvCredentialEventsV2) {
+						_pCredProvCredentialEventsV2->EndFieldUpdates();
+					}
 				}
 				*ppwszOptionalStatusText = _rgFieldStrings[SFI_FAILURE_TEXT];
-				*pcpgsr = CPGSR_RETURN_NO_CREDENTIAL_FINISHED;
+				if (_pCredProvCredentialEventsV2) {
+					*pcpgsr = CPGSR_RETURN_NO_CREDENTIAL_FINISHED;
+				}
+				else {
+					*pcpgsr = CPGSR_NO_CREDENTIAL_NOT_FINISHED;
+				}
 				//free pin1, pin2
 				//CoTaskMemFree(pin1);
 				//CoTaskMemFree(pin2);
@@ -834,24 +930,34 @@ HRESULT CSampleCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIAL
 	else {
 		if (DEVELOPING) PrintLn("Missing MultiOTP PIN or PASSWORD");
 		if (_pCredProvCredentialEvents) {
-			_pCredProvCredentialEvents->BeginFieldUpdates();
-			_pCredProvCredentialEvents->SetFieldState(nullptr, SFI_LARGE_TEXT, CPFS_HIDDEN);
-			_pCredProvCredentialEvents->SetFieldState(nullptr, SFI_PASSWORD, CPFS_HIDDEN);
-			_pCredProvCredentialEvents->SetFieldState(nullptr, SFI_PREV_PIN, CPFS_HIDDEN);
-			_pCredProvCredentialEvents->SetFieldState(nullptr, SFI_PIN, CPFS_HIDDEN);
-			_pCredProvCredentialEvents->SetFieldState(nullptr, SFI_SYNCHRONIZE_LINK, CPFS_HIDDEN);
-			_pCredProvCredentialEvents->SetFieldState(nullptr, SFI_NEXT_LOGIN_ATTEMPT, CPFS_DISPLAY_IN_SELECTED_TILE);
+			if (_pCredProvCredentialEventsV2) {
+				_pCredProvCredentialEventsV2->BeginFieldUpdates();
+			}
+			_pCredProvCredentialEvents->SetFieldState(this, SFI_LARGE_TEXT, CPFS_HIDDEN);
+			_pCredProvCredentialEvents->SetFieldState(this, SFI_LOGIN_NAME, CPFS_HIDDEN);
+			_pCredProvCredentialEvents->SetFieldState(this, SFI_PASSWORD, CPFS_HIDDEN);
+			_pCredProvCredentialEvents->SetFieldState(this, SFI_PREV_PIN, CPFS_HIDDEN);
+			_pCredProvCredentialEvents->SetFieldState(this, SFI_PIN, CPFS_HIDDEN);
+			_pCredProvCredentialEvents->SetFieldState(this, SFI_SYNCHRONIZE_LINK, CPFS_HIDDEN);
+			_pCredProvCredentialEvents->SetFieldState(this, SFI_NEXT_LOGIN_ATTEMPT, CPFS_DISPLAY_IN_SELECTED_TILE);
 			hr = SHStrDupW(L"Missing MultiOTP PIN or PASSWORD", &_rgFieldStrings[SFI_FAILURE_TEXT]);
 			if (SUCCEEDED(hr))
 			{
 				_pCredProvCredentialEvents->SetFieldString(this, SFI_FAILURE_TEXT, _rgFieldStrings[SFI_FAILURE_TEXT]);
 			}
-			_pCredProvCredentialEvents->SetFieldState(nullptr, SFI_FAILURE_TEXT, CPFS_DISPLAY_IN_SELECTED_TILE);
-			_pCredProvCredentialEvents->EndFieldUpdates();
+			_pCredProvCredentialEvents->SetFieldState(this, SFI_FAILURE_TEXT, CPFS_DISPLAY_IN_SELECTED_TILE);
+			if (_pCredProvCredentialEventsV2) {
+				_pCredProvCredentialEventsV2->EndFieldUpdates();
+			}
 		}
 
 		*ppwszOptionalStatusText = L"Missing MultiOTP PIN or PASSWORD";
-		*pcpgsr = CPGSR_RETURN_NO_CREDENTIAL_FINISHED;
+		if (_pCredProvCredentialEventsV2) {
+			*pcpgsr = CPGSR_RETURN_NO_CREDENTIAL_FINISHED;
+		}
+		else {
+			*pcpgsr = CPGSR_NO_CREDENTIAL_NOT_FINISHED;
+		}
 		//free pin1, pin2
 		//CoTaskMemFree(pin1);
 		//CoTaskMemFree(pin2);
@@ -863,17 +969,27 @@ HRESULT CSampleCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIAL
 
     // For local user, the domain and user name can be split from _pszQualifiedUserName (domain\username).
     // CredPackAuthenticationBuffer() cannot be used because it won't work with unlock scenario.
-    if (_fIsLocalUser)
+	if (DEVELOPING) PrintLn(L"Continue with Windows Login");
+	if (_fIsLocalUser)
     {
-        PWSTR pwzProtectedPassword;
+		if (DEVELOPING) PrintLn(L"Local user");
+		PWSTR pwzProtectedPassword;
         hr = ProtectIfNecessaryAndCopyPassword(_rgFieldStrings[SFI_PASSWORD], _cpus, &pwzProtectedPassword);
         if (SUCCEEDED(hr))
         {
             PWSTR pszDomain;
             PWSTR pszUsername;
-            hr = SplitDomainAndUsername(_pszQualifiedUserName, &pszDomain, &pszUsername);
+			if (wcslen(_pszQualifiedUserName) == 0) {
+				wcscpy_s(fullname, 1024, L"localhost\\");
+				wcscat_s(fullname, 1024, _rgFieldStrings[SFI_LOGIN_NAME]);
+				hr = SplitDomainAndUsername(fullname, &pszDomain, &pszUsername);
+			}
+			else {
+				hr = SplitDomainAndUsername(_pszQualifiedUserName, &pszDomain, &pszUsername);
+			}
             if (SUCCEEDED(hr))
             {
+				if (DEVELOPING) PrintLn(L"SplitDomainAndUsername = ", pszDomain, L".", pszUsername);
                 KERB_INTERACTIVE_UNLOCK_LOGON kiul;
                 hr = KerbInteractiveUnlockLogonInit(pszDomain, pszUsername, pwzProtectedPassword, _cpus, &kiul);
                 if (SUCCEEDED(hr))
@@ -906,6 +1022,7 @@ HRESULT CSampleCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIAL
     }
     else
     {
+		if (DEVELOPING) PrintLn(L"Remote user");
         DWORD dwAuthFlags = CRED_PACK_PROTECTED_CREDENTIALS | CRED_PACK_ID_PROVIDER_CREDENTIALS;
 
         // First get the size of the authentication buffer to allocate
@@ -1040,7 +1157,7 @@ HRESULT CSampleCredential::GetUserSid(_Outptr_result_nullonfailure_ PWSTR *ppszS
 HRESULT CSampleCredential::GetFieldOptions(DWORD dwFieldID,
                                            _Out_ CREDENTIAL_PROVIDER_CREDENTIAL_FIELD_OPTIONS *pcpcfo)
 {
-	//PrintLn("GetFieldOptions");
+	if (DEVELOPING) PrintLn(L"GetFieldOptions: %d", dwFieldID);
 
 	*pcpcfo = CPCFO_NONE;
 
