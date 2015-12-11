@@ -61,7 +61,6 @@ HRESULT CSampleProvider::SetUsageScenario(
     // that we're not designed for that scenario.
     switch (cpus)
     {
-	case CPUS_CREDUI:
 	case CPUS_LOGON:
     case CPUS_UNLOCK_WORKSTATION:
         // The reason why we need _fRecreateEnumeratedCredentials is because ICredentialProviderSetUserArray::SetUserArray() is called after ICredentialProvider::SetUsageScenario(),
@@ -72,7 +71,8 @@ HRESULT CSampleProvider::SetUsageScenario(
         hr = S_OK;
         break;
 
-    case CPUS_CHANGE_PASSWORD:
+	case CPUS_CREDUI:
+	case CPUS_CHANGE_PASSWORD:
 	//case CPUS_CREDUI:
 		hr = E_NOTIMPL;
         break;
@@ -539,7 +539,6 @@ HRESULT CLMSFilter::Filter(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus, DWORD dwFlag
 	}
 	switch (cpus)
 	{
-	case CPUS_CREDUI:
 	case CPUS_LOGON:
 	case CPUS_UNLOCK_WORKSTATION:
 		if (DEVELOPING) PrintLn("<Filter>");
@@ -565,6 +564,7 @@ HRESULT CLMSFilter::Filter(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus, DWORD dwFlag
 		}
 		if (DEVELOPING) PrintLn("</Filter>");
 		return S_OK;
+	case CPUS_CREDUI:
 	case CPUS_CHANGE_PASSWORD:
 		return E_NOTIMPL;
 	default:
