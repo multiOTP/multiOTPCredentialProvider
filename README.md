@@ -7,7 +7,7 @@ Prerequisitions:
 - installed multiotp
 - configured multiotp user (multiotp username = windows account name)
 
-Instalation:
+Installation:
 
 1. Copy MultiOTPCredentialProviderV2.dll to Windows\system32\ (check the ntfs rights for system user)
 2. Edit MultiOTPPath setting in file register.reg
