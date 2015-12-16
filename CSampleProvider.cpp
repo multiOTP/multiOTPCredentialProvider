@@ -564,7 +564,7 @@ HRESULT CLMSFilter::Filter(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus, DWORD dwFlag
 		}
 		if (DEVELOPING) PrintLn("</Filter>");
 		return S_OK;
-	case CPUS_CREDUI:
+	case CPUS_CREDUI: //issue #1
 	case CPUS_CHANGE_PASSWORD:
 		return E_NOTIMPL;
 	default:
