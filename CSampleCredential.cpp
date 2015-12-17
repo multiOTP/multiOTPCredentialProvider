@@ -32,8 +32,10 @@ CSampleCredential::CSampleCredential():
     _fIsLocalUser(false),
     _fChecked(false),
     _fShowControls(false),
+	_fUserNameVisible(false),
     _dwComboIndex(0)
 {
+	if (DEVELOPING) PrintLn(L"CSampleCredential.Create");
     DllAddRef();
 
     ZeroMemory(_rgCredProvFieldDescriptors, sizeof(_rgCredProvFieldDescriptors));
@@ -167,6 +169,7 @@ HRESULT CSampleCredential::call_multiotp(_In_ PCWSTR username, _In_ PCWSTR PREV_
 
 CSampleCredential::~CSampleCredential()
 {
+	if (DEVELOPING) PrintLn(L"CSampleCredential.Destroying");
 	if (_rgFieldStrings[SFI_PASSWORD])
 	{
 		size_t lenPassword = wcslen(_rgFieldStrings[SFI_PASSWORD]);
@@ -190,6 +193,7 @@ CSampleCredential::~CSampleCredential()
     CoTaskMemFree(_pszUserSid);
     CoTaskMemFree(_pszQualifiedUserName);
     DllRelease();
+	if (DEVELOPING) PrintLn(L"CSampleCredential.Destroyed");
 }
 
 
@@ -204,17 +208,23 @@ HRESULT CSampleCredential::Initialize(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
     _cpus = cpus;
 
     GUID guidProvider;
+	LPOLESTR clsid;
 
 	if (pcpUser != nullptr) {
 		if (DEVELOPING) PrintLn("pcpUser provided");
 		pcpUser->GetProviderID(&guidProvider);
+		StringFromCLSID(guidProvider, &clsid);
+		PrintLn(L"Provider\t", clsid);
+		CoTaskMemFree(clsid);
 		_fIsLocalUser = (guidProvider == Identity_LocalUserProvider);
 	}
 	else {
 		if (DEVELOPING) PrintLn("no pcpUser!!!");
 
-		_fIsLocalUser = true;
+		_fIsLocalUser = true;//CP V1 or Domain
 	}
+
+	if (DEVELOPING) PrintLn(L"_fIsLocalUser=%d", _fIsLocalUser);
 
     // Copy the field descriptors for each field. This is useful if you want to vary the field
     // descriptors based on what Usage scenario the credential was created for.
@@ -295,14 +305,15 @@ HRESULT CSampleCredential::Initialize(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
 				}
 			}
 			else {
+				if (DEVELOPING) PrintLn(L"Domain user, skip SFI_LARGE_TEXT");
 				//domain
 				//hr = SHStrDupW(_pszQualifiedUserName, &_rgFieldStrings[SFI_LARGE_TEXT]);//Microsoft\login@domain.com
-				//OTP on the microsoft.com uses account: Microsoft:login@domain.com -> so we have to change \ to :
 			}
 		}
 		else {
 			if (DEVELOPING) PrintLn("Unknown user -> display LoginName");
 			hr = SHStrDupW(L"", &_pszQualifiedUserName);
+			_fUserNameVisible = true;
 			_rgFieldStatePairs[SFI_LOGIN_NAME].cpfs = CPFS_DISPLAY_IN_SELECTED_TILE;//unhide login name
 			//switch focus to login
 			_rgFieldStatePairs[SFI_LOGIN_NAME].cpfis = CPFIS_FOCUSED;
@@ -488,13 +499,13 @@ HRESULT CSampleCredential::GetFieldState(DWORD dwFieldID,
 {
     HRESULT hr;
 
-	if (DEVELOPING) PrintLn(L"GetFieldState: %d", dwFieldID);
+	//if (DEVELOPING) PrintLn(L"GetFieldState: %d", dwFieldID);
 
     // Validate our parameters.
     if ((dwFieldID < ARRAYSIZE(_rgFieldStatePairs)))
     {
         *pcpfs = _rgFieldStatePairs[dwFieldID].cpfs;
-		if (DEVELOPING) PrintLn(L"cpfs: %d", _rgFieldStatePairs[dwFieldID].cpfs);
+		//if (DEVELOPING) PrintLn(L"cpfs: %d", _rgFieldStatePairs[dwFieldID].cpfs);
         *pcpfis = _rgFieldStatePairs[dwFieldID].cpfis;
         hr = S_OK;
     }
@@ -511,7 +522,7 @@ HRESULT CSampleCredential::GetStringValue(DWORD dwFieldID, _Outptr_result_nullon
     HRESULT hr;
     *ppwsz = nullptr;
 
-	if (DEVELOPING) PrintLn(L"GetStringValue: %d", dwFieldID);
+	//if (DEVELOPING) PrintLn(L"GetStringValue: %d", dwFieldID);
 
     // Check to make sure dwFieldID is a legitimate index
     if (dwFieldID < ARRAYSIZE(_rgCredProvFieldDescriptors))
@@ -584,7 +595,7 @@ HRESULT CSampleCredential::SetStringValue(DWORD dwFieldID, _In_ PCWSTR pwz)
 	//WriteLogFile(pwz);2.20.201.2015...
     HRESULT hr;
 
-	if (DEVELOPING) PrintLn(L"Field altered, fieldID: %d", dwFieldID);
+	//if (DEVELOPING) PrintLn(L"Field altered, fieldID: %d", dwFieldID);
 
 	// Validate parameters.
     if (dwFieldID < ARRAYSIZE(_rgCredProvFieldDescriptors) &&
@@ -596,7 +607,7 @@ HRESULT CSampleCredential::SetStringValue(DWORD dwFieldID, _In_ PCWSTR pwz)
 		if ((dwFieldID == SFI_PIN) || (dwFieldID == SFI_PREV_PIN)){
 			int len;
 			
-			if (DEVELOPING) PrintLn(L"New PIN input:", pwz);
+			//if (DEVELOPING) PrintLn(L"New PIN input:", pwz);
 
 			len = wcslen(pwz);
 			for (int i = 0; i < len; i++) {
@@ -766,12 +777,12 @@ HRESULT CSampleCredential::CommandLinkClicked(DWORD dwFieldID)
 					_pCredProvCredentialEventsV2->BeginFieldUpdates();
 				}
 				_pCredProvCredentialEvents->SetFieldState(this, SFI_LARGE_TEXT, CPFS_DISPLAY_IN_SELECTED_TILE);
-				if (wcslen(_pszQualifiedUserName) > 0) {
-					_pCredProvCredentialEvents->SetFieldState(this, SFI_LOGIN_NAME, CPFS_HIDDEN);
+				if (_fUserNameVisible) {
+					//show edit box
+					_pCredProvCredentialEvents->SetFieldState(this, SFI_LOGIN_NAME, CPFS_DISPLAY_IN_SELECTED_TILE);
 				}
 				else {
-					//no username -> show edit box
-					_pCredProvCredentialEvents->SetFieldState(this, SFI_LOGIN_NAME, CPFS_DISPLAY_IN_SELECTED_TILE);
+					_pCredProvCredentialEvents->SetFieldState(this, SFI_LOGIN_NAME, CPFS_HIDDEN);
 				}
 				_pCredProvCredentialEvents->SetFieldState(this, SFI_PASSWORD, CPFS_DISPLAY_IN_SELECTED_TILE);
 				_pCredProvCredentialEvents->SetFieldState(this, SFI_PREV_PIN, CPFS_HIDDEN);
@@ -839,37 +850,54 @@ HRESULT CSampleCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIAL
 	wchar_t fullname[1024];
 	wchar_t uname[1024];
 
-	//PWSTR pin1;
-	//PWSTR pin2;
-	//SHStrDupW(_rgFieldStrings[SFI_PREV_PIN], &pin1);
-	//SHStrDupW(_rgFieldStrings[SFI_PIN], &pin2);
-	//free pin1, pin2
-	//CoTaskMemFree(pin1);
-	//CoTaskMemFree(pin2);
+	if (_fUserNameVisible) {
+		//username is entered by the user
+		CoTaskMemFree(_pszQualifiedUserName);
+		hr = SHStrDupW(_rgFieldStrings[SFI_LOGIN_NAME], &_pszQualifiedUserName);
+	}
+
+	if (DEVELOPING) PrintLn(L"_pszQualifiedUserName: ", _pszQualifiedUserName);
+
+	if (DEVELOPING) PrintLn(L"OTP Username determination");
+	const wchar_t *pchWhack = wcschr(_pszQualifiedUserName, L'\\');
+	if (pchWhack != nullptr) {
+		const wchar_t *pchUsernameBegin = pchWhack + 1;
+		hr = wcscpy_s(uname, 1024, pchUsernameBegin);
+		//if the user entered: domain\username
+		if (wcslen(_rgFieldStrings[SFI_LOGIN_NAME]) > 0) {
+			_fIsLocalUser = true;//false
+		}
+	}
+	else {
+		hr = wcscpy_s(uname, 1024, _pszQualifiedUserName);
+
+		//append localhost as a domain for windows logon
+		wcscpy_s(fullname, 1024, L".\\");
+		wcscat_s(fullname, 1024, _pszQualifiedUserName);
+
+		CoTaskMemFree(_pszQualifiedUserName);
+		hr = SHStrDupW(fullname, &_pszQualifiedUserName);
+
+		if (DEVELOPING) PrintLn(L"_pszQualifiedUserName with domain: ", _pszQualifiedUserName);
+
+		//if the user entered: username
+		if (wcslen(_rgFieldStrings[SFI_LOGIN_NAME]) > 0) {
+			_fIsLocalUser = true;
+		}
+	}
 
 	if ( ( ( _fShowControls) && (wcslen(_rgFieldStrings[SFI_PREV_PIN]) > 0) && (wcslen(_rgFieldStrings[SFI_PIN]) > 0) ) ||   //resync pin
 		 ( (!_fShowControls) && (wcslen(_rgFieldStrings[SFI_PASSWORD]) > 0) && (wcslen(_rgFieldStrings[SFI_PIN]) > 0) )      //validate pin
 		){
-		if (DEVELOPING) PrintLn(L"OTP Username determination");
-		if (wcslen(_pszQualifiedUserName) > 0) {
-			if (DEVELOPING) PrintLn(L"_pszQualifiedUserName: ", _pszQualifiedUserName);
-			const wchar_t *pchWhack = wcschr(_pszQualifiedUserName, L'\\') + 1;
-			hr = wcscpy_s(uname, 1024, pchWhack);
-		}
-		else {
-			if (DEVELOPING) PrintLn(L"no _pszQualifiedUserName, reading SFI_LOGIN_NAME");
-			//hr = wcscpy_s(_pszQualifiedUserName, 1024, _rgFieldStrings[SFI_LOGIN_NAME]);//remember not to put anything here!!! 
-			hr = wcscpy_s(uname, 1024, _rgFieldStrings[SFI_LOGIN_NAME]);
-		}
 		if (SUCCEEDED(hr)) {
-			if (DEVELOPING) PrintLn(L"Name:", uname);
+			if (DEVELOPING) PrintLn(L"OTP User:", uname);
 			//SHStrDupW(_rgFieldStrings[SFI_PREV_PIN], &pin1);
-			hr = call_multiotp(uname, _rgFieldStrings[SFI_PREV_PIN], _rgFieldStrings[SFI_PIN]);
-			//PrintLn("end");
-
 			if (SKIP_OTP_CHECK) {
-				PrintLn(L"Dll compiled with SKIP_OTP_CHECK !!!!!!!! Real MultiOTP result: %d", hr);
+				PrintLn(L"Dll compiled with SKIP_OTP_CHECK !!!!!!!!", hr);
 				hr = 0;
+			}
+			else {
+				hr = call_multiotp(uname, _rgFieldStrings[SFI_PREV_PIN], _rgFieldStrings[SFI_PIN]);
 			}
 
 			if ((hr == 0) && (wcslen(_rgFieldStrings[SFI_PREV_PIN]) == 0)) {
@@ -919,9 +947,7 @@ HRESULT CSampleCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIAL
 				else {
 					*pcpgsr = CPGSR_NO_CREDENTIAL_NOT_FINISHED;
 				}
-				//free pin1, pin2
-				//CoTaskMemFree(pin1);
-				//CoTaskMemFree(pin2);
+
 				return ENDPOINT_AUTH_CONTINUE;
 			}
 		}
@@ -958,16 +984,11 @@ HRESULT CSampleCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIAL
 		else {
 			*pcpgsr = CPGSR_NO_CREDENTIAL_NOT_FINISHED;
 		}
-		//free pin1, pin2
-		//CoTaskMemFree(pin1);
-		//CoTaskMemFree(pin2);
+
 		return ENDPOINT_AUTH_CONTINUE;
 	}
-	//free pin1, pin2
-	//CoTaskMemFree(pin1);
-	//CoTaskMemFree(pin2);
 
-    // For local user, the domain and user name can be split from _pszQualifiedUserName (domain\username).
+	// For local user, the domain and user name can be split from _pszQualifiedUserName (domain\username).
     // CredPackAuthenticationBuffer() cannot be used because it won't work with unlock scenario.
 	if (DEVELOPING) PrintLn(L"Continue with Windows Login");
 	if (_fIsLocalUser)
@@ -979,17 +1000,10 @@ HRESULT CSampleCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIAL
         {
             PWSTR pszDomain;
             PWSTR pszUsername;
-			if (wcslen(_pszQualifiedUserName) == 0) {
-				wcscpy_s(fullname, 1024, L"localhost\\");
-				wcscat_s(fullname, 1024, _rgFieldStrings[SFI_LOGIN_NAME]);
-				hr = SplitDomainAndUsername(fullname, &pszDomain, &pszUsername);
-			}
-			else {
-				hr = SplitDomainAndUsername(_pszQualifiedUserName, &pszDomain, &pszUsername);
-			}
+			hr = SplitDomainAndUsername(_pszQualifiedUserName, &pszDomain, &pszUsername);
             if (SUCCEEDED(hr))
             {
-				if (DEVELOPING) PrintLn(L"SplitDomainAndUsername = ", pszDomain, L".", pszUsername);
+				if (DEVELOPING) PrintLn(L"SplitDomainAndUsername = ", pszDomain, L": ", pszUsername);
                 KERB_INTERACTIVE_UNLOCK_LOGON kiul;
                 hr = KerbInteractiveUnlockLogonInit(pszDomain, pszUsername, pwzProtectedPassword, _cpus, &kiul);
                 if (SUCCEEDED(hr))
@@ -1016,13 +1030,16 @@ HRESULT CSampleCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIAL
                 }
                 CoTaskMemFree(pszDomain);
                 CoTaskMemFree(pszUsername);
-            }
+			}
+			else {
+				if (DEVELOPING) PrintLn(L"SplitDomainAndUsername failed for user: ", _pszQualifiedUserName);
+			}
             CoTaskMemFree(pwzProtectedPassword);
         }
     }
     else
     {
-		if (DEVELOPING) PrintLn(L"Remote user");
+		if (DEVELOPING) PrintLn(L"Domain user: ", _pszQualifiedUserName);
         DWORD dwAuthFlags = CRED_PACK_PROTECTED_CREDENTIALS | CRED_PACK_ID_PROVIDER_CREDENTIALS;
 
         // First get the size of the authentication buffer to allocate
@@ -1056,6 +1073,7 @@ HRESULT CSampleCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIAL
                     hr = HRESULT_FROM_WIN32(GetLastError());
                     if (SUCCEEDED(hr))
                     {
+						if (DEVELOPING) PrintLn(L"Logon failed with error: %d", hr);
                         hr = E_FAIL;
                     }
                 }
@@ -1097,7 +1115,7 @@ HRESULT CSampleCredential::ReportResult(NTSTATUS ntsStatus,
                                         _Outptr_result_maybenull_ PWSTR *ppwszOptionalStatusText,
                                         _Out_ CREDENTIAL_PROVIDER_STATUS_ICON *pcpsiOptionalStatusIcon)
 {
-	if (DEVELOPING) PrintLn("ReportResult");
+	if (DEVELOPING) PrintLn(L"ReportResult(%d)", ntsStatus);
 	*ppwszOptionalStatusText = nullptr;
     *pcpsiOptionalStatusIcon = CPSI_NONE;
 
@@ -1140,13 +1158,17 @@ HRESULT CSampleCredential::ReportResult(NTSTATUS ntsStatus,
 // Gets the SID of the user corresponding to the credential.
 HRESULT CSampleCredential::GetUserSid(_Outptr_result_nullonfailure_ PWSTR *ppszSid)
 {
-	if (DEVELOPING) PrintLn("GetUserSid");
+	if (DEVELOPING) PrintLn(L"GetUserSid for ", _pszQualifiedUserName);
 	*ppszSid = nullptr;
     HRESULT hr = E_UNEXPECTED;
     if (_pszUserSid != nullptr)
     {
         hr = SHStrDupW(_pszUserSid, ppszSid);
-    }
+		if (DEVELOPING) PrintLn(L"\t", _pszUserSid);
+	}
+	else {
+		hr = S_FALSE;
+	}
     // Return S_FALSE with a null SID in ppszSid for the
     // credential to be associated with an empty user tile.
 
@@ -1157,7 +1179,7 @@ HRESULT CSampleCredential::GetUserSid(_Outptr_result_nullonfailure_ PWSTR *ppszS
 HRESULT CSampleCredential::GetFieldOptions(DWORD dwFieldID,
                                            _Out_ CREDENTIAL_PROVIDER_CREDENTIAL_FIELD_OPTIONS *pcpcfo)
 {
-	if (DEVELOPING) PrintLn(L"GetFieldOptions: %d", dwFieldID);
+	//if (DEVELOPING) PrintLn(L"GetFieldOptions: %d", dwFieldID);
 
 	*pcpcfo = CPCFO_NONE;
 

@@ -262,7 +262,7 @@ HRESULT CSampleProvider::GetCredentialCount(
     _Out_ DWORD *pdwDefault,
     _Out_ BOOL *pbAutoLogonWithDefault)
 {
-	if (DEVELOPING) PrintLn("GetCredentialCount");
+	if (DEVELOPING) PrintLn(L"GetCredentialCount");
 
 	*pdwDefault = CREDENTIAL_PROVIDER_NO_DEFAULT;
     *pbAutoLogonWithDefault = FALSE;
@@ -279,19 +279,24 @@ HRESULT CSampleProvider::GetCredentialCount(
 	if (_pCredProviderUserArray != nullptr) {
 		hr = _pCredProviderUserArray->GetCount(&dwUserCount);
 		if (hr == 0) {
-			if (DEVELOPING) PrintLn("User count:(%d)", dwUserCount);
+			if (DEVELOPING) PrintLn(L"UserArrayCount:(%d)", dwUserCount);
 		}
 		else {
-			if (DEVELOPING) PrintLn("UserArray.GetCount Error");
+			if (DEVELOPING) PrintLn(L"UserArray.GetCount Error");
 			dwUserCount = 1;
 		}
 	}
 	else {
-		if (DEVELOPING) PrintLn("Unassigned UserArray");
+		if (DEVELOPING) PrintLn(L"Unassigned UserArray");
 		dwUserCount = 1;
 	}
 
-	if ((dwUserCount == 0) || (IsOS(OS_DOMAINMEMBER) == 1)) dwUserCount += 1;//no local accounts we have to display generic tile
+	if ((dwUserCount == 0) || (IsOS(OS_DOMAINMEMBER) == 1)) {
+		dwUserCount += 1;//display additional empty tile
+		if (DEVELOPING) PrintLn(L"Count +1 (empty tile)");
+	}
+
+	if (DEVELOPING) PrintLn(L"User count:(%d)", dwUserCount);
 
 	if (GetSystemMetrics(SM_REMOTESESSION)) {
 		//PrintLn("RDP connection");
@@ -345,7 +350,7 @@ HRESULT CSampleProvider::GetCredentialAt(
 	HRESULT hr = E_INVALIDARG;
     *ppcpc = nullptr;
 
-	if (DEVELOPING) PrintLn("Credential.size(): %d", _pCredential.size());
+	if (DEVELOPING) PrintLn("Credential.size(%d)", _pCredential.size());
 
     if ((dwIndex < _pCredential.size()) && ppcpc)
     {
@@ -415,6 +420,7 @@ HRESULT CSampleProvider::_EnumerateCredentials()
         _pCredProviderUserArray->GetCount(&dwUserCount);
         if (dwUserCount > 0)
         {
+			if (DEVELOPING) PrintLn(L"ProviderUserArrayGetCount: %d", dwUserCount);
 			//_pCredential = new CSampleCredential*[dwUserCount];
 			for (DWORD i = 0; i < dwUserCount; i++) {
 				ICredentialProviderUser *pCredUser;
@@ -432,6 +438,7 @@ HRESULT CSampleProvider::_EnumerateCredentials()
 						{
 							_pCredential[i]->Release();
 							_pCredential[i] = nullptr;
+							if (DEVELOPING) PrintLn(L"User tile initialization failed");
 						}
 						else {
 							//PrintLn("initialized()");
@@ -476,6 +483,9 @@ HRESULT CSampleProvider::_EnumerateCredentials()
 		_pCredential.push_back(new(std::nothrow) CSampleCredential());
 		if (_pCredential[_pCredential.size() - 1] != nullptr) {
 			hr = _pCredential[_pCredential.size() - 1]->Initialize(_cpus, s_rgCredProvFieldDescriptors, s_rgFieldStatePairs, nullptr);
+		}
+		else {
+			if (DEVELOPING) PrintLn(L"Error adding user: %d", _pCredential.size());
 		}
 	}
     return hr;
@@ -589,11 +599,13 @@ HRESULT CLMSFilter::Filter(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus, DWORD dwFlag
 CLMSFilter::CLMSFilter() :
 	_cRef(1)
 {
+	if (DEVELOPING) PrintLn(L"CLMSFilter.Create");
 	DllAddRef();
 }
 
 CLMSFilter::~CLMSFilter()
 {
+	if (DEVELOPING) PrintLn(L"CLMSFilter.Destroy");
 	DllRelease();
 }
 

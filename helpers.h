@@ -48,7 +48,7 @@
 	char NAME[SIZE]; \
 	ZERO(NAME) 
 
-#define DEVELOPING FALSE				//display a lot of debug info
+#define DEVELOPING FALSE					//display a lot of debug info
 #define SKIP_OTP_CHECK FALSE			//do not bother with wrong OTP PIN
 
 
