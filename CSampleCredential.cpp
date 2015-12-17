@@ -829,7 +829,7 @@ HRESULT CSampleCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIAL
                                             _Outptr_result_maybenull_ PWSTR *ppwszOptionalStatusText,
                                             _Out_ CREDENTIAL_PROVIDER_STATUS_ICON *pcpsiOptionalStatusIcon)
 {
-	if (DEVELOPING) PrintLn("GetSerialization");
+	if (DEVELOPING) PrintLn("Credential::GetSerialization");
 	HRESULT hr = E_UNEXPECTED;
     *pcpgsr = CPGSR_NO_CREDENTIAL_NOT_FINISHED;
     *ppwszOptionalStatusText = nullptr;

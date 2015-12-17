@@ -106,7 +106,7 @@ HRESULT CSampleProvider::SetUsageScenario(
 HRESULT CSampleProvider::SetSerialization(
     _In_ CREDENTIAL_PROVIDER_CREDENTIAL_SERIALIZATION const * /*pcpcs*/)
 {
-	if (DEVELOPING) PrintLn("SetSerialization");//that's the place to filter incoming SID from credentials supplied by NLA
+	if (DEVELOPING) PrintLn("Provider::SetSerialization");//that's the place to filter incoming SID from credentials supplied by NLA
 	HRESULT hr = E_INVALIDARG;/*
 	if ((CLSID_CSample == pcpcs->clsidCredentialProvider) || (CPUS_CREDUI == _cpus))
 	{
@@ -205,12 +205,14 @@ HRESULT CSampleProvider::Advise(
     _In_ ICredentialProviderEvents * /*pcpe*/,
     _In_ UINT_PTR /*upAdviseContext*/)
 {
+	if (DEVELOPING) PrintLn("Provider::Advise");
     return E_NOTIMPL;
 }
 
 // Called by LogonUI when the ICredentialProviderEvents callback is no longer valid.
 HRESULT CSampleProvider::UnAdvise()
 {
+	if (DEVELOPING) PrintLn("Provider::UnAdvise");
     return E_NOTIMPL;
 }
 
@@ -289,7 +291,7 @@ HRESULT CSampleProvider::GetCredentialCount(
 		dwUserCount = 1;
 	}
 
-	if (dwUserCount == 0) dwUserCount = 1;//no local accounts we have to display generic tile
+	if ((dwUserCount == 0) || (IsOS(OS_DOMAINMEMBER) == 1)) dwUserCount += 1;//no local accounts we have to display generic tile
 
 	if (GetSystemMetrics(SM_REMOTESESSION)) {
 		//PrintLn("RDP connection");
@@ -404,10 +406,12 @@ HRESULT CSampleProvider::_EnumerateCredentials()
 {
 	if (DEVELOPING) PrintLn("_EnumerateCredential");
 	HRESULT hr = E_UNEXPECTED;
+	DWORD dwUserCount = 0;
+
 	//logfile << "_EnumerateCredential\n";
     if (_pCredProviderUserArray != nullptr)
     {
-        DWORD dwUserCount = 0;
+        //DWORD dwUserCount = 0;
         _pCredProviderUserArray->GetCount(&dwUserCount);
         if (dwUserCount > 0)
         {
@@ -449,17 +453,26 @@ HRESULT CSampleProvider::_EnumerateCredentials()
 		}
 		else {
 			PrintLn("Empty User List");
-			//create empty user tile
-			_pCredential.push_back(new(std::nothrow) CSampleCredential());
+			//create empty user tile later
+			/*_pCredential.push_back(new(std::nothrow) CSampleCredential());
 			if (_pCredential[_pCredential.size()-1] != nullptr) {
 				hr = _pCredential[_pCredential.size()-1]->Initialize(_cpus, s_rgCredProvFieldDescriptors, s_rgFieldStatePairs, nullptr);
-			}
+			}*/
 		}
 	}
 	else {
 		PrintLn("Unassigned User List");
 		//it is probably Credential Provider V1 System...
-		//create empty user tile
+		//create empty user tile later
+		/*_pCredential.push_back(new(std::nothrow) CSampleCredential());
+		if (_pCredential[_pCredential.size() - 1] != nullptr) {
+			hr = _pCredential[_pCredential.size() - 1]->Initialize(_cpus, s_rgCredProvFieldDescriptors, s_rgFieldStatePairs, nullptr);
+		}*/
+	}
+	//if you are in a domain or have no users on the list you have to show "Other user tile"
+	if (DEVELOPING) PrintLn(L"IsOS(OS_DOMAINMEMBER): %d", IsOS(OS_DOMAINMEMBER));
+	if ((dwUserCount == 0) || (IsOS(OS_DOMAINMEMBER) == 1)) {
+		if (DEVELOPING) PrintLn(L"Adding empty user tile");
 		_pCredential.push_back(new(std::nothrow) CSampleCredential());
 		if (_pCredential[_pCredential.size() - 1] != nullptr) {
 			hr = _pCredential[_pCredential.size() - 1]->Initialize(_cpus, s_rgCredProvFieldDescriptors, s_rgFieldStatePairs, nullptr);
