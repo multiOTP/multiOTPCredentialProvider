@@ -10,7 +10,7 @@ Prerequisitions:
 - configured multiOTP user (multiOTP username = windows local account name or domain user name or microsoft account name)
 
 Installation:
-Launch the installer (in the installer directory) and set the various parameters. You must have administrator access.
+- Launch the installer (in the installer directory) and set the various parameters. You must have administrator access.
 
 Thanks to:
 - ArcadeJust (RDP only enhancement)
