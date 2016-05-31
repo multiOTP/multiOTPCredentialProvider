@@ -5,6 +5,10 @@ multiOTP Credential Provider for multiOTP supporting Windows 7/8/8.1/10/2012(R2)
 - client executable of multiOTP is automatically installed and configured
 - multiOTP Credential Provider is only activated if the authentication test is passed successfully
 
+![multiOTPCredentialProvider setup](https://raw.githubusercontent.com/multiOTP/multiOTPCredentialProvider/master/screenshots/multiOTPCredentialProvider-setup.png)
+
+![multiOTPCredentialProvider test](https://raw.githubusercontent.com/multiOTP/multiOTPCredentialProvider/master/screenshots/multiOTPCredentialProvider-test.png)
+
 Prerequisitions:
 - installed multiOTP server(s)
 - configured multiOTP user (multiOTP username = windows local account name or domain user name or microsoft account name)
