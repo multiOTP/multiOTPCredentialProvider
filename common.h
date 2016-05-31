@@ -95,12 +95,12 @@ static const CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR s_rgCredProvFieldDescriptors[]
     { SFI_TILEIMAGE,         CPFT_TILE_IMAGE,    L"Image",                      CPFG_CREDENTIAL_PROVIDER_LOGO  },
     { SFI_LABEL,             CPFT_SMALL_TEXT,    L"Tooltip",                    CPFG_CREDENTIAL_PROVIDER_LABEL },
 	{ SFI_LOGIN_NAME,        CPFT_EDIT_TEXT,     L"Login name"                                                 },
-	{ SFI_LARGE_TEXT,        CPFT_LARGE_TEXT,    L"MultiOTP Login"                                             },
+	{ SFI_LARGE_TEXT,        CPFT_LARGE_TEXT,    L"multiOTP Login"                                             },
     { SFI_PASSWORD,          CPFT_PASSWORD_TEXT, L"Password text"                                              },
     { SFI_SUBMIT_BUTTON,     CPFT_SUBMIT_BUTTON, L"Submit"                                                     },
     { SFI_PREV_PIN,          CPFT_PASSWORD_TEXT, L"PREVIOUS PIN"                                               },
 	{ SFI_PIN,               CPFT_PASSWORD_TEXT, L"PIN"                                                        },               
-	{ SFI_SYNCHRONIZE_LINK,  CPFT_COMMAND_LINK,  L"Synchronize MultiOTP"                                       },
+	{ SFI_SYNCHRONIZE_LINK,  CPFT_COMMAND_LINK,  L"Synchronize multiOTP"                                       },
 	{ SFI_FAILURE_TEXT,      CPFT_SMALL_TEXT,    L"Logon Failure"                                              },
 	{ SFI_NEXT_LOGIN_ATTEMPT,CPFT_COMMAND_LINK,  L"Next Login attempt"                                         },
 	//    { SFI_FULLNAME_TEXT,     CPFT_SMALL_TEXT,    L"Full name: "                                                },
@@ -123,7 +123,7 @@ struct MULTIOTP_RESPONSE
 	PWSTR MessageText;
 };
 
-static const MULTIOTP_RESPONSE s_rgMultiOTPResponse[] =
+static const MULTIOTP_RESPONSE s_rgmultiOTPResponse[] =
 {
 	{ 0,  L"SUCCES: Token resynchronization complete" },
 	{ 10, L"INFO: Access Challenge returned back to the client" },

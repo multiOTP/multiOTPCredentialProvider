@@ -239,7 +239,7 @@ HRESULT CSampleCredential::Initialize(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
     // Initialize the String value of all the fields.
     if (SUCCEEDED(hr))
     {
-        hr = SHStrDupW(L"MultiOTP Credential", &_rgFieldStrings[SFI_LABEL]);
+        hr = SHStrDupW(L"multiOTP Credential", &_rgFieldStrings[SFI_LABEL]);
     }
 	if (SUCCEEDED(hr))
 	{
@@ -247,7 +247,7 @@ HRESULT CSampleCredential::Initialize(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
 	}
 	if (SUCCEEDED(hr))
     {
-        hr = SHStrDupW(L"MultiOTP Login", &_rgFieldStrings[SFI_LARGE_TEXT]);
+        hr = SHStrDupW(L"multiOTP Login", &_rgFieldStrings[SFI_LARGE_TEXT]);
     }
 	if (SUCCEEDED(hr))
 	{
@@ -267,7 +267,7 @@ HRESULT CSampleCredential::Initialize(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
 	}
 	if (SUCCEEDED(hr))
 	{
-		hr = SHStrDupW(L"Synchronize MultiOTP", &_rgFieldStrings[SFI_SYNCHRONIZE_LINK]);
+		hr = SHStrDupW(L"Synchronize multiOTP", &_rgFieldStrings[SFI_SYNCHRONIZE_LINK]);
 	}
 	if (SUCCEEDED(hr))
 	{
@@ -788,7 +788,7 @@ HRESULT CSampleCredential::CommandLinkClicked(DWORD dwFieldID)
 				_pCredProvCredentialEvents->SetFieldState(this, SFI_PREV_PIN, CPFS_HIDDEN);
 				_pCredProvCredentialEvents->SetFieldState(this, SFI_PIN, CPFS_DISPLAY_IN_SELECTED_TILE);
 				_pCredProvCredentialEvents->SetFieldState(this, SFI_SYNCHRONIZE_LINK, CPFS_DISPLAY_IN_SELECTED_TILE);
-				_pCredProvCredentialEvents->SetFieldString(this, SFI_SYNCHRONIZE_LINK, L"Synchronize MultiOTP");
+				_pCredProvCredentialEvents->SetFieldString(this, SFI_SYNCHRONIZE_LINK, L"Synchronize multiOTP");
 				_pCredProvCredentialEvents->SetFieldState(this, SFI_NEXT_LOGIN_ATTEMPT, CPFS_HIDDEN);
 				_pCredProvCredentialEvents->SetFieldState(this, SFI_FAILURE_TEXT, CPFS_HIDDEN);
 				if (_pCredProvCredentialEventsV2) {
@@ -808,8 +808,8 @@ HRESULT CSampleCredential::CommandLinkClicked(DWORD dwFieldID)
 				}
 				cpfsShow = _fShowControls ? CPFS_HIDDEN : CPFS_DISPLAY_IN_SELECTED_TILE;
 				_pCredProvCredentialEvents->SetFieldState(this, SFI_PREV_PIN, cpfsShow);
-				_pCredProvCredentialEvents->SetFieldString(this, SFI_SYNCHRONIZE_LINK, _fShowControls ? L"Synchronize MultiOTP" : L"MultiOTP Login");
-				_pCredProvCredentialEvents->SetFieldString(this, SFI_LARGE_TEXT, _fShowControls ? L"MultiOTP Login" : L"Synchronize MultiOTP");
+				_pCredProvCredentialEvents->SetFieldString(this, SFI_SYNCHRONIZE_LINK, _fShowControls ? L"Synchronize multiOTP" : L"multiOTP Login");
+				_pCredProvCredentialEvents->SetFieldString(this, SFI_LARGE_TEXT, _fShowControls ? L"multiOTP Login" : L"Synchronize multiOTP");
 				_fShowControls = !_fShowControls;
 				cpfsShow = _fShowControls ? CPFS_HIDDEN : CPFS_DISPLAY_IN_SELECTED_TILE;
 				_pCredProvCredentialEvents->SetFieldState(this, SFI_PASSWORD, cpfsShow);
@@ -901,13 +901,13 @@ HRESULT CSampleCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIAL
 			}
 
 			if ((hr == 0) && (wcslen(_rgFieldStrings[SFI_PREV_PIN]) == 0)) {
-				if (DEVELOPING) PrintLn("MultiOTP Success!");//pin ok
+				if (DEVELOPING) PrintLn("multiOTP Success!");//pin ok
 			}
 			else {
-				SHStrDupW(L"Incorrect MultiOTP PIN", &_rgFieldStrings[SFI_FAILURE_TEXT]);
-				for (DWORD i = 0; i < ARRAYSIZE(s_rgMultiOTPResponse); i++) {
-					if (s_rgMultiOTPResponse[i].ErrorNum - hr == 0) {
-						SHStrDupW(s_rgMultiOTPResponse[i].MessageText, &_rgFieldStrings[SFI_FAILURE_TEXT]);
+				SHStrDupW(L"Incorrect multiOTP PIN", &_rgFieldStrings[SFI_FAILURE_TEXT]);
+				for (DWORD i = 0; i < ARRAYSIZE(s_rgmultiOTPResponse); i++) {
+					if (s_rgmultiOTPResponse[i].ErrorNum - hr == 0) {
+						SHStrDupW(s_rgmultiOTPResponse[i].MessageText, &_rgFieldStrings[SFI_FAILURE_TEXT]);
 						break;
 					}
 				}
@@ -930,7 +930,7 @@ HRESULT CSampleCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIAL
 					_pCredProvCredentialEvents->SetFieldState(this, SFI_PIN, CPFS_HIDDEN);
 					_pCredProvCredentialEvents->SetFieldState(this, SFI_SYNCHRONIZE_LINK, CPFS_HIDDEN);
 					_pCredProvCredentialEvents->SetFieldState(this, SFI_NEXT_LOGIN_ATTEMPT, CPFS_DISPLAY_IN_SELECTED_TILE);
-					//hr = SHStrDupW(L"Incorrect MultiOTP PIN", &_rgFieldStrings[SFI_FAILURE_TEXT]);
+					//hr = SHStrDupW(L"Incorrect multiOTP PIN", &_rgFieldStrings[SFI_FAILURE_TEXT]);
 					//if (SUCCEEDED(hr))
 					//{
 						_pCredProvCredentialEvents->SetFieldString(this, SFI_FAILURE_TEXT, _rgFieldStrings[SFI_FAILURE_TEXT]);
@@ -954,7 +954,7 @@ HRESULT CSampleCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIAL
 		
 	}
 	else {
-		if (DEVELOPING) PrintLn("Missing MultiOTP PIN or PASSWORD");
+		if (DEVELOPING) PrintLn("Missing multiOTP PIN or PASSWORD");
 		if (_pCredProvCredentialEvents) {
 			if (_pCredProvCredentialEventsV2) {
 				_pCredProvCredentialEventsV2->BeginFieldUpdates();
@@ -966,7 +966,7 @@ HRESULT CSampleCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIAL
 			_pCredProvCredentialEvents->SetFieldState(this, SFI_PIN, CPFS_HIDDEN);
 			_pCredProvCredentialEvents->SetFieldState(this, SFI_SYNCHRONIZE_LINK, CPFS_HIDDEN);
 			_pCredProvCredentialEvents->SetFieldState(this, SFI_NEXT_LOGIN_ATTEMPT, CPFS_DISPLAY_IN_SELECTED_TILE);
-			hr = SHStrDupW(L"Missing MultiOTP PIN or PASSWORD", &_rgFieldStrings[SFI_FAILURE_TEXT]);
+			hr = SHStrDupW(L"Missing multiOTP PIN or PASSWORD", &_rgFieldStrings[SFI_FAILURE_TEXT]);
 			if (SUCCEEDED(hr))
 			{
 				_pCredProvCredentialEvents->SetFieldString(this, SFI_FAILURE_TEXT, _rgFieldStrings[SFI_FAILURE_TEXT]);
@@ -977,7 +977,7 @@ HRESULT CSampleCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIAL
 			}
 		}
 
-		*ppwszOptionalStatusText = L"Missing MultiOTP PIN or PASSWORD";
+		*ppwszOptionalStatusText = L"Missing multiOTP PIN or PASSWORD";
 		if (_pCredProvCredentialEventsV2) {
 			*pcpgsr = CPGSR_RETURN_NO_CREDENTIAL_FINISHED;
 		}

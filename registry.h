@@ -5,9 +5,9 @@
 #include <stdio.h>
 
 #define MOTP_SETTINGS L"CLSID\\"
-#define MOTP_PATH    L"MultiOTPPath"
-#define MOTP_TIMEOUT L"MultiOTPTimeout"
-#define MOTP_RDPONLY L"MultiOTPRDPOnly"
+#define MOTP_PATH    L"multiOTPPath"
+#define MOTP_TIMEOUT L"multiOTPTimeout"
+#define MOTP_RDPONLY L"multiOTPRDPOnly"
 #define RDP_SETTINGS L"SYSTEM\\CurrentControlSet\\Control\\Terminal Server\\WinStations\\RDP-Tcp"
 #define RDP_PORT     L"PortNumber"
 
