@@ -5,6 +5,7 @@ multiOTP Credential Provider for multiOTP supporting Windows 7/8/8.1/10/2012(R2)
 - client executable of multiOTP is automatically installed and configured
 - multiOTP Credential Provider is only activated if the authentication test is passed successfully
 - DLL and EXE files are digitally signed
+- the first strong two factor authenticaton solution that have cache support in order to work also offline!
 
 ![multiOTPCredentialProvider setup](https://raw.githubusercontent.com/multiOTP/multiOTPCredentialProvider/master/screenshots/multiOTPCredentialProvider-setup.png)
 
