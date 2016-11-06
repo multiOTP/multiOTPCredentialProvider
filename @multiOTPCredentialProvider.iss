@@ -1,7 +1,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "multiOTP Credential Provider"
-#define MyAppVersion "4.3.4.2"
+#define MyAppVersion "5.0.2.6"
 #define MyAppPublisher "SysCo systemes de communication sa"
 #define MyAppURL "http://www.multiotp.com/"
 #define MyAppCopyright "Copyright (c) 2010-2016 SysCo / ArcadeJust / LastSquirrelIT (Apache License)"
