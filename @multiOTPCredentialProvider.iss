@@ -1,10 +1,10 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "multiOTP Credential Provider"
-#define MyAppVersion "5.0.2.6"
+#define MyAppVersion "5.0.4.6"
 #define MyAppPublisher "SysCo systemes de communication sa"
 #define MyAppURL "http://www.multiotp.com/"
-#define MyAppCopyright "Copyright (c) 2010-2016 SysCo / ArcadeJust / LastSquirrelIT (Apache License)"
+#define MyAppCopyright "Copyright (c) 2010-2017 SysCo / ArcadeJust / LastSquirrelIT (Apache License)"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
@@ -26,7 +26,7 @@ DefaultGroupName={#MyAppName}
 UninstallDisplayIcon={app}\multiotp.exe
 DisableProgramGroupPage=yes
 OutputDir=D:\Data\projects\multiotp\multiOTPCredentialProvider\installer
-OutputBaseFilename=multiOTPCredentialProvider
+OutputBaseFilename=multiOTPCredentialProvider-5.0.4.6
 SetupIconFile=D:\Data\projects\multiotp\ico\multiOTP.ico
 Compression=lzma
 SolidCompression=yes
@@ -71,7 +71,7 @@ Root: "HKCR"; Subkey: "CLSID\{{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}"; ValueType
 ProgramOnTheWeb=%1 on the Web
 UninstallProgram=Uninstall %1
 multiOTPserversLabel=URL of your multiOTP server(s), separated by semi-colons
-multiOTPServersSample=Example: https://192.168.1.88 ; https://192.168.1.89:44443
+multiOTPServersSample=Example: https://192.168.1.88 ; http://ip.address.of.server:8112
 multiOTPconfiguration=multiOTP configuration
 multiOTPconfigurationDescription=Type the needed multiOTP server information, then click Next.
 multiOTPServerTimeoutLabel=Timeout (in seconds) before switching to the next server
