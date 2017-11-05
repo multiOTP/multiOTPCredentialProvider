@@ -2,9 +2,9 @@ multiOTPCredentialProvider
 ==========================
 multiOTP Credential Provider for multiOTP is a free implementation of a Credential Provider for the multiOTP strong two-factor authentication solution  
 
-(c) 2016-2017 SysCo systemes de communication sa (installer and enhancements)
-(c) 2015-2016 ArcadeJust ("RDP only" enhancement)
-(c) 2013-2015 Last Squirrel IT
+(c) 2016-2017 SysCo systemes de communication sa (installer and enhancements) 
+(c) 2015-2016 ArcadeJust ("RDP only" enhancement) 
+(c) 2013-2015 Last Squirrel IT 
 
 Current build: 5.0.5.9 (2017-11-05)
 
