@@ -1,7 +1,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "multiOTP Credential Provider"
-#define MyAppVersion "5.0.5.8"
+#define MyAppVersion "5.0.5.9"
 #define MyAppPublisher "SysCo systemes de communication sa"
 #define MyAppURL "http://www.multiotp.com/"
 #define MyAppCopyright "Copyright (c) 2010-2017 SysCo / ArcadeJust / LastSquirrelIT (Apache License)"
@@ -26,7 +26,7 @@ DefaultGroupName={#MyAppName}
 UninstallDisplayIcon={app}\multiotp.exe
 DisableProgramGroupPage=yes
 OutputDir=D:\Data\projects\multiotp\multiOTPCredentialProvider\installer
-OutputBaseFilename=multiOTPCredentialProvider-5.0.5.8
+OutputBaseFilename=multiOTPCredentialProvider-5.0.5.9
 SetupIconFile=D:\Data\projects\multiotp\ico\multiOTP.ico
 Compression=lzma
 SolidCompression=yes
@@ -110,6 +110,78 @@ var
   multiOTPCacheEnabledCheckBox: TCheckBox;
   multiOTPRDPOnlyCheckBox: TCheckBox;
   multiOTPTimeoutEdit: TEdit;
+
+#ifdef UNICODE
+  #define AW "W"
+#else
+  #define AW "A"
+#endif
+const  
+  LOGON32_LOGON_INTERACTIVE = 2;
+  LOGON32_LOGON_NETWORK = 3;
+  LOGON32_LOGON_BATCH = 4;
+  LOGON32_LOGON_SERVICE = 5;
+  LOGON32_LOGON_UNLOCK = 7;
+  LOGON32_LOGON_NETWORK_CLEARTEXT = 8;
+  LOGON32_LOGON_NEW_CREDENTIALS = 9;
+
+  LOGON32_PROVIDER_DEFAULT = 0;
+  LOGON32_PROVIDER_WINNT40 = 2;
+  LOGON32_PROVIDER_WINNT50 = 3;
+
+  ERROR_SUCCESS = 0;
+  ERROR_LOGON_FAILURE = 1326;
+
+function LogonUser(lpszUsername, lpszDomain, lpszPassword: string;
+  dwLogonType, dwLogonProvider: DWORD; var phToken: THandle): BOOL;
+  external 'LogonUser{#AW}@advapi32.dll stdcall';
+
+function TranslateName(lpAccountName: String; AccountNameFormat, DesiredNameFormat: Cardinal; lpTranslatedName: string; var nSize: DWORD): BOOL;
+  external 'TranslateName{#AW}@Secur32.dll stdcall';
+
+function TryLogonUser(const Domain, UserName, Password: string; var ErrorCode: Longint): Boolean;
+var
+  Token: THandle;
+begin
+  Result := LogonUser(UserName, Domain, Password, LOGON32_LOGON_INTERACTIVE, LOGON32_PROVIDER_DEFAULT, Token);
+  if (Result) then begin
+    ErrorCode := ERROR_SUCCESS;
+  end else begin
+    ErrorCode := DLLGetLastError;
+  end;
+end;
+
+procedure ParseDomainUserName(const Value: string; var Domain, UserName: string);
+var
+  DelimPos: Integer;
+  TranslateResult: Boolean;
+  buffer : string;
+  nSize : DWORD;
+begin
+  buffer := Value;
+  DelimPos := Pos('@', Value);
+  if DelimPos <> 0 then
+  begin
+    nSize := 256;
+    buffer := StringOfChar(#0, nSize);
+    SetLength(buffer, nSize);
+    if (TranslateName(Value, 8, 2, buffer, nSize)) then begin
+      SetLength(buffer, nSize);
+    end
+  end;
+
+  DelimPos := Pos('\', buffer);
+  if DelimPos = 0 then
+  begin
+    Domain := '.';
+    UserName := buffer;
+  end
+  else
+  begin
+    Domain := Copy(buffer, 1, DelimPos - 1);
+    UserName := Copy(buffer, DelimPos + 1, MaxInt);
+  end;
+end;
 
 procedure AfterInstallProcedure;
 var
@@ -357,6 +429,9 @@ end;
 procedure TestButtonClick(Sender: TObject);
 var
   ResultCode: Integer;
+  Domain: string;
+  UserName: string;
+  ErrorCode: Longint;
 
 begin
   testButtonResult.Caption := 'please wait...';
@@ -365,13 +440,19 @@ begin
   testDone := true;
   testSuccess := false;
 
-  if ('' = testUsernameEdit.Text) Or ('' = testOtpdEdit.Text) Then Begin
-      testButtonResult.Caption := 'Username or password is missing';
-  end else if Not Exec(ExpandConstant('{app}\multiotp.exe'), testUsernameEdit.Text+' '+testOtpdEdit.Text, ExpandConstant('{app}'), SW_HIDE, ewWaitUntilTerminated, ResultCode) then begin
-    MsgBox('System error during multiOTP test ('+IntToStr(ResultCode)+')', mbCriticalError, MB_OK);
-    ResultCode := 99;
+  if ('' = testUsernameEdit.Text) Or ('' = testOtpdEdit.Text) Or ('' = testPasswordEdit.Text) Then Begin
+      testButtonResult.Caption := 'Username, password or OTP is missing';
   end else begin
-    if (0 = ResultCode) then begin
+    ParseDomainUserName(testUsernameEdit.Text, Domain, UserName);
+    TryLogonUser(Domain, UserName, testPasswordEdit.Text, ErrorCode);
+    if (ERROR_LOGON_FAILURE = ErrorCode) then begin
+      testButtonResult.Caption := 'The windows user name or password is incorrect';
+    end else if (ERROR_SUCCESS <> ErrorCode) then begin
+      testButtonResult.Caption := 'Windows login failed: ' + SysErrorMessage(DLLGetLastError);
+    end else if Not Exec(ExpandConstant('{app}\multiotp.exe'), testUsernameEdit.Text+' '+testOtpdEdit.Text, ExpandConstant('{app}'), SW_HIDE, ewWaitUntilTerminated, ResultCode) then begin
+      MsgBox('System error during multiOTP test ('+IntToStr(ResultCode)+')', mbCriticalError, MB_OK);
+      ResultCode := 99;
+    end else if (0 = ResultCode) then begin
       testSuccess := true;
       testButtonResult.Caption := 'username and OTP validated by the multiOTP server';
     end else if (21 = ResultCode) then begin
@@ -450,7 +531,7 @@ begin
     Left := pageLeft + testUsernameLabel.Width;
     Top := pageTop - ScaleY(2);
     Width := ScaleX(200); // testPage.SurfaceWidth - testUsernameLabel.Width;
-    Text := '';
+    Text := AddBackslash(GetEnv('USERDOMAIN')) + GetUserNameString;
   end;
   pageTop := pageTop + testUsernameLabel.Height + ScaleY(8);
 
@@ -589,6 +670,8 @@ end;
 procedure InitializeWizard;
 var
   stringValue: String;
+  UserName: string;
+
 begin
   // Default values
   multiOTPServers := 'https://192.168.1.88';
