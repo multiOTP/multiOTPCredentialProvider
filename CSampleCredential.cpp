@@ -21,6 +21,7 @@
 
 #include "registry.h"
 
+#include "Security.h"
 
 
 CSampleCredential::CSampleCredential():
@@ -68,32 +69,25 @@ HRESULT CSampleCredential::call_multiotp(_In_ PCWSTR username, _In_ PCWSTR PREV_
 	//cmd = (PWSTR)CoTaskMemAlloc(sizeof(wchar_t) * (len + 1));//+1 null pointer
 
 	if (DEVELOP_MODE) {
-		wcscpy_s(cmd, 1024, L"multiotp.exe -debug ");
+		wcscpy_s(cmd, 1024, L"-debug ");
 		//cmd = L"multiotp.exe -debug ";
 	}
 	else {
-		wcscpy_s(cmd, 1024, L"multiotp.exe ");
-		//cmd = L"multiotp.exe ";
+		wcscpy_s(cmd, 1024, L"");
 	}
 
 	if (wcslen(PREV_OTP) > 0) {
 		wcscpy_s(cmd, 1024, L"-resync ");
 	}
 
-	//cmd = StrDup(cmd);
 	wcscat_s(cmd, 1024, username);
 	wcscat_s(cmd, 1024, L" ");
-	//cmd = StrCat(cmd, username);
-	//cmd = StrCat(cmd, L" ");
 
 	if (wcslen(PREV_OTP) > 0) {
 		wcscat_s(cmd, 1024, PREV_OTP);
 		wcscat_s(cmd, 1024, L" ");
-		//cmd = StrCat(cmd, PREV_OTP);
-		//cmd = StrCat(cmd, L" ");
 	}
 	wcscat_s(cmd, 1024, OTP);
-	//cmd = StrCat(cmd, OTP);
 
 	len = wcslen(cmd);
 	if (DEVELOP_MODE) PrintLn("command len:%d", len);
@@ -113,6 +107,11 @@ HRESULT CSampleCredential::call_multiotp(_In_ PCWSTR username, _In_ PCWSTR PREV_
 		wchar_t appname[1024];
 
 		wcscpy_s(appname, 1024, path);
+		size_t npath = wcslen(appname);
+		if (appname[npath - 1] != '\\' && appname[npath - 1] != '/') {
+			appname[npath] = '\\';
+			appname[npath+1] = '\0';
+		}
 		wcscat_s(appname, 1024, L"multiotp.exe");
 
 		if (DEVELOP_MODE) PrintLn(L"Calling ", appname);
@@ -867,8 +866,23 @@ HRESULT CSampleCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIAL
 	const wchar_t *pchWhack = wcschr(_pszQualifiedUserName, L'\\');
   
   // 2017-11-05 SysCo/al Add UPN support
+  // https://msdn.microsoft.com/en-us/library/ms725484(VS.85).aspx
+  // https://msdn.microsoft.com/en-us/library/ms724268(v=vs.85).aspx
 	const wchar_t *pchWatSign = wcschr(_pszQualifiedUserName, L'@');
 
+   if (pchWatSign != nullptr) {
+      ULONG size=1024;
+      wchar_t buffer[1024];
+      bool rc;
+      rc = TranslateNameW(_pszQualifiedUserName, NameUserPrincipal, NameSamCompatible, buffer, &size); // NameDnsDomain should also work instead of NameSamCompatible
+      if (rc) {
+          if (DEVELOP_MODE) PrintLn(L"Translated from ", _pszQualifiedUserName, L" to ", buffer);
+          CoTaskMemFree(_pszQualifiedUserName);
+          hr = SHStrDupW(buffer, &_pszQualifiedUserName);
+          pchWhack = wcschr(buffer, L'\\');
+      }
+  }
+  
 	if (pchWhack != nullptr) {
 		const wchar_t *pchUsernameBegin = pchWhack + 1;
 		hr = wcscpy_s(uname, 1024, pchUsernameBegin);

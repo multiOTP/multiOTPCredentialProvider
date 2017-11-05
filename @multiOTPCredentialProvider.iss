@@ -1,7 +1,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "multiOTP Credential Provider"
-#define MyAppVersion "5.0.5.7"
+#define MyAppVersion "5.0.5.8"
 #define MyAppPublisher "SysCo systemes de communication sa"
 #define MyAppURL "http://www.multiotp.com/"
 #define MyAppCopyright "Copyright (c) 2010-2017 SysCo / ArcadeJust / LastSquirrelIT (Apache License)"
@@ -26,7 +26,7 @@ DefaultGroupName={#MyAppName}
 UninstallDisplayIcon={app}\multiotp.exe
 DisableProgramGroupPage=yes
 OutputDir=D:\Data\projects\multiotp\multiOTPCredentialProvider\installer
-OutputBaseFilename=multiOTPCredentialProvider-5.0.5.7
+OutputBaseFilename=multiOTPCredentialProvider-5.0.5.8
 SetupIconFile=D:\Data\projects\multiotp\ico\multiOTP.ico
 Compression=lzma
 SolidCompression=yes

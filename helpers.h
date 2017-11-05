@@ -50,7 +50,7 @@
 	ZERO(NAME) 
 
 #define DEVELOP_MODE FALSE 			  //display a lot of debug info
-#define SKIP_OTP_CHECK FALSE  		//do not bother with wrong OTP code
+#define SKIP_OTP_CHECK FALSE   		//do not bother with wrong OTP code
 
 
 void PrintLn(const wchar_t *message, const wchar_t *message2, const wchar_t *message3, const wchar_t *message4);
