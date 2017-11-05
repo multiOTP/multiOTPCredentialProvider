@@ -34,7 +34,8 @@
 #include <wincred.h>
 #pragma warning(pop)
 
-#define LOGFILE_NAME "C:\\multiotplog.txt"
+#define LOGFILE_NAME "C:\\multiotp-cr-log.txt"
+
 #define MAX_TIME_SIZE 250
 
 #define ZERO(NAME) \
@@ -48,8 +49,8 @@
 	char NAME[SIZE]; \
 	ZERO(NAME) 
 
-#define DEVELOPING FALSE					//display a lot of debug info
-#define SKIP_OTP_CHECK FALSE			//do not bother with wrong OTP PIN
+#define DEVELOP_MODE FALSE 			  //display a lot of debug info
+#define SKIP_OTP_CHECK FALSE  		//do not bother with wrong OTP code
 
 
 void PrintLn(const wchar_t *message, const wchar_t *message2, const wchar_t *message3, const wchar_t *message4);
@@ -126,6 +127,12 @@ HRESULT DomainUsernameStringAlloc(
     _In_ PCWSTR pwszDomain,
     _In_ PCWSTR pwszUsername,
     _Outptr_result_nullonfailure_ PWSTR *ppwszDomainUsername
+    );
+
+HRESULT UpnUsernameDomainStringAlloc(
+    _In_ PCWSTR pwszUsername,
+    _In_ PCWSTR pwszDomain,
+    _Outptr_result_nullonfailure_ PWSTR *ppwszUsernameDomain
     );
 
 HRESULT SplitDomainAndUsername(_In_ PCWSTR pszQualifiedUserName, _Outptr_result_nullonfailure_ PWSTR *ppszDomain, _Outptr_result_nullonfailure_ PWSTR *ppszUsername);

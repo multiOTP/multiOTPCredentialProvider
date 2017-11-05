@@ -24,7 +24,7 @@ DWORD readRegistryValueString(_In_ CONF_VALUE conf_value, _Outptr_result_nullonf
 
 		CoTaskMemFree(clsid);//not needed
 
-		if (DEVELOPING) PrintLn(L"Reading REGISTRY Key: ", confKeyNameCLSID, L"\\", confValueName);
+		if (DEVELOP_MODE) PrintLn(L"Reading REGISTRY Key: ", confKeyNameCLSID, L"\\", confValueName);
 
 		DWORD keyType = 0;
 		DWORD dataSize = 0;
@@ -50,7 +50,7 @@ DWORD readRegistryValueString(_In_ CONF_VALUE conf_value, _Outptr_result_nullonf
 				&dataSize);
 			if (result == ERROR_SUCCESS) {
 				dwSize = dataSize / sizeof(WCHAR);
-				if (DEVELOPING) PrintLn("Len %d", dataSize);
+				if (DEVELOP_MODE) PrintLn("Len %d", dataSize);
 				return dwSize;
 			}
 			else {
@@ -61,7 +61,7 @@ DWORD readRegistryValueString(_In_ CONF_VALUE conf_value, _Outptr_result_nullonf
 		}
 		else {
 			/* https://msdn.microsoft.com/en-us/library/windows/desktop/ms681381(v=vs.85).aspx */
-			if (DEVELOPING) PrintLn("ReadRegistryValue: System Error Code ( %d )", result);
+			if (DEVELOP_MODE) PrintLn("ReadRegistryValue: System Error Code ( %d )", result);
 		}
 	}
 
@@ -93,7 +93,7 @@ DWORD readRegistryValueInteger(_In_ CONF_VALUE conf_value, _In_ DWORD defaultVal
 
 		CoTaskMemFree(clsid);//not needed
 
-		if (DEVELOPING) PrintLn(L"Reading REGISTRY Key:", confKeyNameCLSID, L"\\", confValueName);
+		if (DEVELOP_MODE) PrintLn(L"Reading REGISTRY Key:", confKeyNameCLSID, L"\\", confValueName);
 
 		dataSize = sizeof(DWORD);
 
@@ -110,18 +110,18 @@ DWORD readRegistryValueInteger(_In_ CONF_VALUE conf_value, _In_ DWORD defaultVal
 			return DWdata;
 		}
 		else if (result == ERROR_MORE_DATA) {
-			if (DEVELOPING) PrintLn("Result = %d", DWdata);
-			if (DEVELOPING) PrintLn("More data ( %d )", dataSize);
+			if (DEVELOP_MODE) PrintLn("Result = %d", DWdata);
+			if (DEVELOP_MODE) PrintLn("More data ( %d )", dataSize);
 			return 1;
 		}
 		else {
-			if (DEVELOPING) PrintLn("ReadRegistryValue: System Error Code ( %d )", result);
-			if (DEVELOPING) PrintLn("default value: %d", defaultValue);
+			if (DEVELOP_MODE) PrintLn("ReadRegistryValue: System Error Code ( %d )", result);
+			if (DEVELOP_MODE) PrintLn("default value: %d", defaultValue);
 			return defaultValue;
 		}
 	}
 	else {
-		if (DEVELOPING) PrintLn("default value: %d", defaultValue);
+		if (DEVELOP_MODE) PrintLn("default value: %d", defaultValue);
 		return defaultValue;
 	}
 	/*returnStatus = RegOpenKeyExA(rootKeyValue, confKeyName, NULL, KEY_QUERY_VALUE, &hKey);

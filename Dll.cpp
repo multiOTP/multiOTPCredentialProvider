@@ -59,17 +59,17 @@ public:
         {
             //hr = CSample_CreateInstance(riid, ppv);
 			if (IID_ICredentialProvider == riid) {
-				if (DEVELOPING) PrintLn("invoke IID_ICredentialProvider");
+				if (DEVELOP_MODE) PrintLn("invoke IID_ICredentialProvider");
 				hr = CSample_CreateInstance(riid, ppv);
 			}
 			else if (IID_ICredentialProviderFilter == riid) {
-				if (DEVELOPING) PrintLn("invoke IID_ICredentialProviderFilter");
+				if (DEVELOP_MODE) PrintLn("invoke IID_ICredentialProviderFilter");
 				hr = CLMSFilter_CreateInstance(riid, ppv);
 			}
 			else {
 				*ppv = NULL;
 				hr = CLASS_E_NOAGGREGATION;
-				if (DEVELOPING) PrintLn("invoke unknown object");
+				if (DEVELOP_MODE) PrintLn("invoke unknown object");
 			}
 
         }
@@ -129,19 +129,19 @@ HRESULT CClassFactory_CreateInstance(__in REFCLSID rclsid, __in REFIID riid, __d
 
 void DllAddRef()
 {
-	if (DEVELOPING) PrintLn("DllAddRef");
+	if (DEVELOP_MODE) PrintLn("DllAddRef");
     InterlockedIncrement(&g_cRef);
 }
 
 void DllRelease()
 {
-	if (DEVELOPING) PrintLn("DllRelease");
+	if (DEVELOP_MODE) PrintLn("DllRelease");
     InterlockedDecrement(&g_cRef);
 }
 
 STDAPI DllCanUnloadNow()
 {
-	if (DEVELOPING) PrintLn("DllCanUnloadNow?");
+	if (DEVELOP_MODE) PrintLn("DllCanUnloadNow?");
     return (g_cRef > 0) ? S_FALSE : S_OK;
 }
 

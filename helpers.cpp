@@ -107,6 +107,28 @@ void WriteLogFile(const wchar_t* szString)
 	}
 }
 
+/*
+	PWSTR path;
+	wchar_t logfile[1024];
+  
+	if (readRegistryValueString(CONF_PATH, &path, L"c:\\multiotp\\")) {
+		wcscpy_s(logfile, 1024, path);
+    wcscat_s(logfile, 1024, LOGFILE_NAME);
+  }
+  else
+  {
+		wcscpy_s(logfile, 1024, LOGFILE_PATH);
+    wcscat_s(logfile, 1024, LOGFILE_NAME);
+  }
+  
+	FILE* pFile;
+	if (_wfopen_s(&pFile, logfile, L"a") == 0)
+	{
+		fwprintf(pFile, L"%s", szString);
+		fclose(pFile);
+	}
+*/
+
 void GetCurrentTimeAndDate(char(&time)[MAX_TIME_SIZE])
 {
 	SYSTEMTIME st;
@@ -753,6 +775,40 @@ HRESULT DomainUsernameStringAlloc(
     return hr;
 }
 
+// Concatonates UPN (with @) pwszUsername and pwszDomain and places the result in *ppwszUsernameDomain.
+HRESULT UpnUsernameDomainStringAlloc(
+    _In_ PCWSTR pwszUsername,
+    _In_ PCWSTR pwszDomain,
+    _Outptr_result_nullonfailure_ PWSTR *ppwszUsernameDomain
+    )
+{
+    HRESULT hr;
+    *ppwszUsernameDomain = nullptr;
+    size_t cchUsername = wcslen(pwszUsername);
+    size_t cchDomain = wcslen(pwszDomain);
+    // Length of Username, 1 character for '@', length of domain, plus null terminator.
+    size_t cbLen = sizeof(wchar_t) * (cchUsername + 1 + cchDomain +1);
+    PWSTR pwszDest = (PWSTR)HeapAlloc(GetProcessHeap(), 0, cbLen);
+    if (pwszDest)
+    {
+        hr = StringCbPrintfW(pwszDest, cbLen, L"%s@%s", pwszUsername, pwszDomain);
+        if (SUCCEEDED(hr))
+        {
+            *ppwszUsernameDomain = pwszDest;
+        }
+        else
+        {
+            HeapFree(GetProcessHeap(), 0, pwszDest);
+        }
+    }
+    else
+    {
+        hr = E_OUTOFMEMORY;
+    }
+
+    return hr;
+}
+
 HRESULT SplitDomainAndUsername(_In_ PCWSTR pszQualifiedUserName, _Outptr_result_nullonfailure_ PWSTR *ppszDomain, _Outptr_result_nullonfailure_ PWSTR *ppszUsername)
 {
     HRESULT hr = E_UNEXPECTED;
@@ -761,6 +817,10 @@ HRESULT SplitDomainAndUsername(_In_ PCWSTR pszQualifiedUserName, _Outptr_result_
     PWSTR pszDomain;
     PWSTR pszUsername;
     const wchar_t *pchWhack = wcschr(pszQualifiedUserName, L'\\');
+    
+    // 2017-11-05 SysCo/al Add UPN support
+    const wchar_t *pchWhatSign = wcschr(pszQualifiedUserName, L'@');
+
     const wchar_t *pchEnd = pszQualifiedUserName + wcslen(pszQualifiedUserName) - 1;
 
     if (pchWhack != nullptr)
@@ -769,6 +829,52 @@ HRESULT SplitDomainAndUsername(_In_ PCWSTR pszQualifiedUserName, _Outptr_result_
         const wchar_t *pchDomainEnd = pchWhack - 1;
         const wchar_t *pchUsernameBegin = pchWhack + 1;
         const wchar_t *pchUsernameEnd = pchEnd;
+
+        size_t lenDomain = pchDomainEnd - pchDomainBegin + 1; // number of actual chars, NOT INCLUDING null terminated string
+        pszDomain = static_cast<PWSTR>(CoTaskMemAlloc(sizeof(wchar_t) * (lenDomain + 1)));
+        if (pszDomain != nullptr)
+        {
+            hr = StringCchCopyN(pszDomain, lenDomain + 1, pchDomainBegin, lenDomain);
+            if (SUCCEEDED(hr))
+            {
+                size_t lenUsername = pchUsernameEnd - pchUsernameBegin + 1; // number of actual chars, NOT INCLUDING null terminated string
+                pszUsername = static_cast<PWSTR>(CoTaskMemAlloc(sizeof(wchar_t) * (lenUsername + 1)));
+                if (pszUsername != nullptr)
+                {
+                    hr = StringCchCopyN(pszUsername, lenUsername + 1, pchUsernameBegin, lenUsername);
+                    if (SUCCEEDED(hr))
+                    {
+                        *ppszDomain = pszDomain;
+                        *ppszUsername = pszUsername;
+                    }
+                    else
+                    {
+                        CoTaskMemFree(pszUsername);
+                    }
+                }
+                else
+                {
+                    hr = E_OUTOFMEMORY;
+                }
+            }
+
+            if (FAILED(hr))
+            {
+                CoTaskMemFree(pszDomain);
+            }
+        }
+        else
+        {
+            hr = E_OUTOFMEMORY;
+        }
+    }
+    // 2017-11-05 SysCo/al Add UPN support
+    else if (pchWhatSign != nullptr)
+    {
+        const wchar_t *pchUsernameBegin = pszQualifiedUserName;
+        const wchar_t *pchUsernameEnd = pchWhatSign - 1;
+        const wchar_t *pchDomainBegin = pchWhatSign + 1;
+        const wchar_t *pchDomainEnd = pchEnd;
 
         size_t lenDomain = pchDomainEnd - pchDomainBegin + 1; // number of actual chars, NOT INCLUDING null terminated string
         pszDomain = static_cast<PWSTR>(CoTaskMemAlloc(sizeof(wchar_t) * (lenDomain + 1)));

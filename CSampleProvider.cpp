@@ -23,7 +23,7 @@ CSampleProvider::CSampleProvider():
     _pCredProviderUserArray(nullptr)
 {
     DllAddRef();
-	if (DEVELOPING) PrintLn("CSampleProvider created=======================");
+	if (DEVELOP_MODE) PrintLn("CSampleProvider created=======================");
 }
 
 CSampleProvider::~CSampleProvider()
@@ -39,7 +39,7 @@ CSampleProvider::~CSampleProvider()
         _pCredProviderUserArray->Release();
         _pCredProviderUserArray = nullptr;
     }
-	if (DEVELOPING) PrintLn("=====================CSampleProvider destroyed");
+	if (DEVELOP_MODE) PrintLn("=====================CSampleProvider destroyed");
     DllRelease();
 }
 
@@ -52,7 +52,7 @@ HRESULT CSampleProvider::SetUsageScenario(
     HRESULT hr;
 
 	//logfile << "Scenario:";
-	if (DEVELOPING) PrintLn("Provider Scenario: %d", cpus);
+	if (DEVELOP_MODE) PrintLn("Provider Scenario: %d", cpus);
 	//logfile << cpus;
 	//PrintLn(L"Scenario:");
 	//logfile << "\n";
@@ -106,7 +106,7 @@ HRESULT CSampleProvider::SetUsageScenario(
 HRESULT CSampleProvider::SetSerialization(
     _In_ CREDENTIAL_PROVIDER_CREDENTIAL_SERIALIZATION const * /*pcpcs*/)
 {
-	if (DEVELOPING) PrintLn("Provider::SetSerialization");//that's the place to filter incoming SID from credentials supplied by NLA
+	if (DEVELOP_MODE) PrintLn("Provider::SetSerialization");//that's the place to filter incoming SID from credentials supplied by NLA
 	HRESULT hr = E_INVALIDARG;/*
 	if ((CLSID_CSample == pcpcs->clsidCredentialProvider) || (CPUS_CREDUI == _cpus))
 	{
@@ -205,14 +205,14 @@ HRESULT CSampleProvider::Advise(
     _In_ ICredentialProviderEvents * /*pcpe*/,
     _In_ UINT_PTR /*upAdviseContext*/)
 {
-	if (DEVELOPING) PrintLn("Provider::Advise");
+	if (DEVELOP_MODE) PrintLn("Provider::Advise");
     return E_NOTIMPL;
 }
 
 // Called by LogonUI when the ICredentialProviderEvents callback is no longer valid.
 HRESULT CSampleProvider::UnAdvise()
 {
-	if (DEVELOPING) PrintLn("Provider::UnAdvise");
+	if (DEVELOP_MODE) PrintLn("Provider::UnAdvise");
     return E_NOTIMPL;
 }
 
@@ -262,7 +262,7 @@ HRESULT CSampleProvider::GetCredentialCount(
     _Out_ DWORD *pdwDefault,
     _Out_ BOOL *pbAutoLogonWithDefault)
 {
-	if (DEVELOPING) PrintLn(L"GetCredentialCount");
+	if (DEVELOP_MODE) PrintLn(L"GetCredentialCount");
 
 	*pdwDefault = CREDENTIAL_PROVIDER_NO_DEFAULT;
     *pbAutoLogonWithDefault = FALSE;
@@ -279,24 +279,24 @@ HRESULT CSampleProvider::GetCredentialCount(
 	if (_pCredProviderUserArray != nullptr) {
 		hr = _pCredProviderUserArray->GetCount(&dwUserCount);
 		if (hr == 0) {
-			if (DEVELOPING) PrintLn(L"UserArrayCount:(%d)", dwUserCount);
+			if (DEVELOP_MODE) PrintLn(L"UserArrayCount:(%d)", dwUserCount);
 		}
 		else {
-			if (DEVELOPING) PrintLn(L"UserArray.GetCount Error");
+			if (DEVELOP_MODE) PrintLn(L"UserArray.GetCount Error");
 			dwUserCount = 1;
 		}
 	}
 	else {
-		if (DEVELOPING) PrintLn(L"Unassigned UserArray");
+		if (DEVELOP_MODE) PrintLn(L"Unassigned UserArray");
 		dwUserCount = 1;
 	}
 
 	if ((dwUserCount == 0) || (IsOS(OS_DOMAINMEMBER) == 1)) {
 		dwUserCount += 1;//display additional empty tile
-		if (DEVELOPING) PrintLn(L"Count +1 (empty tile)");
+		if (DEVELOP_MODE) PrintLn(L"Count +1 (empty tile)");
 	}
 
-	if (DEVELOPING) PrintLn(L"User count:(%d)", dwUserCount);
+	if (DEVELOP_MODE) PrintLn(L"User count:(%d)", dwUserCount);
 
 	if (GetSystemMetrics(SM_REMOTESESSION)) {
 		//PrintLn("RDP connection");
@@ -319,21 +319,21 @@ HRESULT CSampleProvider::GetCredentialCount(
 		}
 	}
 	else {
-		if (DEVELOPING) PrintLn("Local connection");
+		if (DEVELOP_MODE) PrintLn("Local connection");
 		//logfile << "Local connection\n";
 
 		if (readRegistryValueInteger(CONF_RDP_ONLY, 0)) {
-			if (DEVELOPING) PrintLn("Only RDP is PIN protected!!!");
+			if (DEVELOP_MODE) PrintLn("Only RDP is OTP protected!!!");
 			*pdwCount = 0;//no filtering no OTP tile
 		}
 		else {
-			if (DEVELOPING) PrintLn("RDP and Local PIN protection");
+			if (DEVELOP_MODE) PrintLn("RDP and Local OTP protection");
 			*pdwCount = dwUserCount;//show OTP tile
 		}
 
-		if (DEVELOPING) {
+		if (DEVELOP_MODE) {
 			PrintLn("OTP tile always visible");
-			*pdwCount = dwUserCount;//development - don't force but allow PIN in all scenarios
+			*pdwCount = dwUserCount;//development - don't force but allow OTP in all scenarios
 		}
 	}
 
@@ -346,15 +346,15 @@ HRESULT CSampleProvider::GetCredentialAt(
     DWORD dwIndex,
     _Outptr_result_nullonfailure_ ICredentialProviderCredential **ppcpc)
 {
-	if (DEVELOPING) PrintLn("GetCredentialAt: %d", (int)dwIndex);
+	if (DEVELOP_MODE) PrintLn("GetCredentialAt: %d", (int)dwIndex);
 	HRESULT hr = E_INVALIDARG;
     *ppcpc = nullptr;
 
-	if (DEVELOPING) PrintLn("Credential.size(%d)", _pCredential.size());
+	if (DEVELOP_MODE) PrintLn("Credential.size(%d)", _pCredential.size());
 
     if ((dwIndex < _pCredential.size()) && ppcpc)
     {
-		if (DEVELOPING) PrintLn("QueryInterface");
+		if (DEVELOP_MODE) PrintLn("QueryInterface");
 		hr = _pCredential[dwIndex]->QueryInterface(IID_PPV_ARGS(ppcpc));
     }
     return hr;
@@ -365,7 +365,7 @@ HRESULT CSampleProvider::GetCredentialAt(
 HRESULT CSampleProvider::SetUserArray(_In_ ICredentialProviderUserArray *users)
 {
 	//logfile << "SetUserArray\n";
-	if (DEVELOPING) PrintLn("SetUserArray");
+	if (DEVELOP_MODE) PrintLn("SetUserArray");
     if (_pCredProviderUserArray != nullptr)
     {
         _pCredProviderUserArray->Release();
@@ -377,7 +377,7 @@ HRESULT CSampleProvider::SetUserArray(_In_ ICredentialProviderUserArray *users)
 
 void CSampleProvider::_CreateEnumeratedCredentials()
 {
-	if (DEVELOPING) PrintLn("_CreateEnumeratedCredentials: %d", _cpus);
+	if (DEVELOP_MODE) PrintLn("_CreateEnumeratedCredentials: %d", _cpus);
 	//logfile << "_CreateEnumeratedCredentials: ";
 	//logfile << _cpus;
 	//logfile << "\n";
@@ -396,7 +396,7 @@ void CSampleProvider::_CreateEnumeratedCredentials()
 
 void CSampleProvider::_ReleaseEnumeratedCredentials()
 {
-	if (DEVELOPING) PrintLn("_ReleaseEnumeratedCredentials");
+	if (DEVELOP_MODE) PrintLn("_ReleaseEnumeratedCredentials");
 	for (int i = 0; i < _pCredential.size(); i++) {
 		if (_pCredential[i] != nullptr)
 		{
@@ -409,7 +409,7 @@ void CSampleProvider::_ReleaseEnumeratedCredentials()
 
 HRESULT CSampleProvider::_EnumerateCredentials()
 {
-	if (DEVELOPING) PrintLn("_EnumerateCredential");
+	if (DEVELOP_MODE) PrintLn("_EnumerateCredential");
 	HRESULT hr = E_UNEXPECTED;
 	DWORD dwUserCount = 0;
 
@@ -420,7 +420,7 @@ HRESULT CSampleProvider::_EnumerateCredentials()
         _pCredProviderUserArray->GetCount(&dwUserCount);
         if (dwUserCount > 0)
         {
-			if (DEVELOPING) PrintLn(L"ProviderUserArrayGetCount: %d", dwUserCount);
+			if (DEVELOP_MODE) PrintLn(L"ProviderUserArrayGetCount: %d", dwUserCount);
 			//_pCredential = new CSampleCredential*[dwUserCount];
 			for (DWORD i = 0; i < dwUserCount; i++) {
 				ICredentialProviderUser *pCredUser;
@@ -432,13 +432,13 @@ HRESULT CSampleProvider::_EnumerateCredentials()
 					if (_pCredential[i] != nullptr)
 					{
 						//logfile << "new CSampleCredential()\n";
-						if (DEVELOPING) PrintLn("new Credential()");
+						if (DEVELOP_MODE) PrintLn("new Credential()");
 						hr = _pCredential[i]->Initialize(_cpus, s_rgCredProvFieldDescriptors, s_rgFieldStatePairs, pCredUser);
 						if (FAILED(hr))
 						{
 							_pCredential[i]->Release();
 							_pCredential[i] = nullptr;
-							if (DEVELOPING) PrintLn(L"User tile initialization failed");
+							if (DEVELOP_MODE) PrintLn(L"User tile initialization failed");
 						}
 						else {
 							//PrintLn("initialized()");
@@ -446,7 +446,7 @@ HRESULT CSampleProvider::_EnumerateCredentials()
 							//fwprintf(logfile, L"%s", _pCredential[i]->_pszUserSid);
 							//logfile << _pCredential[i]->_pszUserSid[15];
 							//PrintLn(_pCredential[i]->_pszUserSid);
-							if (DEVELOPING) PrintLn(L"UserSID: ", _pCredential[i]->_pszUserSid);
+							if (DEVELOP_MODE) PrintLn(L"UserSID: ", _pCredential[i]->_pszUserSid);
 							//logfile << " - User Added\n";
 						}
 					}
@@ -477,15 +477,15 @@ HRESULT CSampleProvider::_EnumerateCredentials()
 		}*/
 	}
 	//if you are in a domain or have no users on the list you have to show "Other user tile"
-	if (DEVELOPING) PrintLn(L"IsOS(OS_DOMAINMEMBER): %d", IsOS(OS_DOMAINMEMBER));
+	if (DEVELOP_MODE) PrintLn(L"IsOS(OS_DOMAINMEMBER): %d", IsOS(OS_DOMAINMEMBER));
 	if ((dwUserCount == 0) || (IsOS(OS_DOMAINMEMBER) == 1)) {
-		if (DEVELOPING) PrintLn(L"Adding empty user tile");
+		if (DEVELOP_MODE) PrintLn(L"Adding empty user tile");
 		_pCredential.push_back(new(std::nothrow) CSampleCredential());
 		if (_pCredential[_pCredential.size() - 1] != nullptr) {
 			hr = _pCredential[_pCredential.size() - 1]->Initialize(_cpus, s_rgCredProvFieldDescriptors, s_rgFieldStatePairs, nullptr);
 		}
 		else {
-			if (DEVELOPING) PrintLn(L"Error adding user: %d", _pCredential.size());
+			if (DEVELOP_MODE) PrintLn(L"Error adding user: %d", _pCredential.size());
 		}
 	}
     return hr;
@@ -494,7 +494,7 @@ HRESULT CSampleProvider::_EnumerateCredentials()
 // Boilerplate code to create our provider.
 HRESULT CSample_CreateInstance(_In_ REFIID riid, _Outptr_ void **ppv)
 {
-	if (DEVELOPING) PrintLn("Provider_CreateInstance");
+	if (DEVELOP_MODE) PrintLn("Provider_CreateInstance");
     HRESULT hr;
     CSampleProvider *pProvider = new(std::nothrow) CSampleProvider();
     if (pProvider)
@@ -512,7 +512,7 @@ HRESULT CSample_CreateInstance(_In_ REFIID riid, _Outptr_ void **ppv)
 // Boilerplate code to create our provider. ADDED BY TBW FOR FILTER
 HRESULT CLMSFilter_CreateInstance(__in REFIID riid, __deref_out void** ppv)
 {
-	if (DEVELOPING) PrintLn("Filter_CreateInstance");
+	if (DEVELOP_MODE) PrintLn("Filter_CreateInstance");
 	HRESULT hr;
 	CLMSFilter* pProvider = new CLMSFilter();
 	//CSampleProvider* pProvider = new CSampleProvider();
@@ -547,16 +547,16 @@ HRESULT CLMSFilter::Filter(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus, DWORD dwFlag
 	PrintLn("================END=======================");*/
 
 	//return S_OK;
-	if (DEVELOPING) PrintLn("=============Applying Filter==============");
+	if (DEVELOP_MODE) PrintLn("=============Applying Filter==============");
 	isRDP = GetSystemMetrics(SM_REMOTESESSION);
 	if (!isRDP) {
 		if (readRegistryValueInteger(CONF_RDP_ONLY, onlyRDP)) {
-			if (DEVELOPING) PrintLn("Only RDP is PIN protected!!!");
+			if (DEVELOP_MODE) PrintLn("Only RDP is OTP protected!!!");
 			//isRDP = FALSE;
 			return S_OK;
 		}
 		else {
-			if (DEVELOPING) PrintLn("RDP and Local PIN protection");
+			if (DEVELOP_MODE) PrintLn("RDP and Local OTP protection");
 			isRDP = TRUE;
 		}
 	}
@@ -564,7 +564,7 @@ HRESULT CLMSFilter::Filter(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus, DWORD dwFlag
 	{
 	case CPUS_LOGON:
 	case CPUS_UNLOCK_WORKSTATION:
-		if (DEVELOPING) PrintLn("<Filter>");
+		if (DEVELOP_MODE) PrintLn("<Filter>");
 		for (DWORD i = 0; i < cProviders; i++)
 		{
 			if (i < dwFlags) {}
@@ -574,7 +574,7 @@ HRESULT CLMSFilter::Filter(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus, DWORD dwFlag
 			} else {
 				rgbAllow[i] = !isRDP;// FALSE;
 			}
-			if (DEVELOPING) {
+			if (DEVELOP_MODE) {
 				StringFromCLSID(rgclsidProviders[i], &clsid);
 				if (rgbAllow[i] == FALSE) {
 					PrintLn(L"\t-", clsid);
@@ -585,7 +585,7 @@ HRESULT CLMSFilter::Filter(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus, DWORD dwFlag
 				CoTaskMemFree(clsid);
 			}
 		}
-		if (DEVELOPING) PrintLn("</Filter>");
+		if (DEVELOP_MODE) PrintLn("</Filter>");
 		return S_OK;
 	case CPUS_CREDUI: //issue #1
 	case CPUS_CHANGE_PASSWORD:
@@ -599,18 +599,18 @@ HRESULT CLMSFilter::Filter(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus, DWORD dwFlag
 CLMSFilter::CLMSFilter() :
 	_cRef(1)
 {
-	if (DEVELOPING) PrintLn(L"CLMSFilter.Create");
+	if (DEVELOP_MODE) PrintLn(L"CLMSFilter.Create");
 	DllAddRef();
 }
 
 CLMSFilter::~CLMSFilter()
 {
-	if (DEVELOPING) PrintLn(L"CLMSFilter.Destroy");
+	if (DEVELOP_MODE) PrintLn(L"CLMSFilter.Destroy");
 	DllRelease();
 }
 
 HRESULT CLMSFilter::UpdateRemoteCredential(const CREDENTIAL_PROVIDER_CREDENTIAL_SERIALIZATION *pcpsIn, CREDENTIAL_PROVIDER_CREDENTIAL_SERIALIZATION *pcpcsOut)
 {
-	if (DEVELOPING) PrintLn("UpdateRemoteCredential");
+	if (DEVELOP_MODE) PrintLn("UpdateRemoteCredential");
 	return E_NOTIMPL;
 }

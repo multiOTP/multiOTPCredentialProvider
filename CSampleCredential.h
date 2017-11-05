@@ -94,6 +94,7 @@ public:
     IFACEMETHODIMP GetUserSid(_Outptr_result_nullonfailure_ PWSTR *ppszSid);
 
     // ICredentialProviderCredentialWithFieldOptions
+    // https://msdn.microsoft.com/en-us/library/windows/desktop/hh706885(v=vs.85).aspx
     IFACEMETHODIMP GetFieldOptions(DWORD dwFieldID,
                                    _Out_ CREDENTIAL_PROVIDER_CREDENTIAL_FIELD_OPTIONS *pcpcfo);
 
@@ -107,8 +108,8 @@ public:
 	PWSTR                                   _pszUserSid;
 private:
 	HRESULT call_multiotp(_In_ PCWSTR username,
-		  _In_ PCWSTR PREV_PIN,
-		  _In_ PCWSTR PIN);
+		  _In_ PCWSTR PREV_OTP,
+		  _In_ PCWSTR OTP);
 
     virtual ~CSampleCredential();
     long                                    _cRef;
