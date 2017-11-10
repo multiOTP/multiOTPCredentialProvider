@@ -166,4 +166,3 @@ STDAPI_(BOOL) DllMain(__in HINSTANCE hinstDll, __in DWORD dwReason, __in void *)
     g_hinst = hinstDll;
     return TRUE;
 }
-

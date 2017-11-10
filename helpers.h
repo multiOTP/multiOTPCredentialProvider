@@ -34,6 +34,9 @@
 #include <wincred.h>
 #pragma warning(pop)
 
+#define DEVELOP_MODE FALSE 			  // display a lot of debug info
+#define SKIP_OTP_CHECK FALSE   		// do not bother with wrong OTP code (dev-only !!!)
+
 #define LOGFILE_NAME "C:\\multiotp-cr-log.txt"
 
 #define MAX_TIME_SIZE 250
@@ -49,10 +52,7 @@
 	char NAME[SIZE]; \
 	ZERO(NAME) 
 
-#define DEVELOP_MODE FALSE 			  //display a lot of debug info
-#define SKIP_OTP_CHECK FALSE   		//do not bother with wrong OTP code
-
-
+  
 void PrintLn(const wchar_t *message, const wchar_t *message2, const wchar_t *message3, const wchar_t *message4);
 void PrintLn(const wchar_t *message, const wchar_t *message2, const wchar_t *message3);
 void PrintLn(const wchar_t *message, const wchar_t *message2);

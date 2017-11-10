@@ -1,12 +1,12 @@
 multiOTPCredentialProvider
 ==========================
-multiOTP Credential Provider for multiOTP is a free implementation of a Credential Provider for the multiOTP strong two-factor authentication solution  
+multiOTP Credential Provider for multiOTP is a free implementation of a V2 Credential Provider for the multiOTP strong two-factor authentication solution  
 
 (c) 2016-2017 SysCo systemes de communication sa (installer and enhancements)  
 (c) 2015-2016 ArcadeJust ("RDP only" enhancement)  
 (c) 2013-2015 Last Squirrel IT  
 
-Current build: 5.0.5.9 (2017-11-05)
+Current build: 5.0.6.0 (2017-11-10)
 
 Apache License, Version 2.0
 
@@ -44,6 +44,7 @@ Report if you have any problems or questions regarding this app.
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
+2017-11-10 5.0.6.0 SysCo/al Specific Credential Provider mode in the CLI version
 2017-11-05 5.0.5.9 SysCo/al Full support for login@domain.name UPN notation (AD/LDAP should be synchronized using the userPrincipalName instead of sAMAccountName identifier)
 2017-11-04 5.0.5.6 SysCo/al Removed digit OTP only check for the OTP field
                             Friendly name of the second factor field renamed from PIN to OTP

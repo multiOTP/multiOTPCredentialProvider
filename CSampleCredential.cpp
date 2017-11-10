@@ -21,6 +21,7 @@
 
 #include "registry.h"
 
+// To use the TranslateNameW function
 #include "Security.h"
 
 
@@ -69,11 +70,11 @@ HRESULT CSampleCredential::call_multiotp(_In_ PCWSTR username, _In_ PCWSTR PREV_
 	//cmd = (PWSTR)CoTaskMemAlloc(sizeof(wchar_t) * (len + 1));//+1 null pointer
 
 	if (DEVELOP_MODE) {
-		wcscpy_s(cmd, 1024, L"-debug ");
+		wcscpy_s(cmd, 1024, L"-cp -debug ");
 		//cmd = L"multiotp.exe -debug ";
 	}
 	else {
-		wcscpy_s(cmd, 1024, L"");
+		wcscpy_s(cmd, 1024, L"-cp ");
 	}
 
 	if (wcslen(PREV_OTP) > 0) {
@@ -99,7 +100,7 @@ HRESULT CSampleCredential::call_multiotp(_In_ PCWSTR username, _In_ PCWSTR PREV_
 
 	si.cb = sizeof(si);
 
-	if (readRegistryValueString(CONF_PATH, &path, L"c:\\multiotp\\windows\\")) {
+	if (readRegistryValueString(CONF_PATH, &path, L"c:\\multiotp\\")) {
 		DWORD timeout = 60;
 
 		timeout = readRegistryValueInteger(CONF_TIMEOUT, timeout);
@@ -153,7 +154,7 @@ HRESULT CSampleCredential::call_multiotp(_In_ PCWSTR username, _In_ PCWSTR PREV_
 			if (result == WAIT_OBJECT_0) {
 				GetExitCodeProcess(pi.hProcess, &exitCode);
 
-				PrintLn("multiOTP.exe Exit Code: %d", exitCode);
+				PrintLn("multiotp.exe Exit Code: %d", exitCode);
 				//DebugPrintLn(exitCode);
 
 				hr = exitCode;
@@ -918,7 +919,7 @@ HRESULT CSampleCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIAL
 		if (SUCCEEDED(hr)) {
 			if (DEVELOP_MODE) PrintLn(L"OTP User:", uname);
 			//SHStrDupW(_rgFieldStrings[SFI_PREV_OTP], &otp1);
-			if (SKIP_OTP_CHECK) {
+			if (DEVELOP_MODE && SKIP_OTP_CHECK) {
 				PrintLn(L"Dll compiled with SKIP_OTP_CHECK !!!!!!!!", hr);
 				hr = 0;
 			}
