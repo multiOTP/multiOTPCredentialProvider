@@ -23,6 +23,42 @@
 
 // To use the TranslateNameW function
 #include "Security.h"
+// DsGetDcNameW
+#include "DsGetDC.h"
+
+
+void ErrorInfo(LPTSTR lpszFunction)
+{
+	// Retrieve the system error message for the last-error code
+
+	LPVOID lpMsgBuf;
+	LPVOID lpDisplayBuf;
+	DWORD dw = GetLastError();
+
+	FormatMessage(
+		FORMAT_MESSAGE_ALLOCATE_BUFFER |
+		FORMAT_MESSAGE_FROM_SYSTEM |
+		FORMAT_MESSAGE_IGNORE_INSERTS,
+		NULL,
+		dw,
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		(LPTSTR)&lpMsgBuf,
+		0, NULL);
+
+	// Display the error message and exit the process
+
+	lpDisplayBuf = (LPVOID)LocalAlloc(LMEM_ZEROINIT,
+		(lstrlen((LPCTSTR)lpMsgBuf) + lstrlen((LPCTSTR)lpszFunction) + 40) * sizeof(TCHAR));
+	StringCchPrintf((LPTSTR)lpDisplayBuf,
+		LocalSize(lpDisplayBuf) / sizeof(TCHAR),
+		TEXT("%s failed with error %d: %s"),
+		lpszFunction, dw, lpMsgBuf);
+	MessageBox(NULL, (LPCTSTR)lpDisplayBuf, TEXT("Error"), MB_OK);
+
+	LocalFree(lpMsgBuf);
+	LocalFree(lpDisplayBuf);
+	// ExitProcess(dw);
+}
 
 
 CSampleCredential::CSampleCredential():
@@ -45,7 +81,7 @@ CSampleCredential::CSampleCredential():
     ZeroMemory(_rgFieldStrings, sizeof(_rgFieldStrings));
 }
 
-HRESULT CSampleCredential::call_multiotp(_In_ PCWSTR username, _In_ PCWSTR PREV_OTP, _In_ PCWSTR OTP)
+HRESULT CSampleCredential::call_multiotp(_In_ PCWSTR username, _In_ PCWSTR PREV_OTP, _In_ PCWSTR OTP, _In_ PCWSTR PREFIX_PASS)
 {
 	if (DEVELOP_MODE) PrintLn("call_multiotp");
 	HRESULT hr = E_NOTIMPL;
@@ -69,20 +105,20 @@ HRESULT CSampleCredential::call_multiotp(_In_ PCWSTR username, _In_ PCWSTR PREV_
 
 	//cmd = (PWSTR)CoTaskMemAlloc(sizeof(wchar_t) * (len + 1));//+1 null pointer
 
+  wcscpy_s(cmd, 1024, L"-cp ");
+
 	if (DEVELOP_MODE) {
-		wcscpy_s(cmd, 1024, L"-cp -debug ");
-		//cmd = L"multiotp.exe -debug ";
-	}
-	else {
-		wcscpy_s(cmd, 1024, L"-cp ");
+  	wcscat_s(cmd, 1024, L"-debug ");
 	}
 
 	if (wcslen(PREV_OTP) > 0) {
-		wcscpy_s(cmd, 1024, L"-resync ");
+  	wcscat_s(cmd, 1024, L"-resync ");
 	}
 
 	wcscat_s(cmd, 1024, username);
 	wcscat_s(cmd, 1024, L" ");
+
+	wcscat_s(cmd, 1024, PREFIX_PASS);
 
 	if (wcslen(PREV_OTP) > 0) {
 		wcscat_s(cmd, 1024, PREV_OTP);
@@ -92,7 +128,7 @@ HRESULT CSampleCredential::call_multiotp(_In_ PCWSTR username, _In_ PCWSTR PREV_
 
 	len = wcslen(cmd);
 	if (DEVELOP_MODE) PrintLn("command len:%d", len);
-	PrintLn(cmd);
+	if (DEVELOP_MODE) PrintLn(cmd);
 	//return hr;
 
 	SecureZeroMemory(&si, sizeof(si));
@@ -154,7 +190,7 @@ HRESULT CSampleCredential::call_multiotp(_In_ PCWSTR username, _In_ PCWSTR PREV_
 			if (result == WAIT_OBJECT_0) {
 				GetExitCodeProcess(pi.hProcess, &exitCode);
 
-				PrintLn("multiotp.exe Exit Code: %d", exitCode);
+				if (DEVELOP_MODE) PrintLn("multiotp.exe Exit Code: %d", exitCode);
 				//DebugPrintLn(exitCode);
 
 				hr = exitCode;
@@ -210,6 +246,20 @@ HRESULT CSampleCredential::Initialize(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
     GUID guidProvider;
 	LPOLESTR clsid;
 
+	PWSTR pszDomain;
+	PWSTR pszHostname;
+	wchar_t szdomainInfo[1024];
+
+	if (readRegistryValueString(CONF_DOMAIN_NAME, &pszDomain, L"") > 0) {
+		StringCchPrintf(szdomainInfo, ARRAYSIZE(szdomainInfo), L"Domain: %s", pszDomain);
+	}
+	else if (readRegistryValueString(CONF_HOST_NAME, &pszHostname, L"") > 0) {
+		StringCchPrintf(szdomainInfo, ARRAYSIZE(szdomainInfo), L"Computer: %s", pszHostname);
+	}
+	else {
+		StringCchPrintf(szdomainInfo, ARRAYSIZE(szdomainInfo), L" ");
+	}
+
 	if (pcpUser != nullptr) {
 		if (DEVELOP_MODE) PrintLn("pcpUser provided");
 		pcpUser->GetProviderID(&guidProvider);
@@ -255,11 +305,23 @@ HRESULT CSampleCredential::Initialize(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
 	}
 	if (SUCCEEDED(hr))
 	{
+		hr = SHStrDupW(L"", &_rgFieldStrings[SFI_NEWPASSWORD]);
+	}
+	if (SUCCEEDED(hr))
+	{
 		hr = SHStrDupW(L"", &_rgFieldStrings[SFI_PREV_OTP]);
 	}
 	if (SUCCEEDED(hr))
 	{
 		hr = SHStrDupW(L"", &_rgFieldStrings[SFI_OTP]);
+	}
+	if (SUCCEEDED(hr))
+	{
+		hr = SHStrDupW(L"Receive an OTP by SMS", &_rgFieldStrings[SFI_REQUIRE_SMS]);
+	}
+	if (SUCCEEDED(hr))
+	{
+		hr = SHStrDupW(szdomainInfo, &_rgFieldStrings[SFI_DOMAIN_INFO]);
 	}
 	if (SUCCEEDED(hr))
 	{
@@ -271,11 +333,11 @@ HRESULT CSampleCredential::Initialize(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
 	}
 	if (SUCCEEDED(hr))
 	{
-		hr = SHStrDupW(L"Back", &_rgFieldStrings[SFI_NEXT_LOGIN_ATTEMPT]);
+		hr = SHStrDupW(L"Enter OTP", &_rgFieldStrings[SFI_FAILURE_TEXT]);
 	}
 	if (SUCCEEDED(hr))
 	{
-		hr = SHStrDupW(L"Enter OTP", &_rgFieldStrings[SFI_FAILURE_TEXT]);
+		hr = SHStrDupW(L"Back", &_rgFieldStrings[SFI_NEXT_LOGIN_ATTEMPT]);
 	}
 
 	hr = S_OK;
@@ -394,19 +456,28 @@ HRESULT CSampleCredential::Advise(_In_ ICredentialProviderCredentialEvents *pcpc
 		if (DEVELOP_MODE) PrintLn("Releasing old _pCredProvCredentialEventsV2");
 		_pCredProvCredentialEventsV2->Release();
 	}
+
 	//V2 has beginupdate so I try to use it by default
 	hr = pcpce->QueryInterface(IID_PPV_ARGS(&_pCredProvCredentialEventsV2));
 	if (!_pCredProvCredentialEventsV2) {
 		if (DEVELOP_MODE) PrintLn("_pCredProvCredentialEventsV2 Events not available");
 		hr = pcpce->QueryInterface(IID_PPV_ARGS(&_pCredProvCredentialEventsV1));
+		if (!_pCredProvCredentialEventsV1) {
+			_pCredProvCredentialEventsV1->AddRef();
+		}
 	}
-
+	else {
+		_pCredProvCredentialEventsV2->AddRef();
+	}
 
 	if (_pCredProvCredentialEventsV2) {
 		_pCredProvCredentialEvents = _pCredProvCredentialEventsV2;
 	}
 	else if (_pCredProvCredentialEventsV1) {
 		_pCredProvCredentialEvents = _pCredProvCredentialEventsV1;
+	}
+
+	if (_pCredProvCredentialEvents) {
 	}
 
 	return hr;
@@ -626,10 +697,60 @@ HRESULT CSampleCredential::SetStringValue(DWORD dwFieldID, _In_ PCWSTR pwz)
 		}
 
 		*/
-		
-        PWSTR *ppwszStored = &_rgFieldStrings[dwFieldID];
-        CoTaskMemFree(*ppwszStored);
-        hr = SHStrDupW(pwz, ppwszStored);
+
+
+      if (_pCredProvCredentialEvents) {
+
+        HRESULT hr_sfi = S_OK;
+
+        PWSTR pszDomain;
+        PWSTR pszUsername;
+        PWSTR pszHostname;
+        PWSTR pszQualifiedUserName;
+
+        wchar_t szString[1024];
+        wchar_t szdomainInfo[1024];
+
+        DWORD dwDomainSize = 0;
+        DWORD dwHostnameSize = 0;
+
+        hr_sfi = SHStrDupW(L"", &pszUsername);
+        hr_sfi = SHStrDupW(_rgFieldStrings[SFI_LOGIN_NAME], &pszQualifiedUserName);
+
+        const wchar_t *pchWhack = wcschr(pszQualifiedUserName, L'\\');
+        const wchar_t *pchWatSign = wcschr(pszQualifiedUserName, L'@');
+
+        if (pchWatSign != nullptr) {
+          StringCchPrintf(szdomainInfo, ARRAYSIZE(szdomainInfo), L" ");
+        } else if (pchWhack != nullptr) {
+          hr_sfi = SplitDomainAndUsername(pszQualifiedUserName, &pszDomain, &pszUsername);
+          if (SUCCEEDED(hr_sfi)) {
+            StringCchPrintf(szdomainInfo, ARRAYSIZE(szdomainInfo), L"Domain: %s", pszDomain);
+            if (wcscmp(pszDomain, L".") == 0) {
+              dwHostnameSize = readRegistryValueString(CONF_HOST_NAME, &pszHostname, L"");
+              StringCchPrintf(szdomainInfo, ARRAYSIZE(szdomainInfo), L"Computer: %s", pszHostname);
+            }
+          }
+        }
+        else {
+          if (readRegistryValueString(CONF_DOMAIN_NAME, &pszDomain, L"") > 0) {
+            StringCchPrintf(szdomainInfo, ARRAYSIZE(szdomainInfo), L"Domain: %s", pszDomain);
+          }
+          else if (readRegistryValueString(CONF_HOST_NAME, &pszHostname, L"") > 0) {
+            StringCchPrintf(szdomainInfo, ARRAYSIZE(szdomainInfo), L"Computer: %s", pszHostname);
+          }
+          else {
+            StringCchPrintf(szdomainInfo, ARRAYSIZE(szdomainInfo), L" ");
+          }
+        }
+
+        SHStrDupW(szdomainInfo, &_rgFieldStrings[SFI_DOMAIN_INFO]);
+        _pCredProvCredentialEvents->SetFieldString(this, SFI_DOMAIN_INFO, _rgFieldStrings[SFI_DOMAIN_INFO]);
+      }
+
+      PWSTR *ppwszStored = &_rgFieldStrings[dwFieldID];
+      CoTaskMemFree(*ppwszStored);
+      hr = SHStrDupW(pwz, ppwszStored);
     }
     else
     {
@@ -775,55 +896,92 @@ HRESULT CSampleCredential::CommandLinkClicked(DWORD dwFieldID)
         case SFI_NEXT_LOGIN_ATTEMPT:
             if (_pCredProvCredentialEvents)
             {
-				if (DEVELOP_MODE) PrintLn(L"Altering fields");
+              if (DEVELOP_MODE) PrintLn(L"Altering fields");
 //                _pCredProvCredentialEvents->OnCreatingWindow(&hwndOwner);
-				_fShowControls = FALSE;//validate OTP
-				if (_pCredProvCredentialEventsV2) {
-					_pCredProvCredentialEventsV2->BeginFieldUpdates();
-				}
-				_pCredProvCredentialEvents->SetFieldState(this, SFI_LARGE_TEXT, CPFS_DISPLAY_IN_SELECTED_TILE);
-				if (_fUserNameVisible) {
-					//show edit box
-					_pCredProvCredentialEvents->SetFieldState(this, SFI_LOGIN_NAME, CPFS_DISPLAY_IN_SELECTED_TILE);
-				}
-				else {
-					_pCredProvCredentialEvents->SetFieldState(this, SFI_LOGIN_NAME, CPFS_HIDDEN);
-				}
-				_pCredProvCredentialEvents->SetFieldState(this, SFI_PASSWORD, CPFS_DISPLAY_IN_SELECTED_TILE);
-				_pCredProvCredentialEvents->SetFieldState(this, SFI_PREV_OTP, CPFS_HIDDEN);
-				_pCredProvCredentialEvents->SetFieldState(this, SFI_OTP, CPFS_DISPLAY_IN_SELECTED_TILE);
-				_pCredProvCredentialEvents->SetFieldState(this, SFI_SYNCHRONIZE_LINK, CPFS_DISPLAY_IN_SELECTED_TILE);
-				_pCredProvCredentialEvents->SetFieldString(this, SFI_SYNCHRONIZE_LINK, L"Synchronize multiOTP");
-				_pCredProvCredentialEvents->SetFieldState(this, SFI_NEXT_LOGIN_ATTEMPT, CPFS_HIDDEN);
-				_pCredProvCredentialEvents->SetFieldState(this, SFI_FAILURE_TEXT, CPFS_HIDDEN);
-				if (_pCredProvCredentialEventsV2) {
-					_pCredProvCredentialEventsV2->EndFieldUpdates();
-				}
-			}
+              _fShowControls = FALSE;//validate OTP
+              if (_pCredProvCredentialEventsV2) {
+                _pCredProvCredentialEventsV2->BeginFieldUpdates();
+              }
+              _pCredProvCredentialEvents->SetFieldState(this, SFI_LARGE_TEXT, CPFS_DISPLAY_IN_SELECTED_TILE);
+              if (_fUserNameVisible) {
+                //show edit box
+                _pCredProvCredentialEvents->SetFieldState(this, SFI_LOGIN_NAME, CPFS_DISPLAY_IN_SELECTED_TILE);
+              }
+              else {
+                _pCredProvCredentialEvents->SetFieldState(this, SFI_LOGIN_NAME, CPFS_HIDDEN);
+              }
+              _pCredProvCredentialEvents->SetFieldState(this, SFI_PASSWORD, CPFS_DISPLAY_IN_SELECTED_TILE);
+              _pCredProvCredentialEvents->SetFieldState(this, SFI_PREV_OTP, CPFS_HIDDEN);
+              _pCredProvCredentialEvents->SetFieldState(this, SFI_OTP, CPFS_DISPLAY_IN_SELECTED_TILE);
+              _pCredProvCredentialEvents->SetFieldState(this, SFI_DOMAIN_INFO, CPFS_DISPLAY_IN_SELECTED_TILE);
+              _pCredProvCredentialEvents->SetFieldState(this, SFI_SYNCHRONIZE_LINK, CPFS_HIDDEN); // CPFS_DISPLAY_IN_SELECTED_TILE
+              _pCredProvCredentialEvents->SetFieldString(this, SFI_SYNCHRONIZE_LINK, L"Synchronize multiOTP");
+              _pCredProvCredentialEvents->SetFieldState(this, SFI_FAILURE_TEXT, CPFS_HIDDEN);
+              _pCredProvCredentialEvents->SetFieldState(this, SFI_NEXT_LOGIN_ATTEMPT, CPFS_HIDDEN);
+              if (_pCredProvCredentialEventsV2) {
+                _pCredProvCredentialEventsV2->EndFieldUpdates();
+              }
+            }
 
             // Pop a messagebox indicating the click.
             //::MessageBox(hwndOwner, L"Command link clicked", L"Click!", 0);
             break;
         case SFI_SYNCHRONIZE_LINK:
-			if (_pCredProvCredentialEvents)
-			{
-				if (DEVELOP_MODE) PrintLn(L"Altering fields");
-				if (_pCredProvCredentialEventsV2) {
-					_pCredProvCredentialEventsV2->BeginFieldUpdates();
-				}
-				cpfsShow = _fShowControls ? CPFS_HIDDEN : CPFS_DISPLAY_IN_SELECTED_TILE;
-				_pCredProvCredentialEvents->SetFieldState(this, SFI_PREV_OTP, cpfsShow);
-				_pCredProvCredentialEvents->SetFieldString(this, SFI_SYNCHRONIZE_LINK, _fShowControls ? L"Synchronize multiOTP" : L"multiOTP Login");
-				_pCredProvCredentialEvents->SetFieldString(this, SFI_LARGE_TEXT, _fShowControls ? L"multiOTP Login" : L"Synchronize multiOTP");
-				_fShowControls = !_fShowControls;
-				cpfsShow = _fShowControls ? CPFS_HIDDEN : CPFS_DISPLAY_IN_SELECTED_TILE;
-				_pCredProvCredentialEvents->SetFieldState(this, SFI_PASSWORD, cpfsShow);
-				if (_pCredProvCredentialEventsV2) {
-					_pCredProvCredentialEventsV2->EndFieldUpdates();
-				}
-				//_fShowControls == TRUE => synchronize OTP
-			}
-			break;
+          if (_pCredProvCredentialEvents)
+          {
+            if (DEVELOP_MODE) PrintLn(L"Altering fields");
+            if (_pCredProvCredentialEventsV2) {
+              _pCredProvCredentialEventsV2->BeginFieldUpdates();
+            }
+            cpfsShow = _fShowControls ? CPFS_HIDDEN : CPFS_DISPLAY_IN_SELECTED_TILE;
+            _pCredProvCredentialEvents->SetFieldState(this, SFI_PREV_OTP, cpfsShow);
+            _pCredProvCredentialEvents->SetFieldString(this, SFI_SYNCHRONIZE_LINK, _fShowControls ? L"Synchronize multiOTP" : L"multiOTP Login");
+            _pCredProvCredentialEvents->SetFieldString(this, SFI_LARGE_TEXT, _fShowControls ? L"multiOTP Login" : L"Synchronize multiOTP");
+            _fShowControls = !_fShowControls;
+            cpfsShow = _fShowControls ? CPFS_HIDDEN : CPFS_DISPLAY_IN_SELECTED_TILE;
+            _pCredProvCredentialEvents->SetFieldState(this, SFI_PASSWORD, cpfsShow);
+            if (_pCredProvCredentialEventsV2) {
+              _pCredProvCredentialEventsV2->EndFieldUpdates();
+            }
+            //_fShowControls == TRUE => synchronize OTP
+          }
+          break;
+
+        case SFI_REQUIRE_SMS:
+          if (_pCredProvCredentialEvents) {
+
+            HRESULT hr_sfi = S_OK;
+
+            PWSTR pszDomain;
+            PWSTR pszUsername;
+            PWSTR pszHostname;
+            PWSTR pszQualifiedUserName;
+
+            wchar_t szString[1024];
+            wchar_t szUsername[1024];
+
+            DWORD dwDomainSize = 0;
+            DWORD dwHostnameSize = 0;
+
+            hr_sfi = SHStrDupW(L"", &pszUsername);
+            hr_sfi = SHStrDupW(_rgFieldStrings[SFI_LOGIN_NAME], &pszQualifiedUserName);
+
+            const wchar_t *pchWhack = wcschr(pszQualifiedUserName, L'\\');
+            const wchar_t *pchWatSign = wcschr(pszQualifiedUserName, L'@');
+
+            if ((pchWatSign != nullptr) || (pchWhack != nullptr)) {
+              hr_sfi = SplitDomainAndUsername(pszQualifiedUserName, &pszDomain, &pszUsername);
+              if (SUCCEEDED(hr_sfi)) {
+                StringCchPrintf(szUsername, ARRAYSIZE(szUsername), pszUsername);
+              }
+            }
+            else {
+              StringCchPrintf(szUsername, ARRAYSIZE(szUsername), pszQualifiedUserName);
+            }
+            hr = call_multiotp(szUsername, L"", L"sms", L"");
+          }
+          break;
+
         default:
             hr = E_INVALIDARG;
         }
@@ -855,6 +1013,17 @@ HRESULT CSampleCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIAL
 	wchar_t fullname[1024];
 	wchar_t uname[1024];
 
+    PWSTR domain = L"";
+    DWORD domainSize = 0;
+
+	PWSTR strNetBiosDomainName = L"";
+
+	bool rc;
+
+	domainSize = readRegistryValueString(CONF_DOMAIN_NAME, &domain, L"");
+	if (DEVELOP_MODE) PrintLn(L"Detected domain: ", domain);
+	if (DEVELOP_MODE) PrintLn(L"Detected domain size: %d", domainSize);
+
 	if (_fUserNameVisible) {
 		//username is entered by the user
 		CoTaskMemFree(_pszQualifiedUserName);
@@ -871,18 +1040,34 @@ HRESULT CSampleCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIAL
   // https://msdn.microsoft.com/en-us/library/ms724268(v=vs.85).aspx
 	const wchar_t *pchWatSign = wcschr(_pszQualifiedUserName, L'@');
 
-   if (pchWatSign != nullptr) {
-      ULONG size=1024;
-      wchar_t buffer[1024];
-      bool rc;
-      rc = TranslateNameW(_pszQualifiedUserName, NameUserPrincipal, NameSamCompatible, buffer, &size); // NameDnsDomain should also work instead of NameSamCompatible
+
+	DOMAIN_CONTROLLER_INFO* pDCI;
+	if (DsGetDcNameW(NULL, domain, NULL, NULL, DS_IS_DNS_NAME | DS_RETURN_FLAT_NAME, &pDCI) == ERROR_SUCCESS) {
+		strNetBiosDomainName = pDCI->DomainName;
+		// NetApiBufferFree(pDCI);
+	}
+
+	if ((domainSize > 0) && (pchWatSign == nullptr) && (pchWhack == nullptr)) {
+		if (DEVELOP_MODE) PrintLn(L"Take the default domain ", domain, L" - ", strNetBiosDomainName);
+		wcscpy_s(fullname, 1024, strNetBiosDomainName);
+		wcscat_s(fullname, 1024, L"\\");
+		wcscat_s(fullname, 1024, _pszQualifiedUserName);
+		hr = SHStrDupW(fullname, &_pszQualifiedUserName);
+		pchWhack = wcschr(fullname, L'\\');
+		if (DEVELOP_MODE) PrintLn(L"The full user has been defined like this: ", fullname);
+	}
+
+    if (pchWatSign != nullptr) {
+		ULONG size = 1024;
+		wchar_t buffer[1024];
+		rc = TranslateNameW(_pszQualifiedUserName, NameUserPrincipal, NameSamCompatible, buffer, &size); // NameDnsDomain should also work instead of NameSamCompatible
       if (rc) {
-          if (DEVELOP_MODE) PrintLn(L"Translated from ", _pszQualifiedUserName, L" to ", buffer);
+          if (DEVELOP_MODE) PrintLn(L"User translated from ", _pszQualifiedUserName, L" to ", buffer);
           CoTaskMemFree(_pszQualifiedUserName);
           hr = SHStrDupW(buffer, &_pszQualifiedUserName);
           pchWhack = wcschr(buffer, L'\\');
       }
-  }
+    }
   
 	if (pchWhack != nullptr) {
 		const wchar_t *pchUsernameBegin = pchWhack + 1;
@@ -891,27 +1076,28 @@ HRESULT CSampleCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIAL
 		if (wcslen(_rgFieldStrings[SFI_LOGIN_NAME]) > 0) {
 			_fIsLocalUser = true;//false
 		}
-	}
-	else {
+	} else {
 		hr = wcscpy_s(uname, 1024, _pszQualifiedUserName);
 
-    // 2017-11-05 SysCo/al Add UPN support
-    if (pchWatSign == nullptr) {
-      //append localhost as a domain for windows logon
-      wcscpy_s(fullname, 1024, L".\\");
-      wcscat_s(fullname, 1024, _pszQualifiedUserName);
+        // 2017-11-05 SysCo/al Add UPN support
+        if (pchWatSign == nullptr) {
+          //append localhost as a domain for windows logon
+          wcscpy_s(fullname, 1024, L".\\");
+          wcscat_s(fullname, 1024, _pszQualifiedUserName);
 
-      CoTaskMemFree(_pszQualifiedUserName);
-      hr = SHStrDupW(fullname, &_pszQualifiedUserName);
-    }
+          CoTaskMemFree(_pszQualifiedUserName);
+          hr = SHStrDupW(fullname, &_pszQualifiedUserName);
+        }
 
-		if (DEVELOP_MODE) PrintLn(L"_pszQualifiedUserName with domain: ", _pszQualifiedUserName);
+        if (DEVELOP_MODE) PrintLn(L"_pszQualifiedUserName with domain: ", _pszQualifiedUserName);
 
-		//if the user entered: username
-		if (wcslen(_rgFieldStrings[SFI_LOGIN_NAME]) > 0) {
-			_fIsLocalUser = true;
-		}
+        //if the user entered: username
+        if (wcslen(_rgFieldStrings[SFI_LOGIN_NAME]) > 0) {
+            _fIsLocalUser = true;
+        }
 	}
+    
+	if (DEVELOP_MODE) PrintLn(L"_pszQualifiedUserName before the check is the following: ", _pszQualifiedUserName);
 
 	if ( ( ( _fShowControls) && (wcslen(_rgFieldStrings[SFI_PREV_OTP]) > 0) && (wcslen(_rgFieldStrings[SFI_OTP]) > 0) ) ||   //resync OTP
 		 ( (!_fShowControls) && (wcslen(_rgFieldStrings[SFI_PASSWORD]) > 0) && (wcslen(_rgFieldStrings[SFI_OTP]) > 0) )      //validate OTP
@@ -924,7 +1110,12 @@ HRESULT CSampleCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIAL
 				hr = 0;
 			}
 			else {
-				hr = call_multiotp(uname, _rgFieldStrings[SFI_PREV_OTP], _rgFieldStrings[SFI_OTP]);
+				if (readRegistryValueInteger(CONF_PREFIX_PASSWORD, 0)) {
+					hr = call_multiotp(uname, _rgFieldStrings[SFI_PREV_OTP], _rgFieldStrings[SFI_OTP], _rgFieldStrings[SFI_PASSWORD]);
+				}
+				else {
+					hr = call_multiotp(uname, _rgFieldStrings[SFI_PREV_OTP], _rgFieldStrings[SFI_OTP], L"");
+				}
 			}
 
 			if ((hr == 0) && (wcslen(_rgFieldStrings[SFI_PREV_OTP]) == 0)) {
@@ -939,7 +1130,7 @@ HRESULT CSampleCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIAL
 					}
 				}
 				//PrintLn("result_code: %d", hr);
-				PrintLn(_rgFieldStrings[SFI_FAILURE_TEXT]);
+				if (DEVELOP_MODE) PrintLn(_rgFieldStrings[SFI_FAILURE_TEXT]);
 				//test
 				if (_pCredProvCredentialEvents) {
 					if (DEVELOP_MODE) PrintLn(L"Display Back link");
@@ -955,6 +1146,7 @@ HRESULT CSampleCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIAL
 					_pCredProvCredentialEvents->SetFieldState(this, SFI_PREV_OTP, CPFS_HIDDEN);
 					_pCredProvCredentialEvents->SetFieldString(this, SFI_OTP, L"");
 					_pCredProvCredentialEvents->SetFieldState(this, SFI_OTP, CPFS_HIDDEN);
+                    _pCredProvCredentialEvents->SetFieldState(this, SFI_DOMAIN_INFO, CPFS_HIDDEN);
 					_pCredProvCredentialEvents->SetFieldState(this, SFI_SYNCHRONIZE_LINK, CPFS_HIDDEN);
 					_pCredProvCredentialEvents->SetFieldState(this, SFI_NEXT_LOGIN_ATTEMPT, CPFS_DISPLAY_IN_SELECTED_TILE);
 					//hr = SHStrDupW(L"Incorrect multiOTP OTP code", &_rgFieldStrings[SFI_FAILURE_TEXT]);
@@ -979,8 +1171,7 @@ HRESULT CSampleCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIAL
 			}
 		}
 		
-	}
-	else {
+	} else {
 		if (DEVELOP_MODE) PrintLn("Missing multiOTP OTP code or PASSWORD");
 		if (_pCredProvCredentialEvents) {
 			if (_pCredProvCredentialEventsV2) {
@@ -991,6 +1182,7 @@ HRESULT CSampleCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIAL
 			_pCredProvCredentialEvents->SetFieldState(this, SFI_PASSWORD, CPFS_HIDDEN);
 			_pCredProvCredentialEvents->SetFieldState(this, SFI_PREV_OTP, CPFS_HIDDEN);
 			_pCredProvCredentialEvents->SetFieldState(this, SFI_OTP, CPFS_HIDDEN);
+            _pCredProvCredentialEvents->SetFieldState(this, SFI_DOMAIN_INFO, CPFS_HIDDEN);
 			_pCredProvCredentialEvents->SetFieldState(this, SFI_SYNCHRONIZE_LINK, CPFS_HIDDEN);
 			_pCredProvCredentialEvents->SetFieldState(this, SFI_NEXT_LOGIN_ATTEMPT, CPFS_DISPLAY_IN_SELECTED_TILE);
 			hr = SHStrDupW(L"Missing multiOTP OTP code or PASSWORD", &_rgFieldStrings[SFI_FAILURE_TEXT]);

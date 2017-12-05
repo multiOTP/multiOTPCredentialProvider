@@ -65,16 +65,60 @@ HRESULT CSampleProvider::SetUsageScenario(
     case CPUS_UNLOCK_WORKSTATION:
         // The reason why we need _fRecreateEnumeratedCredentials is because ICredentialProviderSetUserArray::SetUserArray() is called after ICredentialProvider::SetUsageScenario(),
         // while we need the ICredentialProviderUserArray during enumeration in ICredentialProvider::GetCredentialCount()
-		_cpus = cpus;
+        _cpus = cpus;
 
-		_fRecreateEnumeratedCredentials = true;
+        _fRecreateEnumeratedCredentials = true;
         hr = S_OK;
         break;
 
-	case CPUS_CREDUI:
-	case CPUS_CHANGE_PASSWORD:
-	//case CPUS_CREDUI:
+    case CPUS_CHANGE_PASSWORD:
+		/*
+        if(newPassword.Compare(confirmPassword) == 0)
+        {
+            KERB_CHANGEPASSWORD_REQUEST kcpr;
+            ZeroMemory(&kcpr, sizeof(kcpr));                    
+
+            hr = UnicodeStringInitWithString(m_domain, &kcpr.DomainName);
+
+            if (SUCCEEDED(hr))
+            {
+                hr = UnicodeStringInitWithString(m_username, &kcpr.AccountName);
+
+                if (SUCCEEDED(hr))
+                {
+                    hr = UnicodeStringInitWithString(_rgFieldStrings[SFI_PASSWORD], &kcpr.OldPassword);
+                    hr = UnicodeStringInitWithString(_rgFieldStrings[SFI_NEWPASSWORD], &kcpr.NewPassword);
+
+                    if (SUCCEEDED(hr))
+                    {
+                        kcpr.MessageType = KerbChangePasswordMessage;
+                        kcpr.Impersonating = FALSE;
+                        hr = KerbChangePasswordPack( kcpr, &pcpcs->rgbSerialization, &pcpcs->cbSerialization);
+
+                        if (SUCCEEDED(hr))
+                        {
+                            ULONG ulAuthPackage;
+                            hr = RetrieveNegotiateAuthPackage(&ulAuthPackage);
+                            if (SUCCEEDED(hr))
+                            {
+                                pcpcs->ulAuthenticationPackage = ulAuthPackage;
+                                pcpcs->clsidCredentialProvider = CLSID_CSampleProvider;
+
+                                *pcpgsr = CPGSR_RETURN_CREDENTIAL_FINISHED;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+		*/
+
 		hr = E_NOTIMPL;
+		break;
+
+    case CPUS_CREDUI:
+    //case CPUS_CREDUI:
+        hr = E_NOTIMPL;
         break;
 
     default:
@@ -309,11 +353,11 @@ HRESULT CSampleProvider::GetCredentialCount(
 //		HRESULT hr;
 
 		RDPPort = readRegistryValueInteger(CONF_RDP_PORT, RDPPort);
-		PrintLn("RDP connection on port: %d", RDPPort);
+		if (DEVELOP_MODE) PrintLn("RDP connection on port: %d", RDPPort);
 
 		hr = GetRDPClientAddress(RDPPort, &ipAddr);
 		if (hr == 0) {
-			PrintLn(L"Remote Addr: ", ipAddr);
+			if (DEVELOP_MODE) PrintLn(L"Remote Addr: ", ipAddr);
 			//PrintLn(ipAddr);
 			CoTaskMemFree(ipAddr);
 		}
@@ -459,7 +503,7 @@ HRESULT CSampleProvider::_EnumerateCredentials()
 			}
 		}
 		else {
-			PrintLn("Empty User List");
+			if (DEVELOP_MODE) PrintLn("Empty User List");
 			//create empty user tile later
 			/*_pCredential.push_back(new(std::nothrow) CSampleCredential());
 			if (_pCredential[_pCredential.size()-1] != nullptr) {
@@ -468,7 +512,7 @@ HRESULT CSampleProvider::_EnumerateCredentials()
 		}
 	}
 	else {
-		PrintLn("Unassigned User List");
+		if (DEVELOP_MODE) PrintLn("Unassigned User List");
 		//it is probably Credential Provider V1 System...
 		//create empty user tile later
 		/*_pCredential.push_back(new(std::nothrow) CSampleCredential());

@@ -1,7 +1,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "multiOTP Credential Provider"
-#define MyAppVersion "5.0.6.0"
+#define MyAppVersion "5.0.6.1"
 #define MyAppPublisher "SysCo systemes de communication sa"
 #define MyAppURL "http://www.multiotp.com/"
 #define MyAppCopyright "Copyright (c) 2010-2017 SysCo / ArcadeJust / LastSquirrelIT (Apache License)"
@@ -26,7 +26,7 @@ DefaultGroupName={#MyAppName}
 UninstallDisplayIcon={app}\multiotp.exe
 DisableProgramGroupPage=yes
 OutputDir=D:\Data\projects\multiotp\multiOTPCredentialProvider\installer
-OutputBaseFilename=multiOTPCredentialProvider-5.0.6.0
+OutputBaseFilename=multiOTPCredentialProvider-5.0.6.1
 SetupIconFile=D:\Data\projects\multiotp\ico\multiOTP.ico
 Compression=lzma
 SolidCompression=yes
@@ -58,7 +58,7 @@ Name: "{group}\{cm:ProgramOnTheWeb,{#MyAppName}}"; Filename: "{#MyAppURL}"
 Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 
 [Registry]
-; Imported Registry File: "D:\Data\projects\multiotp\multiOTPCredentialProvider\register.reg"
+; Imported Registry File: "\Data\projects\multiotp\multiOTPCredentialProvider\register.reg"
 Root: "HKLM"; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential Providers\{{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}"; ValueType: string; ValueData: "multiOTPCredentialProvider"; Flags: uninsdeletekey
 Root: "HKLM"; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential Provider Filters\{{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}"; ValueType: string; ValueData: "multiOTPCredentialProvider"; Flags: uninsdeletekey
 Root: "HKCR"; Subkey: "CLSID\{{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}\InprocServer32"; ValueType: string; ValueData: "multiOTPCredentialProvider.dll"; Flags: uninsdeletekey
@@ -103,6 +103,7 @@ var
   multiOTPCacheEnabled: Cardinal;
   multiOTPRDPOnly: Cardinal;
   multiOTPTimeout: Cardinal;
+  multiOTPPrefixPass: Cardinal;
 
   multiOTPServersEdit: TEdit;
   multiOTPServerTimeoutEdit: TEdit;
@@ -110,12 +111,14 @@ var
   multiOTPCacheEnabledCheckBox: TCheckBox;
   multiOTPRDPOnlyCheckBox: TCheckBox;
   multiOTPTimeoutEdit: TEdit;
+  multiOTPPrefixPassCheckBox: TCheckBox;
 
 #ifdef UNICODE
   #define AW "W"
 #else
   #define AW "A"
 #endif
+
 const  
   LOGON32_LOGON_INTERACTIVE = 2;
   LOGON32_LOGON_NETWORK = 3;
@@ -131,6 +134,20 @@ const
 
   ERROR_SUCCESS = 0;
   ERROR_LOGON_FAILURE = 1326;
+  ERROR_MORE_DATA = 234;
+
+type
+  TComputerNameFormat = (
+    ComputerNameNetBIOS,
+    ComputerNameDnsHostname,
+    ComputerNameDnsDomain,
+    ComputerNameDnsFullyQualified,
+    ComputerNamePhysicalNetBIOS,
+    ComputerNamePhysicalDnsHostname,
+    ComputerNamePhysicalDnsDomain,
+    ComputerNamePhysicalDnsFullyQualified,
+    ComputerNameMax
+  );
 
 function LogonUser(lpszUsername, lpszDomain, lpszPassword: string;
   dwLogonType, dwLogonProvider: DWORD; var phToken: THandle): BOOL;
@@ -138,6 +155,12 @@ function LogonUser(lpszUsername, lpszDomain, lpszPassword: string;
 
 function TranslateName(lpAccountName: String; AccountNameFormat, DesiredNameFormat: Cardinal; lpTranslatedName: string; var nSize: DWORD): BOOL;
   external 'TranslateName{#AW}@Secur32.dll stdcall';
+
+function GetComputerNameEx(NameType: TComputerNameFormat; lpBuffer: string; var nSize: DWORD): BOOL;
+  external 'GetComputerNameEx{#AW}@kernel32.dll stdcall';
+  
+function DsGetDcName(lpComputerName: String; lpDomainName: String; lpDomainGuid: String; lpSiteName: String; Flags: DWORD; var lpDomainControllerInfo: THandle): DWORD;
+  external 'DsGetDcName{#AW}@NetApi32.dll stdcall';
 
 function TryLogonUser(const Domain, UserName, Password: string; var ErrorCode: Longint): Boolean;
 var
@@ -149,6 +172,19 @@ begin
   end else begin
     ErrorCode := DLLGetLastError;
   end;
+end;
+
+function TryGetComputerName(Format: TComputerNameFormat; out Output: string): Boolean;
+var
+  BufLen: DWORD;
+begin
+  Result := False;
+  BufLen := 0;
+  if not Boolean(GetComputerNameEx(Format, '', BufLen)) and (DLLGetLastError = ERROR_MORE_DATA) then
+  begin
+    SetLength(Output, BufLen);
+    Result := GetComputerNameEx(Format, Output, BufLen);
+  end;    
 end;
 
 procedure ParseDomainUserName(const Value: string; var Domain, UserName: string);
@@ -214,6 +250,13 @@ begin
 
   multiOTPTimeout := StrToIntDef(multiOTPTimeoutEdit.Text, multiOTPTimeout);
   RegWriteDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPTimeout', multiOTPTimeout);
+
+  if (cbChecked = multiOTPPrefixPassCheckBox.State) then begin
+    multiOTPPrefixPass := 1;
+  end else begin
+    multiOTPPrefixPass := 0;
+  end;
+  RegWriteDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPPrefixPass', multiOTPPrefixPass);
 
   // multiOTP configuration
   if Not Exec(ExpandConstant('{app}\multiotp.exe'), '-config server-secret='+multiOTPSharedSecret+' server-cache-level='+IntToStr(multiOTPCacheEnabled)+' server-timeout='+IntToStr(multiOTPServerTimeout)+' server-url='+multiOTPServers+'', ExpandConstant('{app}'), SW_HIDE, ewWaitUntilTerminated, ResultCode) then begin
@@ -354,7 +397,7 @@ begin
     Width := 20 * ScaleX(multiOTPSharedSecretLabel.Font.Size);
     Text := multiOTPSharedSecret;
   end;
-  pageTop := pageTop + multiOTPSharedSecretEdit.Height + ScaleY(8);
+  pageTop := pageTop + multiOTPSharedSecretEdit.Height + ScaleY(6);
 
   multiOTPCacheEnabledCheckBox := TCheckBox.Create(Page);
   with multiOTPCacheEnabledCheckBox do begin
@@ -369,7 +412,7 @@ begin
     end;
     Parent := Page.Surface;
   end;
-  pageTop := pageTop + multiOTPCacheEnabledCheckBox.Height + ScaleY(8);
+  pageTop := pageTop + multiOTPCacheEnabledCheckBox.Height + ScaleY(6);
 
   multiOTPRDPOnlyCheckBox := TCheckBox.Create(Page);
   with multiOTPRDPOnlyCheckBox do begin
@@ -384,7 +427,22 @@ begin
     end;
     Parent := Page.Surface;
   end;
-  pageTop := pageTop + multiOTPRDPOnlyCheckBox.Height + ScaleY(8);
+  pageTop := pageTop + multiOTPRDPOnlyCheckBox.Height + ScaleY(6);
+
+  multiOTPPrefixPassCheckBox := TCheckBox.Create(Page);
+  with multiOTPPrefixPassCheckBox do begin
+    Top := pageTop;
+    Left := pageLeft;
+    Width := Page.SurfaceWidth;
+    Caption := 'Send to multiOTP the concatenation of the windows password and the OTP';
+    if (1 = multiOTPPrefixPass) then begin
+      State := cbChecked;
+    end else begin
+      State := cbUnchecked;
+    end;
+    Parent := Page.Surface;
+  end;
+  pageTop := pageTop + multiOTPPrefixPassCheckBox.Height + ScaleY(6);
 
   multiOTPTimeoutLabel := TNewStaticText.Create(Page);
   with multiOTPTimeoutLabel do begin
@@ -405,7 +463,7 @@ begin
     Width := 2 * multiOTPTimeoutLabel.Height;
     Text := IntToStr(multiOTPTimeout);
   end;
-  pageTop := pageTop + multiOTPTimeoutLabel.Height + ScaleY(8);
+  pageTop := pageTop + multiOTPTimeoutLabel.Height + ScaleY(6);
 
 
   // Add items (False means it's not a password edit)
@@ -432,6 +490,7 @@ var
   Domain: string;
   UserName: string;
   ErrorCode: Longint;
+  PrefixPass: string;
 
 begin
   testButtonResult.Caption := 'please wait...';
@@ -445,11 +504,16 @@ begin
   end else begin
     ParseDomainUserName(testUsernameEdit.Text, Domain, UserName);
     TryLogonUser(Domain, UserName, testPasswordEdit.Text, ErrorCode);
+    if (1 = multiOTPPrefixPass) then begin
+      PrefixPass := testPasswordEdit.Text
+    end else begin
+      PrefixPass := ''
+    end;
     if (ERROR_LOGON_FAILURE = ErrorCode) then begin
       testButtonResult.Caption := 'The windows user name or password is incorrect';
     end else if (ERROR_SUCCESS <> ErrorCode) then begin
       testButtonResult.Caption := 'Windows login failed: ' + SysErrorMessage(DLLGetLastError);
-    end else if Not Exec(ExpandConstant('{app}\multiotp.exe'), testUsernameEdit.Text+' '+testOtpdEdit.Text, ExpandConstant('{app}'), SW_HIDE, ewWaitUntilTerminated, ResultCode) then begin
+    end else if Not Exec(ExpandConstant('{app}\multiotp.exe'), testUsernameEdit.Text+' '+PrefixPass + testOtpdEdit.Text, ExpandConstant('{app}'), SW_HIDE, ewWaitUntilTerminated, ResultCode) then begin
       MsgBox('System error during multiOTP test ('+IntToStr(ResultCode)+')', mbCriticalError, MB_OK);
       ResultCode := 99;
     end else if (0 = ResultCode) then begin
@@ -680,6 +744,7 @@ begin
   multiOTPCacheEnabled := 1;
   multiOTPRDPOnly := 1;
   multiOTPTimeout := 10;
+  multiOTPPrefixPass := 0;
 
   // Read registry values if they exists
   RegQueryStringValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPServers', multiOTPServers);
@@ -688,6 +753,7 @@ begin
   RegQueryDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPCacheEnabled', multiOTPCacheEnabled);
   RegQueryDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPRDPOnly', multiOTPRDPOnly);
   RegQueryDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPTimeout', multiOTPTimeout);
+  RegQueryDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPPrefixPass', multiOTPPrefixPass);
 
   // credentialProviderInstalled := RegQueryStringValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential Providers\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','', stringValue);
   credentialProviderInstalled := false;

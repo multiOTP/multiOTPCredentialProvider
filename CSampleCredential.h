@@ -110,7 +110,9 @@ public:
 private:
 	HRESULT call_multiotp(_In_ PCWSTR username,
 		  _In_ PCWSTR PREV_OTP,
-		  _In_ PCWSTR OTP);
+		  _In_ PCWSTR OTP,
+		  _In_ PCWSTR PREFIX_PASS);
+
 
     virtual ~CSampleCredential();
     long                                    _cRef;

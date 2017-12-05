@@ -868,7 +868,7 @@ HRESULT SplitDomainAndUsername(_In_ PCWSTR pszQualifiedUserName, _Outptr_result_
             hr = E_OUTOFMEMORY;
         }
     }
-    // 2017-11-05 SysCo/al Add UPN support
+    // 2017-11-05 SysCo/al Add UPN support, but warning, the user and domain names are only splitted, nothing better
     else if (pchWhatSign != nullptr)
     {
         const wchar_t *pchUsernameBegin = pszQualifiedUserName;
@@ -914,5 +914,57 @@ HRESULT SplitDomainAndUsername(_In_ PCWSTR pszQualifiedUserName, _Outptr_result_
             hr = E_OUTOFMEMORY;
         }
     }
+    return hr;
+}
+
+
+//pack the struct of KERB_CHANGEPASSWORD_REQUEST
+HRESULT KerbChangePasswordPack(
+    const KERB_CHANGEPASSWORD_REQUEST& kcpr,
+    BYTE** prgb,
+    DWORD* pcb
+    )
+{
+    HRESULT hr;
+
+    DWORD cb = sizeof(kcpr) +
+        kcpr.DomainName.Length +
+        kcpr.AccountName.Length +
+        kcpr.OldPassword.Length +
+        kcpr.NewPassword.Length;
+
+    KERB_CHANGEPASSWORD_REQUEST* pkcpr = (KERB_CHANGEPASSWORD_REQUEST*)CoTaskMemAlloc(cb);
+
+    if (pkcpr)
+    {
+        pkcpr->MessageType = kcpr.MessageType;
+
+        BYTE* pbBuffer = (BYTE*)pkcpr + sizeof(KERB_CHANGEPASSWORD_REQUEST);
+
+        _UnicodeStringPackedUnicodeStringCopy(kcpr.DomainName, (PWSTR)pbBuffer, &pkcpr->DomainName);
+        pkcpr->DomainName.Buffer = (PWSTR)(pbBuffer - (BYTE*)pkcpr);
+        pbBuffer += pkcpr->DomainName.Length;
+
+        _UnicodeStringPackedUnicodeStringCopy(kcpr.AccountName, (PWSTR)pbBuffer, &pkcpr->AccountName);
+        pkcpr->AccountName.Buffer = (PWSTR)(pbBuffer - (BYTE*)pkcpr);
+        pbBuffer += pkcpr->AccountName.Length;
+
+        _UnicodeStringPackedUnicodeStringCopy(kcpr.OldPassword, (PWSTR)pbBuffer, &pkcpr->OldPassword);
+        pkcpr->OldPassword.Buffer = (PWSTR)(pbBuffer - (BYTE*)pkcpr);
+        pbBuffer += pkcpr->OldPassword.Length;
+
+        _UnicodeStringPackedUnicodeStringCopy(kcpr.NewPassword, (PWSTR)pbBuffer, &pkcpr->NewPassword);
+        pkcpr->NewPassword.Buffer = (PWSTR)(pbBuffer - (BYTE*)pkcpr);
+
+        *prgb = (BYTE*)pkcpr;
+        *pcb = cb;
+
+        hr = S_OK;
+    }
+    else
+    {
+        hr = E_OUTOFMEMORY;
+    }
+
     return hr;
 }

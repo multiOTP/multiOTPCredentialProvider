@@ -26,7 +26,7 @@ HRESULT GetRDPClientAddress(_In_ int RDPPort, _Outptr_result_nullonfailure_ PWST
 
 	pTcpTable = (MIB_TCPTABLE2 *)MALLOC(sizeof(MIB_TCPTABLE2));
 	if (pTcpTable == NULL) {
-		PrintLn("GetRDPClientAddress: Error allocating memory\n");
+		if (DEVELOP_MODE) PrintLn("GetRDPClientAddress: Error allocating memory\n");
 		return 1;
 	}
 	ulSize = sizeof(MIB_TCPTABLE);
@@ -37,7 +37,7 @@ HRESULT GetRDPClientAddress(_In_ int RDPPort, _Outptr_result_nullonfailure_ PWST
 		FREE(pTcpTable);
 		pTcpTable = (MIB_TCPTABLE2 *)MALLOC(ulSize);
 		if (pTcpTable == NULL) {
-			PrintLn("GetRDPClientAddress: Error allocating memory\n");
+			if (DEVELOP_MODE) PrintLn("GetRDPClientAddress: Error allocating memory\n");
 			return 1;
 		}
 	}
@@ -146,7 +146,7 @@ HRESULT GetRDPClientAddress(_In_ int RDPPort, _Outptr_result_nullonfailure_ PWST
 		}
 	}
 	else {
-		PrintLn("\tGetTcpTable2 failed with %d\n", dwRetVal);
+		if (DEVELOP_MODE) PrintLn("\tGetTcpTable2 failed with %d\n", dwRetVal);
 		FREE(pTcpTable);
 		return 1;
 	}
