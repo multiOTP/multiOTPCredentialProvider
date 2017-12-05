@@ -27,6 +27,9 @@ multiOTP Credential Provider for multiOTP supporting Windows 7/8/8.1/10/2012(R2)
 
 ![multiOTPCredentialProvider test](https://raw.githubusercontent.com/multiOTP/multiOTPCredentialProvider/master/screenshots/multiOTPCredentialProvider-test.png)
 
+![multiOTPCredentialProvider login](https://raw.githubusercontent.com/multiOTP/multiOTPCredentialProvider/master/screenshots/multiOTPCredentialProvider-login.png)
+
+
 Prerequisitions:
 - installed multiOTP server(s)
 - configured multiOTP user (multiOTP username = windows local account name or domain user name or microsoft account name)
