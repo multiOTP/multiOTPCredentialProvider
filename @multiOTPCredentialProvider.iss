@@ -1,7 +1,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "multiOTP Credential Provider"
-#define MyAppVersion "5.0.6.1"
+#define MyAppVersion "5.0.6.2"
 #define MyAppPublisher "SysCo systemes de communication sa"
 #define MyAppURL "http://www.multiotp.com/"
 #define MyAppCopyright "Copyright (c) 2010-2017 SysCo / ArcadeJust / LastSquirrelIT (Apache License)"
@@ -26,7 +26,7 @@ DefaultGroupName={#MyAppName}
 UninstallDisplayIcon={app}\multiotp.exe
 DisableProgramGroupPage=yes
 OutputDir=D:\Data\projects\multiotp\multiOTPCredentialProvider\installer
-OutputBaseFilename=multiOTPCredentialProvider-5.0.6.1
+OutputBaseFilename=multiOTPCredentialProvider-5.0.6.2
 SetupIconFile=D:\Data\projects\multiotp\ico\multiOTP.ico
 Compression=lzma
 SolidCompression=yes
@@ -43,7 +43,7 @@ ArchitecturesInstallIn64BitMode=x64
 ;SignTool=standard
 ;SignedUninstaller=yes
 
-[Languages]
+;[Languages]
 ;Name: "english"; MessagesFile: "compiler:Default.isl"
 ;Name: "french"; MessagesFile: "compiler:Languages\French.isl"
 
@@ -76,10 +76,87 @@ multiOTPconfiguration=multiOTP configuration
 multiOTPconfigurationDescription=Type the needed multiOTP server information, then click Next.
 multiOTPServerTimeoutLabel=Timeout (in seconds) before switching to the next server
 multiOTPSharedSecretLabel=Secret shared with your multiOTP server(s)
+multiOTPSharedSecretSample=On your multiOTP server, Menu Configuration/Devices, Edit/Add a device
+multiOTPSharedSecretSample2=that match the IP and subnet mask of this current Windows machine
+multiOTPCacheEnabledCheckBox=Enable cache support on this machine if authorized by the server(s)
+multiOTPRDPOnlyCheckBox=Only RDP connection must be protected with strong authentication
+multiOTPPrefixPassCheckBox=Send to multiOTP the concatenation of the windows password and the OTP
+multiOTPDisplaySmsLinkCheckBox=Display the [Receive an OTP by SMS] link
+multiOTPUPNFormatCheckBox=Send the username to multiOTP in UPN format (user@domain.name)
+multiOTPTimeoutLabel=Timeout (in seconds) for the Credential Provider
+multiOTPLibraryVersion=multiOTP library version
+multiOTPCredentialProviderState=Credential Provider state
+multiOTPErrorConfiguration=Error during multiOTP configuration
+multiOTPPleaseWait=please wait...
+multiOTPConfigurationTest=multiOTP configuration test
+multiOTPCheckServer=Check if multiOTP is working correctly.
+multiOTPWindowsUsername=Windows username
+multiOTPWindowsPassword=Windows password
+multiOTPUserOTP=OTP for this user
+multiOTPTestButton=Test the multiOTP authentication to activate the Credential Provider
+multiOTPTestResult=multiOTP test result
+multiOTPUsernamePasswordOrOtpMissing=Username, password or OTP is missing
+multiOTPWindowsUsernameOrPasswordIncorrect=The windows user name or password is incorrect
+multiOTPWindowsLoginFailed=Windows login failed
+multiOTPSystemErrorDuringmultiOTPTest=System error during multiOTP test
+multiOTPInstalledAndActivated=installed and activated
+multiOTPNotActivated=NOT activated
+multiOTPReturnCode0=username and OTP validated by the multiOTP server
+multiOTPReturnCode21=User doesn't exist
+multiOTPReturnCode24=User locked (too many tries)
+multiOTPReturnCode25=User delayed (too many tries)
+multiOTPReturnCode26=This token has already been used
+multiOTPReturnCode28=Unable to write the changes for the user
+multiOTPReturnCode30=Username or password is missing
+multiOTPReturnCode98=Wrong token length, check if a prefix is required
+multiOTPReturnCode99=Authentication failed (and other possible unknown errors)
+multiOTPReturnCodePrefix=Check exit code 
+multiOTPReturnCodeSuffix= in multiOTP documentation
 
 ;french.ProgramOnTheWeb=%1 sur Internet
 ;french.UninstallProgram=Désinstaller %1
 ;french.multiOTPserversLabel=URL de votre/vos serveur(s) multiOTP, séparés par un point-virgule
+;french.multiOTPServersSample=Exemple: https://192.168.1.88 ; http://adresse.ip.du.serveur:8112
+;french.multiOTPconfiguration=Configuration multiOTP
+;french.multiOTPconfigurationDescription=Saisir les données concernant multiOTP, puis cliquer sur Suivant.
+;french.multiOTPServerTimeoutLabel=Temps d'attente (en secondes) avant de passer au serveur suivant
+;french.multiOTPSharedSecretLabel=Secret partagé avec le(s) serveur(s) multiOTP
+;french.multiOTPSharedSecretSample=Sur votre serveur multiOTP, Menu Configuration/Appareils, Editer/Ajouter un appareil
+;french.multiOTPSharedSecretSample2=that match the IP and subnet mask of this current Windows machine
+;french.multiOTPCacheEnabledCheckBox=Enable cache support on this machine if authorized by the server(s)
+;french.multiOTPRDPOnlyCheckBox=Only RDP connection must be protected with strong authentication
+;french.multiOTPPrefixPassCheckBox=Send to multiOTP the concatenation of the windows password and the OTP
+;french.multiOTPDisplaySmsLinkCheckBox=Display the [Receive an OTP by SMS] link
+;french.multiOTPUPNFormatCheckBox=Send the username to multiOTP in UPN format (user@domain.name)
+;french.multiOTPTimeoutLabel=Temps d'attente (en secondes) pour l'exécution du Credential Provider
+;french.multiOTPLibraryVersion=Version de la librairie multiOTP
+;french.multiOTPCredentialProviderState=Etat du Credential Provider
+;french.multiOTPErrorConfiguration=Erreur pendant la configuration de multiOTP
+;french.multiOTPPleaseWait=merci de patienter...
+;french.multiOTPConfigurationTest=Test de configuration multiOTP
+;french.multiOTPCheckServer=Test si multiOTP fonctionne correctemnt.
+;french.multiOTPWindowsUsername=Utilisateur Windows
+;french.multiOTPWindowsPassword=Mot de passe Windows
+;french.multiOTPUserOTP=OTP pour cet utilisateur
+;french.multiOTPTestButton=Tester l'authentification par multiOTP pour activer le Credential Provider
+;french.multiOTPTestResult=Résultat du test multiOTP
+;french.multiOTPUsernamePasswordOrOtpMissing=Username, password or OTP is missing
+;french.multiOTPWindowsUsernameOrPasswordIncorrect=The windows user name or password is incorrect
+;french.multiOTPWindowsLoginFailed=Windows login failed
+;french.multiOTPSystemErrorDuringmultiOTPTest=System error during multiOTP test
+;french.multiOTPInstalledAndActivated=installé et activé
+;french.multiOTPNotActivated=PAS activé
+;french.multiOTPReturnCode0=username and OTP validated by the multiOTP server
+;french.multiOTPReturnCode21=User doesn't exist
+;french.multiOTPReturnCode24=User locked (too many tries)
+;french.multiOTPReturnCode25=User delayed (too many tries)
+;french.multiOTPReturnCode26=This token has already been used
+;french.multiOTPReturnCode28=Unable to write the changes for the user
+;french.multiOTPReturnCode30=Username or password is missing
+;french.multiOTPReturnCode98=Wrong token length, check if a prefix is required
+;french.multiOTPReturnCode99=Authentication failed (and other possible unknown errors)
+;french.multiOTPReturnCodePrefix=Check exit code 
+;french.multiOTPReturnCodeSuffix= in multiOTP documentation
 
 
 [Code]
@@ -104,6 +181,8 @@ var
   multiOTPRDPOnly: Cardinal;
   multiOTPTimeout: Cardinal;
   multiOTPPrefixPass: Cardinal;
+  multiOTPDisplaySmsLink: Cardinal;
+  multiOTPUPNFormat: Cardinal;
 
   multiOTPServersEdit: TEdit;
   multiOTPServerTimeoutEdit: TEdit;
@@ -112,6 +191,8 @@ var
   multiOTPRDPOnlyCheckBox: TCheckBox;
   multiOTPTimeoutEdit: TEdit;
   multiOTPPrefixPassCheckBox: TCheckBox;
+  multiOTPDisplaySmsLinkCheckBox: TCheckBox;
+  multiOTPUPNFormatCheckBox: TCheckBox;
 
 #ifdef UNICODE
   #define AW "W"
@@ -135,6 +216,17 @@ const
   ERROR_SUCCESS = 0;
   ERROR_LOGON_FAILURE = 1326;
   ERROR_MORE_DATA = 234;
+  
+  NameUnknown           = 0;
+  NameFullyQualifiedDN  = 1;
+  NameSamCompatible     = 2;
+  NameDisplay           = 3;
+  NameUniqueId          = 6;
+  NameCanonical         = 7;
+  NameUserPrincipal     = 8;
+  NameCanonicalEx       = 9;
+  NameServicePrincipal  = 10;
+  NameDnsDomain         = 12; 
 
 type
   TComputerNameFormat = (
@@ -183,26 +275,40 @@ begin
   if not Boolean(GetComputerNameEx(Format, '', BufLen)) and (DLLGetLastError = ERROR_MORE_DATA) then
   begin
     SetLength(Output, BufLen);
-    Result := GetComputerNameEx(Format, Output, BufLen);
+    if (GetComputerNameEx(Format, Output, BufLen)) then begin
+      SetLength(Output, BufLen-1);
+    end
   end;    
 end;
 
-procedure ParseDomainUserName(const Value: string; var Domain, UserName: string);
+procedure ParseDomainUserName(const Value: string; var Domain, UserName, UPNUserName: string);
 var
   DelimPos: Integer;
   TranslateResult: Boolean;
   buffer : string;
+  buffer2 : string;
   nSize : DWORD;
 begin
   buffer := Value;
   DelimPos := Pos('@', Value);
   if DelimPos <> 0 then
   begin
+    UPNUserName := Value;
     nSize := 256;
     buffer := StringOfChar(#0, nSize);
     SetLength(buffer, nSize);
-    if (TranslateName(Value, 8, 2, buffer, nSize)) then begin
-      SetLength(buffer, nSize);
+    if (TranslateName(Value, NameUserPrincipal, NameSamCompatible, buffer, nSize)) then begin
+      SetLength(buffer, nSize-1);
+    end
+  end
+  else
+  begin
+    nSize := 256;
+    buffer2 := StringOfChar(#0, nSize);
+    SetLength(buffer2, nSize);
+    if (TranslateName(Value, NameSamCompatible, NameUserPrincipal, buffer2, nSize)) then begin
+      SetLength(buffer2, nSize-1);
+      UPNUserName := buffer2;
     end
   end;
 
@@ -258,9 +364,23 @@ begin
   end;
   RegWriteDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPPrefixPass', multiOTPPrefixPass);
 
+  if (cbChecked = multiOTPDisplaySmsLinkCheckBox.State) then begin
+    multiOTPDisplaySmsLink := 1;
+  end else begin
+    multiOTPDisplaySmsLink := 0;
+  end;
+  RegWriteDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPDisplaySmsLink', multiOTPDisplaySmsLink);
+
+  if (cbChecked = multiOTPUPNFormatCheckBox.State) then begin
+    multiOTPUPNFormat := 1;
+  end else begin
+    multiOTPUPNFormat := 0;
+  end;
+  RegWriteDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPUPNFormat', multiOTPUPNFormat);
+  
   // multiOTP configuration
-  if Not Exec(ExpandConstant('{app}\multiotp.exe'), '-config server-secret='+multiOTPSharedSecret+' server-cache-level='+IntToStr(multiOTPCacheEnabled)+' server-timeout='+IntToStr(multiOTPServerTimeout)+' server-url='+multiOTPServers+'', ExpandConstant('{app}'), SW_HIDE, ewWaitUntilTerminated, ResultCode) then begin
-    MsgBox('Error during multiOTP configuration', mbCriticalError, MB_OK);
+  if Not Exec(ExpandConstant('{app}\multiotp.exe'), '-cp -config server-secret='+multiOTPSharedSecret+' server-cache-level='+IntToStr(multiOTPCacheEnabled)+' server-timeout='+IntToStr(multiOTPServerTimeout)+' server-url='+multiOTPServers+'', ExpandConstant('{app}'), SW_HIDE, ewWaitUntilTerminated, ResultCode) then begin
+    MsgBox(ExpandConstant('{cm:multiOTPErrorConfiguration}'), mbCriticalError, MB_OK);
     // MsgBox(SysErrorMessage(ResultCode), mbInformation, MB_OK);
     ResultCode := 99;
   end;
@@ -307,7 +427,7 @@ begin
     Caption := ExpandConstant('{cm:multiOTPServersLabel}');
     Parent := Page.Surface;
   end;
-  pageTop := pageTop + multiOTPServersLabel.Height + ScaleY(2);
+  pageTop := pageTop + multiOTPServersLabel.Height + ScaleY(0);
 
   multiOTPServersSample := TNewStaticText.Create(Page);
   with multiOTPServersSample do begin
@@ -319,7 +439,7 @@ begin
     Caption := ExpandConstant('{cm:multiOTPServersSample}');
     Parent := Page.Surface;
   end;
-  pageTop := pageTop + multiOTPServersSample.Height + ScaleY(2);
+  pageTop := pageTop + multiOTPServersSample.Height + ScaleY(0);
 
   multiOTPServersEdit := TEdit.Create(Page);
   with multiOTPServersEdit do
@@ -330,7 +450,7 @@ begin
     Width := Page.SurfaceWidth - Left;
     Text := multiOTPServers;
   end;
-  pageTop := pageTop + multiOTPServersEdit.Height + ScaleY(4);
+  pageTop := pageTop + multiOTPServersEdit.Height + ScaleY(3);
 
   multiOTPServerTimeoutLabel := TNewStaticText.Create(Page);
   with multiOTPServerTimeoutLabel do begin
@@ -347,11 +467,11 @@ begin
   begin
     Parent := Page.Surface;
     Left := pageLeft + multiOTPServerTimeoutLabel.Width;
-    Top := pageTop - ScaleY(2);
+    Top := pageTop - ScaleY(3);
     Width := 2 * multiOTPServerTimeoutLabel.Height;
     Text := IntToStr(multiOTPServerTimeout);
   end;
-  pageTop := pageTop + multiOTPServerTimeoutLabel.Height + ScaleY(8);
+  pageTop := pageTop + multiOTPServerTimeoutLabel.Height + ScaleY(4);
 
   multiOTPSharedSecretLabel := TNewStaticText.Create(Page);
   with multiOTPSharedSecretLabel do begin
@@ -363,7 +483,7 @@ begin
     Caption := ExpandConstant('{cm:multiOTPSharedSecretLabel}');
     Parent := Page.Surface;
   end;
-  pageTop := pageTop + multiOTPSharedSecretLabel.Height + ScaleY(2);
+  pageTop := pageTop + multiOTPSharedSecretLabel.Height + ScaleY(0);
 
   multiOTPSharedSecretSample := TNewStaticText.Create(Page);
   with multiOTPSharedSecretSample do begin
@@ -372,7 +492,7 @@ begin
     Top := pageTop;
     Left := pageLeft;
     Font.Style := [fsItalic];
-    Caption := 'On your multiOTP server, Menu Configuration/Devices, Edit/Add a device';
+    Caption := ExpandConstant('{cm:multiOTPSharedSecretSample}');
     Parent := Page.Surface;
   end;
   pageTop := pageTop + multiOTPSharedSecretSample.Height;
@@ -383,10 +503,10 @@ begin
     Top := pageTop;
     Left := pageLeft;
     Font.Style := [fsItalic];
-    Caption := 'that match the IP and subnet mask of this current Windows machine';
+    Caption := ExpandConstant('{cm:multiOTPSharedSecretSample2}');
     Parent := Page.Surface;
   end;
-  pageTop := pageTop + multiOTPSharedSecretSample2.Height + ScaleY(2);
+  pageTop := pageTop + multiOTPSharedSecretSample2.Height + ScaleY(0);
 
   multiOTPSharedSecretEdit := TEdit.Create(Page);
   with multiOTPSharedSecretEdit do
@@ -397,14 +517,14 @@ begin
     Width := 20 * ScaleX(multiOTPSharedSecretLabel.Font.Size);
     Text := multiOTPSharedSecret;
   end;
-  pageTop := pageTop + multiOTPSharedSecretEdit.Height + ScaleY(6);
+  pageTop := pageTop + multiOTPSharedSecretEdit.Height + ScaleY(0);
 
   multiOTPCacheEnabledCheckBox := TCheckBox.Create(Page);
   with multiOTPCacheEnabledCheckBox do begin
     Top := pageTop;
-    Left := pageLeft;
+    Left := pageLeft + 12;
     Width := Page.SurfaceWidth;
-    Caption := 'Enable cache support on this machine if authorized by the server(s)';
+    Caption := ExpandConstant('{cm:multiOTPCacheEnabledCheckBox}');
     if (1 = multiOTPCacheEnabled) then begin
       State := cbChecked;
     end else begin
@@ -412,14 +532,14 @@ begin
     end;
     Parent := Page.Surface;
   end;
-  pageTop := pageTop + multiOTPCacheEnabledCheckBox.Height + ScaleY(6);
+  pageTop := pageTop + multiOTPCacheEnabledCheckBox.Height + ScaleY(0);
 
   multiOTPRDPOnlyCheckBox := TCheckBox.Create(Page);
   with multiOTPRDPOnlyCheckBox do begin
     Top := pageTop;
-    Left := pageLeft;
+    Left := pageLeft + 12;
     Width := Page.SurfaceWidth;
-    Caption := 'Only RDP connection must be protected with strong authentication';
+    Caption := ExpandConstant('{cm:multiOTPRDPOnlyCheckBox}');
     if (1 = multiOTPRDPOnly) then begin
       State := cbChecked;
     end else begin
@@ -427,14 +547,14 @@ begin
     end;
     Parent := Page.Surface;
   end;
-  pageTop := pageTop + multiOTPRDPOnlyCheckBox.Height + ScaleY(6);
+  pageTop := pageTop + multiOTPRDPOnlyCheckBox.Height + ScaleY(0);
 
   multiOTPPrefixPassCheckBox := TCheckBox.Create(Page);
   with multiOTPPrefixPassCheckBox do begin
     Top := pageTop;
-    Left := pageLeft;
+    Left := pageLeft + 12;
     Width := Page.SurfaceWidth;
-    Caption := 'Send to multiOTP the concatenation of the windows password and the OTP';
+    Caption := ExpandConstant('{cm:multiOTPPrefixPassCheckBox}');
     if (1 = multiOTPPrefixPass) then begin
       State := cbChecked;
     end else begin
@@ -442,15 +562,45 @@ begin
     end;
     Parent := Page.Surface;
   end;
-  pageTop := pageTop + multiOTPPrefixPassCheckBox.Height + ScaleY(6);
+  pageTop := pageTop + multiOTPPrefixPassCheckBox.Height + ScaleY(0);
 
+  multiOTPDisplaySmsLinkCheckBox := TCheckBox.Create(Page);
+  with multiOTPDisplaySmsLinkCheckBox do begin
+    Top := pageTop;
+    Left := pageLeft + 12;
+    Width := Page.SurfaceWidth;
+    Caption := ExpandConstant('{cm:multiOTPDisplaySmsLinkCheckBox}');
+    if (1 = multiOTPDisplaySmsLink) then begin
+      State := cbChecked;
+    end else begin
+      State := cbUnchecked;
+    end;
+    Parent := Page.Surface;
+  end;
+  pageTop := pageTop + multiOTPDisplaySmsLinkCheckBox.Height + ScaleY(0);
+
+  multiOTPUPNFormatCheckBox := TCheckBox.Create(Page);
+  with multiOTPUPNFormatCheckBox do begin
+    Top := pageTop;
+    Left := pageLeft + 12;
+    Width := Page.SurfaceWidth;
+    Caption := ExpandConstant('{cm:multiOTPUPNFormatCheckBox}');
+    if (1 = multiOTPUPNFormat) then begin
+      State := cbChecked;
+    end else begin
+      State := cbUnchecked;
+    end;
+    Parent := Page.Surface;
+  end;
+  pageTop := pageTop + multiOTPUPNFormatCheckBox.Height + ScaleY(3);
+  
   multiOTPTimeoutLabel := TNewStaticText.Create(Page);
   with multiOTPTimeoutLabel do begin
     AutoSize := True;
     WordWrap := False;
     Top := pageTop;
-    Left := pageLeft;
-    Caption := 'Timeout (in seconds) for the Credential Provider : ';
+    Left := pageLeft + 12;
+    Caption := ExpandConstant('{cm:multiOTPTimeoutLabel} : ');
     Parent := Page.Surface;
   end;
 
@@ -458,12 +608,12 @@ begin
   with multiOTPTimeoutEdit do
   begin
     Parent := Page.Surface;
-    Left := pageLeft + multiOTPTimeoutLabel.Width;
-    Top := pageTop - ScaleY(2);
+    Left := pageLeft + 12 + multiOTPTimeoutLabel.Width;
+    Top := pageTop - ScaleY(3);
     Width := 2 * multiOTPTimeoutLabel.Height;
     Text := IntToStr(multiOTPTimeout);
   end;
-  pageTop := pageTop + multiOTPTimeoutLabel.Height + ScaleY(6);
+  pageTop := pageTop + multiOTPTimeoutLabel.Height + ScaleY(0);
 
 
   // Add items (False means it's not a password edit)
@@ -489,52 +639,61 @@ var
   ResultCode: Integer;
   Domain: string;
   UserName: string;
+  UPNUserName: string;
   ErrorCode: Longint;
   PrefixPass: string;
+  OTPUsername: string;
 
 begin
-  testButtonResult.Caption := 'please wait...';
-  credentialProviderState.Caption := 'please wait...';
+  testButtonResult.Caption := ExpandConstant('{cm:multiOTPPleaseWait}');
+  credentialProviderState.Caption := ExpandConstant('{cm:multiOTPPleaseWait}');
 
   testDone := true;
   testSuccess := false;
 
   if ('' = testUsernameEdit.Text) Or ('' = testOtpdEdit.Text) Or ('' = testPasswordEdit.Text) Then Begin
-      testButtonResult.Caption := 'Username, password or OTP is missing';
+      testButtonResult.Caption := ExpandConstant('{cm:multiOTPUsernamePasswordOrOtpMissing}');
   end else begin
-    ParseDomainUserName(testUsernameEdit.Text, Domain, UserName);
+    ParseDomainUserName(testUsernameEdit.Text, Domain, UserName, UPNUserName);
     TryLogonUser(Domain, UserName, testPasswordEdit.Text, ErrorCode);
     if (1 = multiOTPPrefixPass) then begin
       PrefixPass := testPasswordEdit.Text
     end else begin
       PrefixPass := ''
     end;
+    if (1 = multiOTPUPNFormat) then begin
+      OTPUsername := UPNUserName
+    end else begin
+      OTPUsername := UserName
+    end;
     if (ERROR_LOGON_FAILURE = ErrorCode) then begin
-      testButtonResult.Caption := 'The windows user name or password is incorrect';
+      testButtonResult.Caption := ExpandConstant('{cm:multiOTPWindowsUsernameOrPasswordIncorrect}');
     end else if (ERROR_SUCCESS <> ErrorCode) then begin
-      testButtonResult.Caption := 'Windows login failed: ' + SysErrorMessage(DLLGetLastError);
-    end else if Not Exec(ExpandConstant('{app}\multiotp.exe'), testUsernameEdit.Text+' '+PrefixPass + testOtpdEdit.Text, ExpandConstant('{app}'), SW_HIDE, ewWaitUntilTerminated, ResultCode) then begin
-      MsgBox('System error during multiOTP test ('+IntToStr(ResultCode)+')', mbCriticalError, MB_OK);
+      testButtonResult.Caption := ExpandConstant('{cm:multiOTPWindowsLoginFailed}: ') + SysErrorMessage(DLLGetLastError);
+    end else if Not Exec(ExpandConstant('{app}\multiotp.exe'), '-cp ' + OTPUsername +' '+PrefixPass + testOtpdEdit.Text, ExpandConstant('{app}'), SW_HIDE, ewWaitUntilTerminated, ResultCode) then begin
+      MsgBox(ExpandConstant('{cm:multiOTPSystemErrorDuringmultiOTPTest}') + ' ('+IntToStr(ResultCode)+')', mbCriticalError, MB_OK);
       ResultCode := 99;
     end else if (0 = ResultCode) then begin
       testSuccess := true;
-      testButtonResult.Caption := 'username and OTP validated by the multiOTP server';
+      testButtonResult.Caption := ExpandConstant('{cm:multiOTPReturnCode0}');
     end else if (21 = ResultCode) then begin
-      testButtonResult.Caption := 'User doesn''t exist';
+      testButtonResult.Caption := ExpandConstant('{cm:multiOTPReturnCode21}');
     end else if (24 = ResultCode) then begin
-      testButtonResult.Caption := 'User locked (too many tries)';
+      testButtonResult.Caption := ExpandConstant('{cm:multiOTPReturnCode24}');
     end else if (25 = ResultCode) then begin
-      testButtonResult.Caption := 'User delayed (too many tries)';
+      testButtonResult.Caption := ExpandConstant('{cm:multiOTPReturnCode25}');
     end else if (26 = ResultCode) then begin
-      testButtonResult.Caption := 'This token has already been used';
+      testButtonResult.Caption := ExpandConstant('{cm:multiOTPReturnCode26}');
     end else if (28 = ResultCode) then begin
-      testButtonResult.Caption := 'Unable to write the changes for the user';
+      testButtonResult.Caption := ExpandConstant('{cm:multiOTPReturnCode28}');
     end else if (30 = ResultCode) then begin
-      testButtonResult.Caption := 'Username or password is missing';
+      testButtonResult.Caption := ExpandConstant('{cm:multiOTPReturnCode30}');
     end else if (98 = ResultCode) then begin
-      testButtonResult.Caption := 'Wrong token length, check if a prefix is required';
+      testButtonResult.Caption := ExpandConstant('{cm:multiOTPReturnCode98}');
+    end else if (99 = ResultCode) then begin
+      testButtonResult.Caption := ExpandConstant('{cm:multiOTPReturnCode99}');
     end else begin
-      testButtonResult.Caption := 'Check exit code '+IntToStr(ResultCode)+', in multiOTP documentation';
+      testButtonResult.Caption := ExpandConstant('{cm:multiOTPReturnCodePrefix}') + IntToStr(ResultCode) + ExpandConstant('{cm:multiOTPReturnCodeSuffix}');
     end;
   end;
 
@@ -546,11 +705,11 @@ begin
     // testButton.Enabled := false;
     RegWriteStringValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential Providers\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','', 'multiOTPCredentialProvider');
     RegWriteStringValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential Provider Filters\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','', 'multiOTPCredentialProvider');
-    credentialProviderState.Caption := 'installed and activated';
+    credentialProviderState.Caption := ExpandConstant('{cm:multiOTPInstalledAndActivated}');
   end else begin
     RegDeleteKeyIncludingSubkeys(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential Providers\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}');
     RegDeleteKeyIncludingSubkeys(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential Provider Filters\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}');
-    credentialProviderState.Caption := 'NOT activated';
+    credentialProviderState.Caption := ExpandConstant('{cm:multiOTPNotActivated}');
   end;
 end;
 
@@ -573,8 +732,8 @@ begin
 
   // Create the page
   testPage := CreateCustomPage(wpInstalling,
-    'multiOTP configuration test',
-    'Check if multiOTP is working correctly.');
+    ExpandConstant('{cm:multiOTPConfigurationTest}'),
+    ExpandConstant('{cm:multiOTPCheckServer}'));
 
   testUsernameLabel := TNewStaticText.Create(testPage);
   with testUsernameLabel do begin
@@ -583,10 +742,10 @@ begin
     Top := pageTop;
     Left := pageLeft;
     Font.Style := [fsBold];
-    Caption := 'Windows username : ';
+    Caption := ExpandConstant('{cm:multiOTPWindowsUsername} : ');
     Parent := testPage.Surface;
   end;
-  // pageTop := pageTop + testUsernameLabel.Height + ScaleY(2);
+  // pageTop := pageTop + testUsernameLabel.Height + ScaleY(0);
 
   testUsernameEdit := TEdit.Create(testPage);
   with testUsernameEdit do
@@ -606,7 +765,7 @@ begin
     Top := pageTop;
     Left := pageLeft;
     Font.Style := [fsBold];
-    Caption := 'Windows password : ';
+    Caption := ExpandConstant('{cm:multiOTPWindowsPassword} : ');
     Parent := testPage.Surface;
   end;
   // pageTop := pageTop + testPasswordLabel.Height + ScaleY(2);
@@ -630,7 +789,7 @@ begin
     Top := pageTop;
     Left := pageLeft;
     Font.Style := [fsBold];
-    Caption := 'OTP for this user : ';
+    Caption := ExpandConstant('{cm:multiOTPUserOTP} : ');
     Parent := testPage.Surface;
   end;
   // pageTop := pageTop + testOtpLabel.Height + ScaleY(2);
@@ -651,7 +810,7 @@ begin
   with testButton do begin
     Top := pageTop;
     Left := pageLeft;
-    Caption := 'Test the multiOTP authentication to activate the Credential Provider';
+    Caption := ExpandConstant('{cm:multiOTPTestButton}');
     Width := testPage.SurfaceWidth - Left;
     Parent := testPage.Surface;
     OnClick := @TestButtonClick;
@@ -664,7 +823,7 @@ begin
     WordWrap := False;
     Top := pageTop;
     Left := pageLeft;
-    Caption := 'multiOTP test result : ';
+    Caption := ExpandConstant('{cm:multiOTPTestResult} : ');
     Parent := testPage.Surface;
   end;
   // pageTop := pageTop + testPasswordLabel.Height + ScaleY(2);
@@ -688,7 +847,7 @@ begin
     WordWrap := False;
     Top := pageTop;
     Left := pageLeft;
-    Caption := 'Credential Provider state : ';
+    Caption := ExpandConstant('{cm:multiOTPCredentialProviderState} : ');
     Parent := testPage.Surface;
   end;
 
@@ -712,7 +871,7 @@ begin
     WordWrap := False;
     Top := pageTop;
     Left := pageLeft;
-    Caption := 'multiOTP library version : ';
+    Caption := ExpandConstant('{cm:multiOTPLibraryVersion} : ');
     Font.Style := [fsItalic];
     Parent := testPage.Surface;
   end;
@@ -745,6 +904,8 @@ begin
   multiOTPRDPOnly := 1;
   multiOTPTimeout := 10;
   multiOTPPrefixPass := 0;
+  multiOTPDisplaySmsLink := 0;
+  multiOTPUPNFormat := 0;
 
   // Read registry values if they exists
   RegQueryStringValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPServers', multiOTPServers);
@@ -754,6 +915,8 @@ begin
   RegQueryDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPRDPOnly', multiOTPRDPOnly);
   RegQueryDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPTimeout', multiOTPTimeout);
   RegQueryDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPPrefixPass', multiOTPPrefixPass);
+  RegQueryDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPDisplaySmsLink', multiOTPDisplaySmsLink);
+  RegQueryDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPUPNFormat', multiOTPUPNFormat);
 
   // credentialProviderInstalled := RegQueryStringValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential Providers\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','', stringValue);
   credentialProviderInstalled := false;
@@ -773,9 +936,9 @@ begin
   if CurPageID = TestPage.ID then
     begin
       if (credentialProviderInstalled) then begin
-        credentialProviderState.Caption := 'installed and activated';
+        credentialProviderState.Caption := ExpandConstant('{cm:multiOTPInstalledAndActivated}');
       end else begin
-        credentialProviderState.Caption := 'NOT activated';
+        credentialProviderState.Caption := ExpandConstant('{cm:multiOTPNotActivated}');
         RegDeleteKeyIncludingSubkeys(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential Providers\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}');
         RegDeleteKeyIncludingSubkeys(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential Provider Filters\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}');
       end;

@@ -16,7 +16,7 @@ HRESULT GetRDPClientAddress(_In_ int RDPPort, _Outptr_result_nullonfailure_ PWST
 	ULONG ulSize = 0;
 	DWORD dwRetVal = 0;
 
-	char szLocalAddr[128];
+	// char szLocalAddr[128];
 	char szRemoteAddr[128];
 	PWSTR ptAddr;
 

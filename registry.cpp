@@ -18,7 +18,7 @@ DWORD readRegistryValueString(_In_ CONF_VALUE conf_value, _Outptr_result_nullonf
 
 	if (hr == S_OK) {
 		wcscpy_s(confKeyNameCLSID, 1024, confKeyName);
-		if (confKeyName == (PWSTR)MOTP_SETTINGS) {
+		if (confKeyName == (PWSTR)MULTIOTP_SETTINGS) {
 			wcscat_s(confKeyNameCLSID, 1024, clsid);
 		}
 
@@ -65,7 +65,7 @@ DWORD readRegistryValueString(_In_ CONF_VALUE conf_value, _Outptr_result_nullonf
 		}
 	}
 
-	dwSize = wcslen(defaultValue);
+	dwSize = DWORD(wcslen(defaultValue));
 	*data = (PWSTR)CoTaskMemAlloc(sizeof(wchar_t) * (dwSize + 1));
 	wcscpy_s(*data, 1024, defaultValue);
 	return dwSize;
@@ -87,7 +87,7 @@ DWORD readRegistryValueInteger(_In_ CONF_VALUE conf_value, _In_ DWORD defaultVal
 
 	if (hr == S_OK) {
 		wcscpy_s(confKeyNameCLSID, 1024, confKeyName);
-		if (confKeyName == (PWSTR)MOTP_SETTINGS) {
+		if (confKeyName == (PWSTR)MULTIOTP_SETTINGS) {
 			wcscat_s(confKeyNameCLSID, 1024, clsid);
 		}
 

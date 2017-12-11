@@ -4,18 +4,20 @@
 #include <winreg.h>
 #include <stdio.h>
 
-#define MOTP_SETTINGS    L"CLSID\\"
-#define MOTP_PATH        L"multiOTPPath"
-#define MOTP_TIMEOUT     L"multiOTPTimeout"
-#define MOTP_RDPONLY     L"multiOTPRDPOnly"
-#define MOTP_PREFIX_PASS L"multiOTPPrefixPass"
+#define MULTIOTP_SETTINGS         L"CLSID\\"
+#define MULTIOTP_PATH             L"multiOTPPath"
+#define MULTIOTP_TIMEOUT          L"multiOTPTimeout"
+#define MULTIOTP_RDPONLY          L"multiOTPRDPOnly"
+#define MULTIOTP_PREFIX_PASSWORD  L"multiOTPPrefixPass"
+#define MULTIOTP_DISPLAY_SMS_LINK L"multiOTPDisplaySmsLink"
+#define MULTIOTP_UPN_FORMAT       L"multiOTPUPNFormat"
 
-#define RDP_SETTINGS     L"SYSTEM\\CurrentControlSet\\Control\\Terminal Server\\WinStations\\RDP-Tcp"
-#define RDP_PORT         L"PortNumber"
+#define RDP_SETTINGS              L"SYSTEM\\CurrentControlSet\\Control\\Terminal Server\\WinStations\\RDP-Tcp"
+#define RDP_PORT                  L"PortNumber"
 
-#define TCPIP_SETTINGS   L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters"
-#define TCPIP_DOMAIN     L"Domain"
-#define TCPIP_HOSTNAME   L"Hostname"
+#define TCPIP_SETTINGS            L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters"
+#define TCPIP_DOMAIN              L"Domain"
+#define TCPIP_HOSTNAME            L"Hostname"
 
 struct REGISTRY_KEY
 {
@@ -26,22 +28,26 @@ struct REGISTRY_KEY
 
 enum CONF_VALUE
 {
-	CONF_PATH				  = 0,
-	CONF_TIMEOUT 			  = 1,
+	CONF_PATH                 = 0,
+	CONF_TIMEOUT              = 1,
 	CONF_RDP_ONLY             = 2,
 	CONF_PREFIX_PASSWORD      = 3,
-	CONF_RDP_PORT             = 4,
-	CONF_DOMAIN_NAME          = 5,
-	CONF_HOST_NAME            = 6,
-	CONF_NUM_VALUES			  = 7,
+	CONF_DISPLAY_SMS_LINK     = 4,
+	CONF_UPN_FORMAT           = 5,
+	CONF_RDP_PORT             = 6,
+	CONF_DOMAIN_NAME          = 7,
+	CONF_HOST_NAME            = 8,
+	CONF_NUM_VALUES           = 9,
 };
 
 static const REGISTRY_KEY s_CONF_VALUES[] =
 {
-	{ HKEY_CLASSES_ROOT, MOTP_SETTINGS, MOTP_PATH},
-	{ HKEY_CLASSES_ROOT, MOTP_SETTINGS, MOTP_TIMEOUT },
-    { HKEY_CLASSES_ROOT, MOTP_SETTINGS, MOTP_RDPONLY },
-	{ HKEY_CLASSES_ROOT, MOTP_SETTINGS, MOTP_PREFIX_PASS },
+	{ HKEY_CLASSES_ROOT, MULTIOTP_SETTINGS, MULTIOTP_PATH},
+	{ HKEY_CLASSES_ROOT, MULTIOTP_SETTINGS, MULTIOTP_TIMEOUT },
+  { HKEY_CLASSES_ROOT, MULTIOTP_SETTINGS, MULTIOTP_RDPONLY },
+	{ HKEY_CLASSES_ROOT, MULTIOTP_SETTINGS, MULTIOTP_PREFIX_PASSWORD },
+	{ HKEY_CLASSES_ROOT, MULTIOTP_SETTINGS, MULTIOTP_DISPLAY_SMS_LINK },
+	{ HKEY_CLASSES_ROOT, MULTIOTP_SETTINGS, MULTIOTP_UPN_FORMAT },
 
 	{ HKEY_LOCAL_MACHINE, RDP_SETTINGS, RDP_PORT },
 

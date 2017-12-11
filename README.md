@@ -1,23 +1,25 @@
 multiOTPCredentialProvider
 ==========================
-multiOTP Credential Provider for multiOTP is a free implementation of a V2 Credential Provider for the multiOTP strong two-factor authentication solution  
+multiOTP Credential Provider for multiOTP is a free and open source implementation of a V2 Credential Provider for the multiOTP strong two-factor authentication solution (Apache License, Version 2.0)
 
-(c) 2016-2017 SysCo systemes de communication sa (installer and enhancements)  
+(c) 2016-2017 SysCo systemes de communication sa (enhancements since 2016, simple installer with configuration options)
 (c) 2015-2016 ArcadeJust ("RDP only" enhancement)  
 (c) 2013-2015 Last Squirrel IT  
 
-Current build: 5.0.6.1 (2017-12-04)
-
-Apache License, Version 2.0
+Current build: 5.0.6.2 (2017-12-11)
 
 Binary download: https://download.multiotp.net/credential-provider/
 
 [![Donate via PayPal](https://img.shields.io/badge/donate-paypal-87ceeb.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&currency_code=USD&business=paypal@sysco.ch&item_name=Donation%20for%20multiOTP%20project)
 *Please consider supporting this project by making a donation via [PayPal](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&currency_code=USD&business=paypal@sysco.ch&item_name=Donation%20for%20multiOTP%20project)*
 
-multiOTP Credential Provider for multiOTP supporting Windows 7/8/8.1/10/2012(R2). Also supports domain users and Microsoft Account OTP (you can read about it here http://windows.microsoft.com/en-us/windows/identity-verification-apps-faq and here https://github.com/LastSquirrelIT/MultiOneTimePassword-CredentialProvider/wiki/multiOTP)
-- Forced OTP check for RDP
-- Forced, optional or disabled check of OTP for local logons
+Visit http://forum.multiotp.net/ for additional support.
+
+
+multiOTP Credential Provider for multiOTP supporting Windows 7/8/8.1/10/2012(R2)/2016.
+- supports both local and domain users
+- forced OTP check for RDP
+- forced or disabled check of OTP for local logons
 - client executable of multiOTP is automatically installed and configured
 - multiOTP Credential Provider is only activated if the authentication test is passed successfully
 - DLL and EXE files are digitally signed
@@ -30,16 +32,40 @@ multiOTP Credential Provider for multiOTP supporting Windows 7/8/8.1/10/2012(R2)
 ![multiOTPCredentialProvider login](https://raw.githubusercontent.com/multiOTP/multiOTPCredentialProvider/master/screenshots/multiOTPCredentialProvider-login.png)
 
 
-Prerequisitions:
+PREREQUISITES
+=============
 - installed multiOTP server(s)
-- configured multiOTP user (multiOTP username = windows local account name or domain user name or microsoft account name)
+- configured multiOTP user (multiOTP username = [domain user name] or [windows local account name] or [microsoft account name])
 
-Installation:
-- Launch the installer (in the installer directory) and set the various parameters. You must have administrator access.
 
-Thanks to:
+INSTALLATION
+============
+- Launch the installer (in the installer directory) and configure the various parameters during the detup. You must have administrator access.
+
+
+UNINSTALLATION
+==============
+- Uninstall the multiOTP Credential Provider using the regular uninstallation procedure, or launch the file multiOTPCredentialProvider-unregister.reg (you must have administrator access).
+
+
+TECHNICAL DETAILS
+=================
+- the credential provider DLL (multiOTPCredentialProvider.dll) is installed in the system folder \Windows\System32
+- the credential provider options are stored in the following registry key : HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential Providers\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}
+  - multiOTPPath : X:\Path\to\multiotp\folder
+  - multiOTPTimeout : [timeout in seconds, default is 10]
+  - multiOTPRDPOnly : [0|1]
+  - multiOTPPrefixPass : [0|1]
+  - multiOTPDisplaySmsLink : [0|1]
+  - multiOTPUPNFormat : [0|1]
+- the multiOTP options are stored in the file [multiOTPPath]\config\multiotp.ini
+
+
+THANKS TO
+=========
 - ArcadeJust ("RDP only" enhancement)
-- LastSquirrelIT (first version)
+- LastSquirrelIT (initial implementation)
+
 
 Report if you have any problems or questions regarding this app.
 
@@ -47,8 +73,12 @@ Report if you have any problems or questions regarding this app.
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
+2017-12-11 5.0.6.2 SysCo/al [Receive an OTP by SMS] link can be displayed or not (option during installation)
+                            UPN username format can be sent to the multiOTP server (by default, legacy username)
+                            Better documentation
 2017-12-04 5.0.6.1 SysCo/al Default domain name support
                             User can request an SMS code using a command link
+                            [Synchronize OTP] link removed (useless, synchronization is done automatically by typing OTP1 + [space] + OTP2)
 2017-11-10 5.0.6.0 SysCo/al Specific Credential Provider mode in the CLI version
 2017-11-05 5.0.5.9 SysCo/al Full support for login@domain.name UPN notation (AD/LDAP should be synchronized using the userPrincipalName instead of sAMAccountName identifier)
 2017-11-04 5.0.5.6 SysCo/al Removed digit OTP only check for the OTP field

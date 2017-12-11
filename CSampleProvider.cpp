@@ -394,7 +394,7 @@ HRESULT CSampleProvider::GetCredentialAt(
 	HRESULT hr = E_INVALIDARG;
     *ppcpc = nullptr;
 
-	if (DEVELOP_MODE) PrintLn("Credential.size(%d)", _pCredential.size());
+	if (DEVELOP_MODE) PrintLn("Credential.size(%d)", (int)_pCredential.size());
 
     if ((dwIndex < _pCredential.size()) && ppcpc)
     {
@@ -529,7 +529,7 @@ HRESULT CSampleProvider::_EnumerateCredentials()
 			hr = _pCredential[_pCredential.size() - 1]->Initialize(_cpus, s_rgCredProvFieldDescriptors, s_rgFieldStatePairs, nullptr);
 		}
 		else {
-			if (DEVELOP_MODE) PrintLn(L"Error adding user: %d", _pCredential.size());
+			if (DEVELOP_MODE) PrintLn(L"Error adding user: %d", (int)_pCredential.size());
 		}
 	}
     return hr;

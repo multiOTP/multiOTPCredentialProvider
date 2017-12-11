@@ -26,8 +26,8 @@
 #define ENDPOINT_AUTH_FAIL		((HRESULT)0x88809001)
 #define ENDPOINT_AUTH_CONTINUE	((HRESULT)0x88809002) 
 
-// ICredentialProviderCredential should be removed once...
-class CSampleCredential : public ICredentialProviderCredential2, ICredentialProviderCredential, ICredentialProviderCredentialWithFieldOptions
+// ICredentialProviderCredential removed (already base-class of 'ICredentialProviderCredential2')
+class CSampleCredential : public ICredentialProviderCredential2, ICredentialProviderCredentialWithFieldOptions
 {
 public:
     // IUnknown
@@ -53,7 +53,7 @@ public:
             QITABENT(CSampleCredential, ICredentialProviderCredential), // IID_ICredentialProviderCredential
             QITABENT(CSampleCredential, ICredentialProviderCredential2), // IID_ICredentialProviderCredential2
             QITABENT(CSampleCredential, ICredentialProviderCredentialWithFieldOptions), //IID_ICredentialProviderCredentialWithFieldOptions
-            {0},
+            { static_cast<int>(0) },
         };
         return QISearch(this, qit, riid, ppv);
     }

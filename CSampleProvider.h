@@ -47,7 +47,7 @@ class CSampleProvider : public ICredentialProvider,
         {
             QITABENT(CSampleProvider, ICredentialProvider), // IID_ICredentialProvider
             QITABENT(CSampleProvider, ICredentialProviderSetUserArray), // IID_ICredentialProviderSetUserArray
-            {0},
+            { static_cast<int>(0) },
         };
         return QISearch(this, qit, riid, ppv);
     }

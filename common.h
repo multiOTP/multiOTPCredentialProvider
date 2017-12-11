@@ -81,7 +81,7 @@ static const FIELD_STATE_PAIR s_rgFieldStatePairs[] =
   { CPFS_HIDDEN,                     CPFIS_NONE    },    // SFI_PREV_OTP
 	{ CPFS_DISPLAY_IN_SELECTED_TILE,   CPFIS_NONE    },    // SFI_OTP
 	{ CPFS_DISPLAY_IN_SELECTED_TILE,   CPFIS_NONE    },    // SFI_DOMAIN_INFO
-	{ CPFS_DISPLAY_IN_SELECTED_TILE,   CPFIS_NONE    },    // SFI_REQUIRE_SMS
+	{ CPFS_HIDDEN,                     CPFIS_NONE    },    // SFI_REQUIRE_SMS
 	{ CPFS_HIDDEN,                     CPFIS_NONE    },    // SFI_SYNCHRONIZE_LINK
 	{ CPFS_HIDDEN,                     CPFIS_NONE    },    // SFI_FAILURE_TEXT
 	{ CPFS_HIDDEN,                     CPFIS_NONE    },    // SFI_NEXT_LOGIN_ATTEMPT

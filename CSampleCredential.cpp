@@ -101,7 +101,7 @@ HRESULT CSampleCredential::call_multiotp(_In_ PCWSTR username, _In_ PCWSTR PREV_
 	len += 1;//space char
 	len += wcslen(OTP);
 
-	if (DEVELOP_MODE) PrintLn("cmd len: %d", len);
+	if (DEVELOP_MODE) PrintLn("cmd len: %d", int(len));
 
 	//cmd = (PWSTR)CoTaskMemAlloc(sizeof(wchar_t) * (len + 1));//+1 null pointer
 
@@ -127,7 +127,7 @@ HRESULT CSampleCredential::call_multiotp(_In_ PCWSTR username, _In_ PCWSTR PREV_
 	wcscat_s(cmd, 1024, OTP);
 
 	len = wcslen(cmd);
-	if (DEVELOP_MODE) PrintLn("command len:%d", len);
+	if (DEVELOP_MODE) PrintLn("command len:%d", int(len));
 	if (DEVELOP_MODE) PrintLn(cmd);
 	//return hr;
 
@@ -344,45 +344,53 @@ HRESULT CSampleCredential::Initialize(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
 
 	if (SUCCEEDED(hr))
     {
-        //hr = pcpUser->GetStringValue(PKEY_Identity_QualifiedUserName, &_pszQualifiedUserName);
-		if (pcpUser != nullptr) {
-			if (DEVELOP_MODE) PrintLn("Known user");
-			hr = pcpUser->GetStringValue(PKEY_Identity_QualifiedUserName, &_pszQualifiedUserName);//get username from the LogonUI user object
-			if (DEVELOP_MODE) PrintLn(L"Qualified User Name: ", _pszQualifiedUserName);
-			if (_fIsLocalUser) {
-				PWSTR pszUserName;
-				pcpUser->GetStringValue(PKEY_Identity_UserName, &pszUserName);
-				if (pszUserName != nullptr)
-				{
-					wchar_t szString[256];
-					StringCchPrintf(szString, ARRAYSIZE(szString), L"User Name: %s", pszUserName);
-					if (DEVELOP_MODE) PrintLn(szString);
-					hr = SHStrDupW(szString, &_rgFieldStrings[SFI_LARGE_TEXT]);
-					CoTaskMemFree(pszUserName);
-					//				hr = pcpUser->GetSid(&_pszUserSid);
-				}
-				else
-				{
-					hr = SHStrDupW(L"User Name is NULL", &_rgFieldStrings[SFI_LARGE_TEXT]);
-				}
-			}
-			else {
-				if (DEVELOP_MODE) PrintLn(L"Domain user, skip SFI_LARGE_TEXT");
-				//domain
-				//hr = SHStrDupW(_pszQualifiedUserName, &_rgFieldStrings[SFI_LARGE_TEXT]);//Microsoft\login@domain.com
-			}
-		}
-		else {
-			if (DEVELOP_MODE) PrintLn("Unknown user -> display LoginName");
-			hr = SHStrDupW(L"", &_pszQualifiedUserName);
-			_fUserNameVisible = true;
-			_rgFieldStatePairs[SFI_LOGIN_NAME].cpfs = CPFS_DISPLAY_IN_SELECTED_TILE;//unhide login name
-			//switch focus to login
-			_rgFieldStatePairs[SFI_LOGIN_NAME].cpfis = CPFIS_FOCUSED;
-			_rgFieldStatePairs[SFI_PASSWORD].cpfis = CPFIS_NONE;
-			//Don't panic!!!
-		}
+      //hr = pcpUser->GetStringValue(PKEY_Identity_QualifiedUserName, &_pszQualifiedUserName);
+      if (pcpUser != nullptr) {
+        if (DEVELOP_MODE) PrintLn("Known user");
+        hr = pcpUser->GetStringValue(PKEY_Identity_QualifiedUserName, &_pszQualifiedUserName);//get username from the LogonUI user object
+        if (DEVELOP_MODE) PrintLn(L"Qualified User Name: ", _pszQualifiedUserName);
+        if (_fIsLocalUser) {
+          PWSTR pszUserName;
+          pcpUser->GetStringValue(PKEY_Identity_UserName, &pszUserName);
+          if (pszUserName != nullptr)
+          {
+            wchar_t szString[256];
+            StringCchPrintf(szString, ARRAYSIZE(szString), L"User Name: %s", pszUserName);
+            if (DEVELOP_MODE) PrintLn(szString);
+            hr = SHStrDupW(szString, &_rgFieldStrings[SFI_LARGE_TEXT]);
+            CoTaskMemFree(pszUserName);
+            //				hr = pcpUser->GetSid(&_pszUserSid);
+          }
+          else
+          {
+            hr = SHStrDupW(L"User Name is NULL", &_rgFieldStrings[SFI_LARGE_TEXT]);
+          }
+        }
+        else {
+          if (DEVELOP_MODE) PrintLn(L"Domain user, skip SFI_LARGE_TEXT");
+          //domain
+          //hr = SHStrDupW(_pszQualifiedUserName, &_rgFieldStrings[SFI_LARGE_TEXT]);//Microsoft\login@domain.com
+        }
+      }
+      else {
+        if (DEVELOP_MODE) PrintLn("Unknown user -> display LoginName");
+        hr = SHStrDupW(L"", &_pszQualifiedUserName);
+        _fUserNameVisible = true;
+        _rgFieldStatePairs[SFI_LOGIN_NAME].cpfs = CPFS_DISPLAY_IN_SELECTED_TILE;//unhide login name
+        //switch focus to login
+        _rgFieldStatePairs[SFI_LOGIN_NAME].cpfis = CPFIS_FOCUSED;
+        _rgFieldStatePairs[SFI_PASSWORD].cpfis = CPFIS_NONE;
+        //Don't panic!!!
+      }
     }
+
+    // Display or not the "Receive an OTP by SMS" link
+    if (readRegistryValueInteger(CONF_DISPLAY_SMS_LINK, 0)) {
+      _rgFieldStatePairs[SFI_REQUIRE_SMS].cpfs = CPFS_DISPLAY_IN_SELECTED_TILE;
+    } else {
+      _rgFieldStatePairs[SFI_REQUIRE_SMS].cpfs = CPFS_HIDDEN;
+    }
+    
 	/*
 	if (SUCCEEDED(hr))
     {
@@ -708,7 +716,6 @@ HRESULT CSampleCredential::SetStringValue(DWORD dwFieldID, _In_ PCWSTR pwz)
         PWSTR pszHostname;
         PWSTR pszQualifiedUserName;
 
-        wchar_t szString[1024];
         wchar_t szdomainInfo[1024];
 
         DWORD dwDomainSize = 0;
@@ -954,14 +961,19 @@ HRESULT CSampleCredential::CommandLinkClicked(DWORD dwFieldID)
 
             PWSTR pszDomain;
             PWSTR pszUsername;
-            PWSTR pszHostname;
             PWSTR pszQualifiedUserName;
 
-            wchar_t szString[1024];
-            wchar_t szUsername[1024];
+            ULONG size = 1024;
+            wchar_t buffer[1024];
+
+            wchar_t uname[1024];
+            wchar_t upn_name[1024];
+            wchar_t otp_name[1024];
 
             DWORD dwDomainSize = 0;
             DWORD dwHostnameSize = 0;
+            
+            BOOLEAN rc;
 
             hr_sfi = SHStrDupW(L"", &pszUsername);
             hr_sfi = SHStrDupW(_rgFieldStrings[SFI_LOGIN_NAME], &pszQualifiedUserName);
@@ -969,16 +981,38 @@ HRESULT CSampleCredential::CommandLinkClicked(DWORD dwFieldID)
             const wchar_t *pchWhack = wcschr(pszQualifiedUserName, L'\\');
             const wchar_t *pchWatSign = wcschr(pszQualifiedUserName, L'@');
 
-            if ((pchWatSign != nullptr) || (pchWhack != nullptr)) {
+            if (pchWatSign != nullptr) {
+              wcscpy_s(upn_name, 1024, pszQualifiedUserName);
+              rc = TranslateNameW(pszQualifiedUserName, NameUserPrincipal, NameSamCompatible, buffer, &size);
+              if (rc) {
+                if (DEVELOP_MODE) PrintLn(L"User translated from ", pszQualifiedUserName, L" to ", buffer);
+                CoTaskMemFree(pszQualifiedUserName);
+                wcscpy_s(uname, 1024, buffer);
+              }
+            } else if (pchWhack != nullptr) {
               hr_sfi = SplitDomainAndUsername(pszQualifiedUserName, &pszDomain, &pszUsername);
               if (SUCCEEDED(hr_sfi)) {
-                StringCchPrintf(szUsername, ARRAYSIZE(szUsername), pszUsername);
+                wcscpy_s(uname, 1024, pszUsername);
+                rc = TranslateNameW(pszQualifiedUserName, NameSamCompatible, NameUserPrincipal, buffer, &size);
+                if (rc) {
+                  if (DEVELOP_MODE) PrintLn(L"User translated from ", pszQualifiedUserName, L" to ", buffer);
+                  CoTaskMemFree(pszQualifiedUserName);
+                  wcscpy_s(upn_name, 1024, buffer);
+                }
               }
+            } else {
+              wcscpy_s(upn_name, 1024, pszQualifiedUserName);
+              wcscpy_s(uname, 1024, pszQualifiedUserName);
+              CoTaskMemFree(pszQualifiedUserName);
             }
-            else {
-              StringCchPrintf(szUsername, ARRAYSIZE(szUsername), pszQualifiedUserName);
+            
+            if (readRegistryValueInteger(CONF_UPN_FORMAT, 0)) {
+              wcscpy_s(otp_name, 1024, upn_name);
+            } else {
+              wcscpy_s(otp_name, 1024, uname);
             }
-            hr = call_multiotp(szUsername, L"", L"sms", L"");
+            
+            hr = call_multiotp(otp_name, L"", L"sms", L"");
           }
           break;
 
@@ -1010,15 +1044,17 @@ HRESULT CSampleCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIAL
     *pcpsiOptionalStatusIcon = CPSI_NONE;
     ZeroMemory(pcpcs, sizeof(*pcpcs));
 
-	wchar_t fullname[1024];
-	wchar_t uname[1024];
+    wchar_t fullname[1024];
+    wchar_t uname[1024];
+    wchar_t upn_name[1024];
+    wchar_t otp_name[1024];
 
     PWSTR domain = L"";
     DWORD domainSize = 0;
 
 	PWSTR strNetBiosDomainName = L"";
 
-	bool rc;
+	BOOLEAN rc;
 
 	domainSize = readRegistryValueString(CONF_DOMAIN_NAME, &domain, L"");
 	if (DEVELOP_MODE) PrintLn(L"Detected domain: ", domain);
@@ -1034,10 +1070,6 @@ HRESULT CSampleCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIAL
 
 	if (DEVELOP_MODE) PrintLn(L"OTP Username determination");
 	const wchar_t *pchWhack = wcschr(_pszQualifiedUserName, L'\\');
-  
-  // 2017-11-05 SysCo/al Add UPN support
-  // https://msdn.microsoft.com/en-us/library/ms725484(VS.85).aspx
-  // https://msdn.microsoft.com/en-us/library/ms724268(v=vs.85).aspx
 	const wchar_t *pchWatSign = wcschr(_pszQualifiedUserName, L'@');
 
 
@@ -1057,18 +1089,27 @@ HRESULT CSampleCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIAL
 		if (DEVELOP_MODE) PrintLn(L"The full user has been defined like this: ", fullname);
 	}
 
-    if (pchWatSign != nullptr) {
-		ULONG size = 1024;
-		wchar_t buffer[1024];
-		rc = TranslateNameW(_pszQualifiedUserName, NameUserPrincipal, NameSamCompatible, buffer, &size); // NameDnsDomain should also work instead of NameSamCompatible
-      if (rc) {
-          if (DEVELOP_MODE) PrintLn(L"User translated from ", _pszQualifiedUserName, L" to ", buffer);
-          CoTaskMemFree(_pszQualifiedUserName);
-          hr = SHStrDupW(buffer, &_pszQualifiedUserName);
-          pchWhack = wcschr(buffer, L'\\');
-      }
+  if (pchWatSign != nullptr) {
+    ULONG size = 1024;
+    wchar_t buffer[1024];
+    wcscpy_s(upn_name, 1024, _pszQualifiedUserName);
+    rc = TranslateNameW(_pszQualifiedUserName, NameUserPrincipal, NameSamCompatible, buffer, &size); // NameDnsDomain should also work instead of NameSamCompatible
+    if (rc) {
+      if (DEVELOP_MODE) PrintLn(L"User translated from ", _pszQualifiedUserName, L" to ", buffer);
+      CoTaskMemFree(_pszQualifiedUserName);
+      hr = SHStrDupW(buffer, &_pszQualifiedUserName);
+      pchWhack = wcschr(buffer, L'\\');
     }
-  
+  } else {
+    ULONG size = 1024;
+    wchar_t buffer[1024];
+    rc = TranslateNameW(_pszQualifiedUserName, NameSamCompatible, NameUserPrincipal, buffer, &size); // NameDnsDomain should also work instead of NameSamCompatible
+    if (rc) {
+      if (DEVELOP_MODE) PrintLn(L"User translated to UPN, from ", _pszQualifiedUserName, L" to ", buffer);
+      wcscpy_s(upn_name, 1024, buffer);
+    }
+  }
+
 	if (pchWhack != nullptr) {
 		const wchar_t *pchUsernameBegin = pchWhack + 1;
 		hr = wcscpy_s(uname, 1024, pchUsernameBegin);
@@ -1096,14 +1137,21 @@ HRESULT CSampleCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIAL
             _fIsLocalUser = true;
         }
 	}
-    
+
+		if (readRegistryValueInteger(CONF_UPN_FORMAT, 0)) {
+      wcscpy_s(otp_name, 1024, upn_name);
+    } else {
+      wcscpy_s(otp_name, 1024, uname);
+    }
+
+  
 	if (DEVELOP_MODE) PrintLn(L"_pszQualifiedUserName before the check is the following: ", _pszQualifiedUserName);
 
 	if ( ( ( _fShowControls) && (wcslen(_rgFieldStrings[SFI_PREV_OTP]) > 0) && (wcslen(_rgFieldStrings[SFI_OTP]) > 0) ) ||   //resync OTP
 		 ( (!_fShowControls) && (wcslen(_rgFieldStrings[SFI_PASSWORD]) > 0) && (wcslen(_rgFieldStrings[SFI_OTP]) > 0) )      //validate OTP
 		){
 		if (SUCCEEDED(hr)) {
-			if (DEVELOP_MODE) PrintLn(L"OTP User:", uname);
+			if (DEVELOP_MODE) PrintLn(L"OTP User:", otp_name);
 			//SHStrDupW(_rgFieldStrings[SFI_PREV_OTP], &otp1);
 			if (DEVELOP_MODE && SKIP_OTP_CHECK) {
 				PrintLn(L"Dll compiled with SKIP_OTP_CHECK !!!!!!!!", hr);
@@ -1111,10 +1159,10 @@ HRESULT CSampleCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIAL
 			}
 			else {
 				if (readRegistryValueInteger(CONF_PREFIX_PASSWORD, 0)) {
-					hr = call_multiotp(uname, _rgFieldStrings[SFI_PREV_OTP], _rgFieldStrings[SFI_OTP], _rgFieldStrings[SFI_PASSWORD]);
+					hr = call_multiotp(otp_name, _rgFieldStrings[SFI_PREV_OTP], _rgFieldStrings[SFI_OTP], _rgFieldStrings[SFI_PASSWORD]);
 				}
 				else {
-					hr = call_multiotp(uname, _rgFieldStrings[SFI_PREV_OTP], _rgFieldStrings[SFI_OTP], L"");
+					hr = call_multiotp(otp_name, _rgFieldStrings[SFI_PREV_OTP], _rgFieldStrings[SFI_OTP], L"");
 				}
 			}
 
@@ -1219,7 +1267,7 @@ HRESULT CSampleCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIAL
         {
             PWSTR pszDomain;
             PWSTR pszUsername;
-			hr = SplitDomainAndUsername(_pszQualifiedUserName, &pszDomain, &pszUsername);
+            hr = SplitDomainAndUsername(_pszQualifiedUserName, &pszDomain, &pszUsername);
             if (SUCCEEDED(hr))
             {
 				if (DEVELOP_MODE) PrintLn(L"SplitDomainAndUsername = ", pszDomain, L": ", pszUsername);

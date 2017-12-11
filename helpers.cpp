@@ -775,7 +775,7 @@ HRESULT DomainUsernameStringAlloc(
     return hr;
 }
 
-// Concatonates UPN (with @) pwszUsername and pwszDomain and places the result in *ppwszUsernameDomain.
+// Concatenates UPN (with @) pwszUsername and pwszDomain and places the result in *ppwszUsernameDomain.
 HRESULT UpnUsernameDomainStringAlloc(
     _In_ PCWSTR pwszUsername,
     _In_ PCWSTR pwszDomain,
