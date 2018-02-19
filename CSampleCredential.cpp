@@ -246,18 +246,24 @@ HRESULT CSampleCredential::Initialize(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
     GUID guidProvider;
 	LPOLESTR clsid;
 
-	PWSTR pszDomain;
-	PWSTR pszHostname;
-	wchar_t szdomainInfo[1024];
+	PWSTR pszDomain, pszHostname, pszLoginTitle;
+	wchar_t szDomainInfo[1024], szLoginTitle[1024];
 
 	if (readRegistryValueString(CONF_DOMAIN_NAME, &pszDomain, L"") > 0) {
-		StringCchPrintf(szdomainInfo, ARRAYSIZE(szdomainInfo), L"Domain: %s", pszDomain);
+		StringCchPrintf(szDomainInfo, ARRAYSIZE(szDomainInfo), L"Domain: %s", pszDomain);
 	}
 	else if (readRegistryValueString(CONF_HOST_NAME, &pszHostname, L"") > 0) {
-		StringCchPrintf(szdomainInfo, ARRAYSIZE(szdomainInfo), L"Computer: %s", pszHostname);
+		StringCchPrintf(szDomainInfo, ARRAYSIZE(szDomainInfo), L"Computer: %s", pszHostname);
 	}
 	else {
-		StringCchPrintf(szdomainInfo, ARRAYSIZE(szdomainInfo), L" ");
+		StringCchPrintf(szDomainInfo, ARRAYSIZE(szDomainInfo), L" ");
+	}
+
+	if (readRegistryValueString(CONF_LOGIN_TITLE, &pszLoginTitle, L"") > 0) {
+		StringCchPrintf(szLoginTitle, ARRAYSIZE(szLoginTitle), pszLoginTitle);
+	}
+	else {
+		StringCchPrintf(szLoginTitle, ARRAYSIZE(szLoginTitle), L"multiOTP Login");
 	}
 
 	if (pcpUser != nullptr) {
@@ -297,7 +303,7 @@ HRESULT CSampleCredential::Initialize(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
 	}
 	if (SUCCEEDED(hr))
     {
-        hr = SHStrDupW(L"multiOTP Login", &_rgFieldStrings[SFI_LARGE_TEXT]);
+        hr = SHStrDupW(szLoginTitle, &_rgFieldStrings[SFI_LARGE_TEXT]);
     }
 	if (SUCCEEDED(hr))
 	{
@@ -321,7 +327,7 @@ HRESULT CSampleCredential::Initialize(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
 	}
 	if (SUCCEEDED(hr))
 	{
-		hr = SHStrDupW(szdomainInfo, &_rgFieldStrings[SFI_DOMAIN_INFO]);
+		hr = SHStrDupW(szDomainInfo, &_rgFieldStrings[SFI_DOMAIN_INFO]);
 	}
 	if (SUCCEEDED(hr))
 	{
@@ -623,10 +629,36 @@ HRESULT CSampleCredential::GetBitmapValue(DWORD dwFieldID, _Outptr_result_nullon
 {
     HRESULT hr;
     *phbmp = nullptr;
-
+    PWSTR path;
+    BOOLEAN alternate_bmp = FALSE;
+    
     if ((SFI_TILEIMAGE == dwFieldID))
     {
-        HBITMAP hbmp = LoadBitmap(HINST_THISDLL, MAKEINTRESOURCE(IDB_TILE_IMAGE));
+		HBITMAP hbmp = nullptr;
+        if (readRegistryValueString(CONF_PATH, &path, L"c:\\multiotp\\")) {
+            wchar_t bitmap_path[1024];
+            wcscpy_s(bitmap_path, 1024, path);
+            size_t npath = wcslen(bitmap_path);
+            if (bitmap_path[npath - 1] != '\\' && bitmap_path[npath - 1] != '/') {
+                bitmap_path[npath] = '\\';
+                bitmap_path[npath+1] = '\0';
+            }
+            wcscat_s(bitmap_path, 1024, L"multiotp.bmp");
+            if (PathFileExists(bitmap_path)) {
+				hbmp = (HBITMAP)LoadImage(HINST_THISDLL, bitmap_path, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
+				if (hbmp != nullptr) {
+					alternate_bmp = true;
+				}
+            }
+        }
+
+        // From File:
+        // HBITMAP hbmp = (HBITMAP)LoadImage(hInstance, "myimage.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
+        
+        if (!alternate_bmp) {
+			hbmp = LoadBitmap(HINST_THISDLL, MAKEINTRESOURCE(IDB_TILE_IMAGE));
+        }
+        
         if (hbmp != nullptr)
         {
             hr = S_OK;
@@ -716,7 +748,7 @@ HRESULT CSampleCredential::SetStringValue(DWORD dwFieldID, _In_ PCWSTR pwz)
         PWSTR pszHostname;
         PWSTR pszQualifiedUserName;
 
-        wchar_t szdomainInfo[1024];
+        wchar_t szDomainInfo[1024];
 
         DWORD dwDomainSize = 0;
         DWORD dwHostnameSize = 0;
@@ -728,30 +760,30 @@ HRESULT CSampleCredential::SetStringValue(DWORD dwFieldID, _In_ PCWSTR pwz)
         const wchar_t *pchWatSign = wcschr(pszQualifiedUserName, L'@');
 
         if (pchWatSign != nullptr) {
-          StringCchPrintf(szdomainInfo, ARRAYSIZE(szdomainInfo), L" ");
+          StringCchPrintf(szDomainInfo, ARRAYSIZE(szDomainInfo), L" ");
         } else if (pchWhack != nullptr) {
           hr_sfi = SplitDomainAndUsername(pszQualifiedUserName, &pszDomain, &pszUsername);
           if (SUCCEEDED(hr_sfi)) {
-            StringCchPrintf(szdomainInfo, ARRAYSIZE(szdomainInfo), L"Domain: %s", pszDomain);
+            StringCchPrintf(szDomainInfo, ARRAYSIZE(szDomainInfo), L"Domain: %s", pszDomain);
             if (wcscmp(pszDomain, L".") == 0) {
               dwHostnameSize = readRegistryValueString(CONF_HOST_NAME, &pszHostname, L"");
-              StringCchPrintf(szdomainInfo, ARRAYSIZE(szdomainInfo), L"Computer: %s", pszHostname);
+              StringCchPrintf(szDomainInfo, ARRAYSIZE(szDomainInfo), L"Computer: %s", pszHostname);
             }
           }
         }
         else {
           if (readRegistryValueString(CONF_DOMAIN_NAME, &pszDomain, L"") > 0) {
-            StringCchPrintf(szdomainInfo, ARRAYSIZE(szdomainInfo), L"Domain: %s", pszDomain);
+            StringCchPrintf(szDomainInfo, ARRAYSIZE(szDomainInfo), L"Domain: %s", pszDomain);
           }
           else if (readRegistryValueString(CONF_HOST_NAME, &pszHostname, L"") > 0) {
-            StringCchPrintf(szdomainInfo, ARRAYSIZE(szdomainInfo), L"Computer: %s", pszHostname);
+            StringCchPrintf(szDomainInfo, ARRAYSIZE(szDomainInfo), L"Computer: %s", pszHostname);
           }
           else {
-            StringCchPrintf(szdomainInfo, ARRAYSIZE(szdomainInfo), L" ");
+            StringCchPrintf(szDomainInfo, ARRAYSIZE(szDomainInfo), L" ");
           }
         }
 
-        SHStrDupW(szdomainInfo, &_rgFieldStrings[SFI_DOMAIN_INFO]);
+        SHStrDupW(szDomainInfo, &_rgFieldStrings[SFI_DOMAIN_INFO]);
         _pCredProvCredentialEvents->SetFieldString(this, SFI_DOMAIN_INFO, _rgFieldStrings[SFI_DOMAIN_INFO]);
       }
 
@@ -883,7 +915,17 @@ HRESULT CSampleCredential::SetComboBoxSelectedValue(DWORD dwFieldID, DWORD dwSel
 // Called when the user clicks a command link.
 HRESULT CSampleCredential::CommandLinkClicked(DWORD dwFieldID)
 {
-    HRESULT hr = S_OK;
+	HRESULT hr = S_OK;
+
+	PWSTR pszLoginTitle;
+	wchar_t szLoginTitle[1024];
+
+	if (readRegistryValueString(CONF_LOGIN_TITLE, &pszLoginTitle, L"") > 0) {
+		StringCchPrintf(szLoginTitle, ARRAYSIZE(szLoginTitle), pszLoginTitle);
+	}
+	else {
+		StringCchPrintf(szLoginTitle, ARRAYSIZE(szLoginTitle), L"multiOTP Login");
+	}
 
 	if (DEVELOP_MODE) PrintLn(L"CommandLinkClicked: %d", dwFieldID);
 
@@ -943,7 +985,7 @@ HRESULT CSampleCredential::CommandLinkClicked(DWORD dwFieldID)
             cpfsShow = _fShowControls ? CPFS_HIDDEN : CPFS_DISPLAY_IN_SELECTED_TILE;
             _pCredProvCredentialEvents->SetFieldState(this, SFI_PREV_OTP, cpfsShow);
             _pCredProvCredentialEvents->SetFieldString(this, SFI_SYNCHRONIZE_LINK, _fShowControls ? L"Synchronize multiOTP" : L"multiOTP Login");
-            _pCredProvCredentialEvents->SetFieldString(this, SFI_LARGE_TEXT, _fShowControls ? L"multiOTP Login" : L"Synchronize multiOTP");
+            _pCredProvCredentialEvents->SetFieldString(this, SFI_LARGE_TEXT, _fShowControls ? szLoginTitle : L"Synchronize multiOTP");
             _fShowControls = !_fShowControls;
             cpfsShow = _fShowControls ? CPFS_HIDDEN : CPFS_DISPLAY_IN_SELECTED_TILE;
             _pCredProvCredentialEvents->SetFieldState(this, SFI_PASSWORD, cpfsShow);

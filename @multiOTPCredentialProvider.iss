@@ -1,10 +1,10 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "multiOTP Credential Provider"
-#define MyAppVersion "5.0.6.2"
+#define MyAppVersion "5.1.0.3"
 #define MyAppPublisher "SysCo systemes de communication sa"
-#define MyAppURL "http://www.multiotp.com/"
-#define MyAppCopyright "Copyright (c) 2010-2017 SysCo / ArcadeJust / LastSquirrelIT (Apache License)"
+#define MyAppURL "https://github.com/multiOTP/multiOTPCredentialProvider"
+#define MyAppCopyright "Copyright (c) 2010-2018 SysCo / ArcadeJust / LastSquirrelIT (Apache License)"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
@@ -26,8 +26,10 @@ DefaultGroupName={#MyAppName}
 UninstallDisplayIcon={app}\multiotp.exe
 DisableProgramGroupPage=yes
 OutputDir=D:\Data\projects\multiotp\multiOTPCredentialProvider\installer
-OutputBaseFilename=multiOTPCredentialProvider-5.0.6.2
+OutputBaseFilename=multiOTPCredentialProvider-5.1.0.3
 SetupIconFile=D:\Data\projects\multiotp\ico\multiOTP.ico
+WizardImageFile=D:\Data\projects\multiotp\bmp\multiOTP-wizard-164x314.bmp
+WizardSmallImageFile=D:\Data\projects\multiotp\bmp\multiOTP-wizard-55x58.bmp
 Compression=lzma
 SolidCompression=yes
 ; "ArchitecturesInstallIn64BitMode=x64" requests that the install be
@@ -70,6 +72,7 @@ Root: "HKCR"; Subkey: "CLSID\{{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}"; ValueType
 [CustomMessages]
 ProgramOnTheWeb=%1 on the Web
 UninstallProgram=Uninstall %1
+multiOTPLoginTitleLabel=multiOTP Login Title
 multiOTPserversLabel=URL of your multiOTP server(s), separated by semi-colons
 multiOTPServersSample=Example: https://192.168.1.88 ; http://ip.address.of.server:8112
 multiOTPconfiguration=multiOTP configuration
@@ -115,6 +118,7 @@ multiOTPReturnCodeSuffix= in multiOTP documentation
 
 ;french.ProgramOnTheWeb=%1 sur Internet
 ;french.UninstallProgram=Désinstaller %1
+;french.multiOTPLoginTitleLabel=Titre du fournisseur de connexion multiOTP
 ;french.multiOTPserversLabel=URL de votre/vos serveur(s) multiOTP, séparés par un point-virgule
 ;french.multiOTPServersSample=Exemple: https://192.168.1.88 ; http://adresse.ip.du.serveur:8112
 ;french.multiOTPconfiguration=Configuration multiOTP
@@ -174,6 +178,7 @@ var
   testPasswordEdit: TEdit;
   testOtpdEdit: TEdit;
 
+  multiOTPLoginTitle: String;
   multiOTPServers: String;
   multiOTPServerTimeout: Cardinal;
   multiOTPSharedSecret: String;
@@ -184,6 +189,7 @@ var
   multiOTPDisplaySmsLink: Cardinal;
   multiOTPUPNFormat: Cardinal;
 
+  multiOTPLoginTitleEdit: TEdit;
   multiOTPServersEdit: TEdit;
   multiOTPServerTimeoutEdit: TEdit;
   multiOTPSharedSecretEdit: TEdit;
@@ -330,7 +336,12 @@ var
   ResultCode: Integer;
   TmpFileName: string;
   ExecStdout: AnsiString;
+  multiOTPOptions : string;
 begin
+
+  multiOTPLoginTitle := multiOTPLoginTitleEdit.Text;
+  RegWriteStringValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPLoginTitle', multiOTPLoginTitle);
+
   multiOTPServers := multiOTPServersEdit.Text;
   RegWriteStringValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPServers', multiOTPServers);
 
@@ -384,6 +395,9 @@ begin
     // MsgBox(SysErrorMessage(ResultCode), mbInformation, MB_OK);
     ResultCode := 99;
   end;
+  
+  multiOTPOptions := 'server_secret='+multiOTPSharedSecret+Chr(9)+'server_cache_level='+IntToStr(multiOTPCacheEnabled)+Chr(9)+'server_timeout='+IntToStr(multiOTPServerTimeout)+Chr(9)+'server_url='+multiOTPServers+''
+  RegWriteStringValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPOptions', multiOTPOptions);
 
   TmpFileName := ExpandConstant('{tmp}') + '\multiotp_version.txt';
   Exec('cmd.exe', '/C '+ExpandConstant('{app}\multiotp.exe')+' -cp -version > "' + TmpFileName + '"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
@@ -393,16 +407,16 @@ begin
   DeleteFile(TmpFileName);
 end;
 
-procedure CreateSetupPage;
+procedure CreateSetupPage2of2;
 var
   Page: TWizardPage;
+  multiOTPLoginTitleLabel: TNewStaticText;
   multiOTPServersLabel: TNewStaticText;
   multiOTPServersSample: TNewStaticText;
   multiOTPServerTimeoutLabel: TNewStaticText;
   multiOTPSharedSecretLabel: TNewStaticText;
   multiOTPSharedSecretSample: TNewStaticText;
   multiOTPSharedSecretSample2: TNewStaticText;
-  multiOTPTimeoutLabel: TNewStaticText;
 
   pageTop: Integer;
   pageLeft: Integer;
@@ -416,6 +430,28 @@ begin
     ExpandConstant('{cm:multiOTPconfiguration}'),
     ExpandConstant('{cm:multiOTPconfigurationDescription}'));
 
+  multiOTPLoginTitleLabel := TNewStaticText.Create(Page);
+  with multiOTPLoginTitleLabel do begin
+    AutoSize := True;
+    WordWrap := False;
+    Top := pageTop;
+    Left := pageLeft;
+    Font.Style := [fsBold];
+    Caption := ExpandConstant('{cm:multiOTPLoginTitleLabel}');
+    Parent := Page.Surface;
+  end;
+  pageTop := pageTop + multiOTPLoginTitleLabel.Height + ScaleY(0);
+
+  multiOTPLoginTitleEdit := TEdit.Create(Page);
+  with multiOTPLoginTitleEdit do
+  begin
+    Parent := Page.Surface;
+    Left := pageLeft;
+    Top := pageTop;
+    Width := Page.SurfaceWidth - Left;
+    Text := multiOTPLoginTitle;
+  end;
+  pageTop := pageTop + 2 * multiOTPLoginTitleEdit.Height + ScaleY(0);
 
   multiOTPServersLabel := TNewStaticText.Create(Page);
   with multiOTPServersLabel do begin
@@ -450,7 +486,8 @@ begin
     Width := Page.SurfaceWidth - Left;
     Text := multiOTPServers;
   end;
-  pageTop := pageTop + multiOTPServersEdit.Height + ScaleY(3);
+  // pageTop := pageTop + multiOTPServersEdit.Height + ScaleY(3);
+  pageTop := pageTop + 2 * multiOTPServersEdit.Height;
 
   multiOTPServerTimeoutLabel := TNewStaticText.Create(Page);
   with multiOTPServerTimeoutLabel do begin
@@ -458,6 +495,7 @@ begin
     WordWrap := False;
     Top := pageTop;
     Left := pageLeft;
+    Font.Style := [fsBold];
     Caption := ExpandConstant('{cm:multiOTPServerTimeoutLabel} : ');
     Parent := Page.Surface;
   end;
@@ -471,8 +509,9 @@ begin
     Width := 2 * multiOTPServerTimeoutLabel.Height;
     Text := IntToStr(multiOTPServerTimeout);
   end;
-  pageTop := pageTop + multiOTPServerTimeoutLabel.Height + ScaleY(4);
+  pageTop := pageTop + 2 * multiOTPServerTimeoutLabel.Height;
 
+  pageTop := pageTop + ScaleY(4);
   multiOTPSharedSecretLabel := TNewStaticText.Create(Page);
   with multiOTPSharedSecretLabel do begin
     AutoSize := True;
@@ -483,7 +522,22 @@ begin
     Caption := ExpandConstant('{cm:multiOTPSharedSecretLabel}');
     Parent := Page.Surface;
   end;
+  // pageTop := pageTop + multiOTPSharedSecretLabel.Height + ScaleY(0);
   pageTop := pageTop + multiOTPSharedSecretLabel.Height + ScaleY(0);
+
+
+  multiOTPSharedSecretEdit := TEdit.Create(Page);
+  with multiOTPSharedSecretEdit do
+  begin
+    Parent := Page.Surface;
+    // Left := pageLeft + 6 + multiOTPSharedSecretLabel.Width;
+    Left := pageLeft;
+    // Top := pageTop - ScaleY(3);
+    Top := pageTop;
+    Width := 20 * ScaleX(multiOTPSharedSecretLabel.Font.Size);
+    Text := multiOTPSharedSecret;
+  end;
+  pageTop := pageTop + multiOTPSharedSecretEdit.Height + ScaleY(0);
 
   multiOTPSharedSecretSample := TNewStaticText.Create(Page);
   with multiOTPSharedSecretSample do begin
@@ -508,16 +562,24 @@ begin
   end;
   pageTop := pageTop + multiOTPSharedSecretSample2.Height + ScaleY(0);
 
-  multiOTPSharedSecretEdit := TEdit.Create(Page);
-  with multiOTPSharedSecretEdit do
-  begin
-    Parent := Page.Surface;
-    Left := pageLeft;
-    Top := pageTop;
-    Width := 20 * ScaleX(multiOTPSharedSecretLabel.Font.Size);
-    Text := multiOTPSharedSecret;
-  end;
-  pageTop := pageTop + multiOTPSharedSecretEdit.Height + ScaleY(0);
+end;
+
+
+procedure CreateSetupPage1of2;
+var
+  Page: TWizardPage;
+  multiOTPTimeoutLabel: TNewStaticText;
+  pageTop: Integer;
+  pageLeft: Integer;
+
+begin
+  pageTop := 0;
+  pageLeft := 0;
+
+  // Create the page
+  Page := CreateCustomPage(wpSelectTasks,
+    ExpandConstant('{cm:multiOTPconfiguration}'),
+    ExpandConstant('{cm:multiOTPconfigurationDescription}'));
 
   multiOTPCacheEnabledCheckBox := TCheckBox.Create(Page);
   with multiOTPCacheEnabledCheckBox do begin
@@ -897,6 +959,7 @@ var
 
 begin
   // Default values
+  multiOTPLoginTitle := 'multiOTP Login';
   multiOTPServers := 'https://192.168.1.88';
   multiOTPServerTimeout := 5;
   multiOTPSharedSecret := 'ClientServerSecret';
@@ -908,6 +971,7 @@ begin
   multiOTPUPNFormat := 0;
 
   // Read registry values if they exists
+  RegQueryStringValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPLoginTitle', multiOTPLoginTitle);
   RegQueryStringValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPServers', multiOTPServers);
   RegQueryDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPServerTimeout', multiOTPServerTimeout);
   RegQueryStringValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPSharedSecret', multiOTPSharedSecret);
@@ -922,7 +986,8 @@ begin
   credentialProviderInstalled := false;
 
   // Create two custom pages
-  CreateSetupPage;
+  CreateSetupPage1of2;
+  CreateSetupPage2of2;
   CreateTestPage;
 
   // Test variables initialization
