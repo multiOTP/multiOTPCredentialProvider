@@ -1,7 +1,8 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "multiOTP Credential Provider"
-#define MyAppVersion "5.1.0.3"
+#define MyAppVersion "5.1.0.5"
+#define MyAppShortName "multiOTP"
 #define MyAppPublisher "SysCo systemes de communication sa"
 #define MyAppURL "https://github.com/multiOTP/multiOTPCredentialProvider"
 #define MyAppCopyright "Copyright (c) 2010-2018 SysCo / ArcadeJust / LastSquirrelIT (Apache License)"
@@ -21,12 +22,13 @@ AppUpdatesURL={#MyAppURL}
 VersionInfoVersion={#MyAppVersion}
 VersionInfoCopyright={#MyAppCopyright}
 VersionInfoProductName={#MyAppName}
-DefaultDirName={sd}\multiOTP
+; DefaultDirName={sd}\{#MyAppShortName}
+DefaultDirName={pf32}\{#MyAppShortName}
 DefaultGroupName={#MyAppName}
 UninstallDisplayIcon={app}\multiotp.exe
 DisableProgramGroupPage=yes
 OutputDir=D:\Data\projects\multiotp\multiOTPCredentialProvider\installer
-OutputBaseFilename=multiOTPCredentialProvider-5.1.0.3
+OutputBaseFilename=multiOTPCredentialProvider-5.1.0.5
 SetupIconFile=D:\Data\projects\multiotp\ico\multiOTP.ico
 WizardImageFile=D:\Data\projects\multiotp\bmp\multiOTP-wizard-164x314.bmp
 WizardSmallImageFile=D:\Data\projects\multiotp\bmp\multiOTP-wizard-55x58.bmp
@@ -51,9 +53,10 @@ ArchitecturesInstallIn64BitMode=x64
 
 [Files]
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
-Source: "stable\multiotp.exe"; DestDir: "{app}"; Flags: ignoreversion; AfterInstall: AfterInstallProcedure;
-Source: "stable\x64\multiOTPCredentialProvider.dll"; DestDir: "{sys}"; Flags: ignoreversion; Check: Is64BitInstallMode;
-Source: "stable\i386\multiOTPCredentialProvider.dll"; DestDir: "{sys}"; Flags: ignoreversion; Check: not Is64BitInstallMode;
+Source: "stable\multiotp.exe"; DestDir: "{app}"; Flags: ignoreversion; AfterInstall: AfterInstallProcedure
+Source: "stable\x64\multiOTPCredentialProvider.dll"; DestDir: "{sys}"; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: "stable\i386\multiOTPCredentialProvider.dll"; DestDir: "{sys}"; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: "stable\php\*"; DestDir: "{app}\php"; Flags: ignoreversion createallsubdirs recursesubdirs
 
 [Icons]
 Name: "{group}\{cm:ProgramOnTheWeb,{#MyAppName}}"; Filename: "{#MyAppURL}"
@@ -67,7 +70,6 @@ Root: "HKCR"; Subkey: "CLSID\{{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}\InprocServe
 Root: "HKCR"; Subkey: "CLSID\{{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}\InprocServer32"; ValueType: string; ValueName: "ThreadingModel"; ValueData: "Apartment"; Flags: uninsdeletekey
 Root: "HKCR"; Subkey: "CLSID\{{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}"; ValueType: string; ValueData: "multiOTPCredentialProvider"; Flags: uninsdeletekey
 Root: "HKCR"; Subkey: "CLSID\{{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}"; ValueType: string; ValueName: "multiOTPPath"; ValueData: "{app}\"; Flags: uninsdeletekey
-
 
 [CustomMessages]
 ProgramOnTheWeb=%1 on the Web
@@ -161,7 +163,6 @@ multiOTPReturnCodeSuffix= in multiOTP documentation
 ;french.multiOTPReturnCode99=Authentication failed (and other possible unknown errors)
 ;french.multiOTPReturnCodePrefix=Check exit code 
 ;french.multiOTPReturnCodeSuffix= in multiOTP documentation
-
 
 [Code]
 var
@@ -332,82 +333,11 @@ begin
 end;
 
 procedure AfterInstallProcedure;
-var
-  ResultCode: Integer;
-  TmpFileName: string;
-  ExecStdout: AnsiString;
-  multiOTPOptions : string;
+
 begin
-
-  multiOTPLoginTitle := multiOTPLoginTitleEdit.Text;
-  RegWriteStringValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPLoginTitle', multiOTPLoginTitle);
-
-  multiOTPServers := multiOTPServersEdit.Text;
-  RegWriteStringValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPServers', multiOTPServers);
-
-  multiOTPServerTimeout := StrToIntDef(multiOTPServerTimeoutEdit.Text, multiOTPServerTimeout);
-  RegWriteDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPServerTimeout', multiOTPServerTimeout);
-
-  multiOTPSharedSecret := multiOTPSharedSecretEdit.Text;
-  RegWriteStringValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPSharedSecret', multiOTPSharedSecret);
-
-  if (cbChecked = multiOTPCacheEnabledCheckBox.State) then begin
-    multiOTPCacheEnabled := 1;
-  end else begin
-    multiOTPCacheEnabled := 0;
-  end;
-  RegWriteDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPCacheEnabled', multiOTPCacheEnabled);
-
-  if (cbChecked = multiOTPRDPOnlyCheckBox.State) then begin
-    multiOTPRDPOnly := 1;
-  end else begin
-    multiOTPRDPOnly := 0;
-  end;
-  RegWriteDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPRDPOnly', multiOTPRDPOnly);
-
-  multiOTPTimeout := StrToIntDef(multiOTPTimeoutEdit.Text, multiOTPTimeout);
-  RegWriteDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPTimeout', multiOTPTimeout);
-
-  if (cbChecked = multiOTPPrefixPassCheckBox.State) then begin
-    multiOTPPrefixPass := 1;
-  end else begin
-    multiOTPPrefixPass := 0;
-  end;
-  RegWriteDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPPrefixPass', multiOTPPrefixPass);
-
-  if (cbChecked = multiOTPDisplaySmsLinkCheckBox.State) then begin
-    multiOTPDisplaySmsLink := 1;
-  end else begin
-    multiOTPDisplaySmsLink := 0;
-  end;
-  RegWriteDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPDisplaySmsLink', multiOTPDisplaySmsLink);
-
-  if (cbChecked = multiOTPUPNFormatCheckBox.State) then begin
-    multiOTPUPNFormat := 1;
-  end else begin
-    multiOTPUPNFormat := 0;
-  end;
-  RegWriteDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPUPNFormat', multiOTPUPNFormat);
-  
-  // multiOTP configuration
-  if Not Exec(ExpandConstant('{app}\multiotp.exe'), '-cp -config server-secret='+multiOTPSharedSecret+' server-cache-level='+IntToStr(multiOTPCacheEnabled)+' server-timeout='+IntToStr(multiOTPServerTimeout)+' server-url='+multiOTPServers+'', ExpandConstant('{app}'), SW_HIDE, ewWaitUntilTerminated, ResultCode) then begin
-    MsgBox(ExpandConstant('{cm:multiOTPErrorConfiguration}'), mbCriticalError, MB_OK);
-    // MsgBox(SysErrorMessage(ResultCode), mbInformation, MB_OK);
-    ResultCode := 99;
-  end;
-  
-  multiOTPOptions := 'server_secret='+multiOTPSharedSecret+Chr(9)+'server_cache_level='+IntToStr(multiOTPCacheEnabled)+Chr(9)+'server_timeout='+IntToStr(multiOTPServerTimeout)+Chr(9)+'server_url='+multiOTPServers+''
-  RegWriteStringValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPOptions', multiOTPOptions);
-
-  TmpFileName := ExpandConstant('{tmp}') + '\multiotp_version.txt';
-  Exec('cmd.exe', '/C '+ExpandConstant('{app}\multiotp.exe')+' -cp -version > "' + TmpFileName + '"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
-  if (LoadStringFromFile(TmpFileName, ExecStdout)) then begin
-    multiOTPversion.Caption := ExecStdout;
-  end;
-  DeleteFile(TmpFileName);
 end;
 
-procedure CreateSetupPage2of2;
+procedure CreateSetupPage1of2;
 var
   Page: TWizardPage;
   multiOTPLoginTitleLabel: TNewStaticText;
@@ -565,7 +495,7 @@ begin
 end;
 
 
-procedure CreateSetupPage1of2;
+procedure CreateSetupPage2of2;
 var
   Page: TWizardPage;
   multiOTPTimeoutLabel: TNewStaticText;
@@ -706,7 +636,80 @@ var
   PrefixPass: string;
   OTPUsername: string;
 
+  // ResultCode: Integer;
+  TmpFileName: string;
+  ExecStdout: AnsiString;
+
 begin
+
+  multiOTPLoginTitle := multiOTPLoginTitleEdit.Text;
+  RegWriteStringValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPLoginTitle', multiOTPLoginTitle);
+
+  multiOTPServers := multiOTPServersEdit.Text;
+  RegWriteStringValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPServers', multiOTPServers);
+
+  multiOTPServerTimeout := StrToIntDef(multiOTPServerTimeoutEdit.Text, multiOTPServerTimeout);
+  RegWriteDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPServerTimeout', multiOTPServerTimeout);
+
+  multiOTPSharedSecret := multiOTPSharedSecretEdit.Text;
+  RegWriteStringValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPSharedSecret', multiOTPSharedSecret);
+
+  if (cbChecked = multiOTPCacheEnabledCheckBox.State) then begin
+    multiOTPCacheEnabled := 1;
+  end else begin
+    multiOTPCacheEnabled := 0;
+  end;
+  RegWriteDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPCacheEnabled', multiOTPCacheEnabled);
+
+  if (cbChecked = multiOTPRDPOnlyCheckBox.State) then begin
+    multiOTPRDPOnly := 1;
+  end else begin
+    multiOTPRDPOnly := 0;
+  end;
+  RegWriteDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPRDPOnly', multiOTPRDPOnly);
+
+  multiOTPTimeout := StrToIntDef(multiOTPTimeoutEdit.Text, multiOTPTimeout);
+  RegWriteDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPTimeout', multiOTPTimeout);
+
+  if (cbChecked = multiOTPPrefixPassCheckBox.State) then begin
+    multiOTPPrefixPass := 1;
+  end else begin
+    multiOTPPrefixPass := 0;
+  end;
+  RegWriteDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPPrefixPass', multiOTPPrefixPass);
+
+  if (cbChecked = multiOTPDisplaySmsLinkCheckBox.State) then begin
+    multiOTPDisplaySmsLink := 1;
+  end else begin
+    multiOTPDisplaySmsLink := 0;
+  end;
+  RegWriteDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPDisplaySmsLink', multiOTPDisplaySmsLink);
+
+  if (cbChecked = multiOTPUPNFormatCheckBox.State) then begin
+    multiOTPUPNFormat := 1;
+  end else begin
+    multiOTPUPNFormat := 0;
+  end;
+  RegWriteDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPUPNFormat', multiOTPUPNFormat);
+  
+  // multiOTP configuration
+  if Not Exec(ExpandConstant('{app}\multiotp.exe'), '-cp -config server-secret='+multiOTPSharedSecret+' server-cache-level='+IntToStr(multiOTPCacheEnabled)+' server-timeout='+IntToStr(multiOTPServerTimeout)+' server-url='+multiOTPServers+'', ExpandConstant('{app}'), SW_HIDE, ewWaitUntilTerminated, ResultCode) then begin
+    MsgBox(ExpandConstant('{cm:multiOTPErrorConfiguration}'), mbCriticalError, MB_OK);
+    // MsgBox(SysErrorMessage(ResultCode), mbInformation, MB_OK);
+    ResultCode := 99;
+  end;
+  
+  // multiOTPOptions := 'server_secret='+multiOTPSharedSecret+Chr(9)+'server_cache_level='+IntToStr(multiOTPCacheEnabled)+Chr(9)+'server_timeout='+IntToStr(multiOTPServerTimeout)+Chr(9)+'server_url='+multiOTPServers+''
+  // RegWriteStringValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPOptions', multiOTPOptions);
+
+  // Get multiOTP version
+  TmpFileName := ExpandConstant('{tmp}\multiotp_version.txt');
+  Exec('>', 'cmd.exe /C multiotp.exe -cp -version > "' + TmpFileName + '"', ExpandConstant('{app}'), SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  if (LoadStringFromFile(TmpFileName, ExecStdout)) then begin
+    multiOTPversion.Caption := ExecStdout;
+  end;
+  DeleteFile(TmpFileName);
+
   testButtonResult.Caption := ExpandConstant('{cm:multiOTPPleaseWait}');
   credentialProviderState.Caption := ExpandConstant('{cm:multiOTPPleaseWait}');
 
@@ -789,6 +792,7 @@ var
   pageLeft: Integer;
 
 begin
+
   pageTop := 0;
   pageLeft := 0;
 
@@ -986,8 +990,8 @@ begin
   credentialProviderInstalled := false;
 
   // Create two custom pages
-  CreateSetupPage1of2;
   CreateSetupPage2of2;
+  CreateSetupPage1of2;
   CreateTestPage;
 
   // Test variables initialization
