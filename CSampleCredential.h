@@ -48,14 +48,17 @@ public:
 
     IFACEMETHODIMP QueryInterface(_In_ REFIID riid, _COM_Outptr_ void **ppv)
     {
-        static const QITAB qit[] =
+		#pragma warning( push )
+		#pragma warning( disable : 4838)
+		static const QITAB qit[] =
         {
             QITABENT(CSampleCredential, ICredentialProviderCredential), // IID_ICredentialProviderCredential
             QITABENT(CSampleCredential, ICredentialProviderCredential2), // IID_ICredentialProviderCredential2
             QITABENT(CSampleCredential, ICredentialProviderCredentialWithFieldOptions), //IID_ICredentialProviderCredentialWithFieldOptions
             { static_cast<int>(0) },
         };
-        return QISearch(this, qit, riid, ppv);
+		#pragma warning( pop ) 
+		return QISearch(this, qit, riid, ppv);
     }
   public:
     // ICredentialProviderCredential

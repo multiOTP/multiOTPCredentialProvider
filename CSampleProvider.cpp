@@ -441,7 +441,7 @@ void CSampleProvider::_CreateEnumeratedCredentials()
 void CSampleProvider::_ReleaseEnumeratedCredentials()
 {
 	if (DEVELOP_MODE) PrintLn("_ReleaseEnumeratedCredentials");
-	for (int i = 0; i < _pCredential.size(); i++) {
+	for (DWORD i = 0; i < _pCredential.size(); i++) {
 		if (_pCredential[i] != nullptr)
 		{
 			_pCredential[i]->Release();

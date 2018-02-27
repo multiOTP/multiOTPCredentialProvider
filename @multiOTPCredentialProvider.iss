@@ -1,7 +1,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "multiOTP Credential Provider"
-#define MyAppVersion "5.1.0.5"
+#define MyAppVersion "5.1.0.7"
 #define MyAppShortName "multiOTP"
 #define MyAppPublisher "SysCo systemes de communication sa"
 #define MyAppURL "https://github.com/multiOTP/multiOTPCredentialProvider"
@@ -28,10 +28,10 @@ DefaultGroupName={#MyAppName}
 UninstallDisplayIcon={app}\multiotp.exe
 DisableProgramGroupPage=yes
 OutputDir=D:\Data\projects\multiotp\multiOTPCredentialProvider\installer
-OutputBaseFilename=multiOTPCredentialProvider-5.1.0.5
+OutputBaseFilename=multiOTPCredentialProvider-5.1.0.7
 SetupIconFile=D:\Data\projects\multiotp\ico\multiOTP.ico
-WizardImageFile=D:\Data\projects\multiotp\bmp\multiOTP-wizard-164x314.bmp
-WizardSmallImageFile=D:\Data\projects\multiotp\bmp\multiOTP-wizard-55x58.bmp
+WizardImageFile=..\bmp\multiOTP-wizard-164x314.bmp
+WizardSmallImageFile=..\bmp\multiOTP-wizard-55x58.bmp
 Compression=lzma
 SolidCompression=yes
 ; "ArchitecturesInstallIn64BitMode=x64" requests that the install be
@@ -57,6 +57,9 @@ Source: "stable\multiotp.exe"; DestDir: "{app}"; Flags: ignoreversion; AfterInst
 Source: "stable\x64\multiOTPCredentialProvider.dll"; DestDir: "{sys}"; Flags: ignoreversion; Check: Is64BitInstallMode
 Source: "stable\i386\multiOTPCredentialProvider.dll"; DestDir: "{sys}"; Flags: ignoreversion; Check: not Is64BitInstallMode
 Source: "stable\php\*"; DestDir: "{app}\php"; Flags: ignoreversion createallsubdirs recursesubdirs
+Source: "..\core\qrcode\*"; DestDir: "{app}\qrcode"; Flags: ignoreversion createallsubdirs recursesubdirs
+Source: "..\core\templates\emailtemplate.html"; DestDir: "{app}\templates"; Flags: ignoreversion
+Source: "..\core\templates\scratchtemplate.html"; DestDir: "{app}\templates"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\{cm:ProgramOnTheWeb,{#MyAppName}}"; Filename: "{#MyAppURL}"
@@ -416,7 +419,6 @@ begin
     Width := Page.SurfaceWidth - Left;
     Text := multiOTPServers;
   end;
-  // pageTop := pageTop + multiOTPServersEdit.Height + ScaleY(3);
   pageTop := pageTop + 2 * multiOTPServersEdit.Height;
 
   multiOTPServerTimeoutLabel := TNewStaticText.Create(Page);
@@ -452,7 +454,6 @@ begin
     Caption := ExpandConstant('{cm:multiOTPSharedSecretLabel}');
     Parent := Page.Surface;
   end;
-  // pageTop := pageTop + multiOTPSharedSecretLabel.Height + ScaleY(0);
   pageTop := pageTop + multiOTPSharedSecretLabel.Height + ScaleY(0);
 
 
@@ -460,9 +461,7 @@ begin
   with multiOTPSharedSecretEdit do
   begin
     Parent := Page.Surface;
-    // Left := pageLeft + 6 + multiOTPSharedSecretLabel.Width;
     Left := pageLeft;
-    // Top := pageTop - ScaleY(3);
     Top := pageTop;
     Width := 20 * ScaleX(multiOTPSharedSecretLabel.Font.Size);
     Text := multiOTPSharedSecret;
@@ -607,22 +606,6 @@ begin
   end;
   pageTop := pageTop + multiOTPTimeoutLabel.Height + ScaleY(0);
 
-
-  // Add items (False means it's not a password edit)
-  //WizardPage.Add('URL of your multiOTP server(s), separated with a ; if more than one : ', False);
-  //WizardPage.Add('Timeout before switching to the next server : ', False);
-  //WizardPage.Add('Secret shared with your server(s) (Configuration / Devices / Secret) : ', False);
-
-  // Set initial values (optional)
-  //WizardPage.Values[0] := ExpandConstant('https://192.168.1.88');
-  //WizardPage.Values[1] := ExpandConstant('5');
-  //WizardPage.Values[2] := ExpandConstant('MySharedSecret');
-
-  // Read values into variables
-  //multiOTPServers := WizardPage.Values[0];
-  //multiOTPServerTimeout := WizardPage.Values[1];
-  //multiOTPSecret := WizardPage.Values[1];
-
 end;
 
 
@@ -699,9 +682,6 @@ begin
     ResultCode := 99;
   end;
   
-  // multiOTPOptions := 'server_secret='+multiOTPSharedSecret+Chr(9)+'server_cache_level='+IntToStr(multiOTPCacheEnabled)+Chr(9)+'server_timeout='+IntToStr(multiOTPServerTimeout)+Chr(9)+'server_url='+multiOTPServers+''
-  // RegWriteStringValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPOptions', multiOTPOptions);
-
   // Get multiOTP version
   TmpFileName := ExpandConstant('{tmp}\multiotp_version.txt');
   Exec('>', 'cmd.exe /C multiotp.exe -cp -version > "' + TmpFileName + '"', ExpandConstant('{app}'), SW_HIDE, ewWaitUntilTerminated, ResultCode);
@@ -811,7 +791,6 @@ begin
     Caption := ExpandConstant('{cm:multiOTPWindowsUsername} : ');
     Parent := testPage.Surface;
   end;
-  // pageTop := pageTop + testUsernameLabel.Height + ScaleY(0);
 
   testUsernameEdit := TEdit.Create(testPage);
   with testUsernameEdit do
@@ -834,7 +813,6 @@ begin
     Caption := ExpandConstant('{cm:multiOTPWindowsPassword} : ');
     Parent := testPage.Surface;
   end;
-  // pageTop := pageTop + testPasswordLabel.Height + ScaleY(2);
 
   testPasswordEdit := TEdit.Create(testPage);
   with testPasswordEdit do
@@ -858,7 +836,6 @@ begin
     Caption := ExpandConstant('{cm:multiOTPUserOTP} : ');
     Parent := testPage.Surface;
   end;
-  // pageTop := pageTop + testOtpLabel.Height + ScaleY(2);
 
   testOtpdEdit := TEdit.Create(testPage);
   with testOtpdEdit do
@@ -892,7 +869,6 @@ begin
     Caption := ExpandConstant('{cm:multiOTPTestResult} : ');
     Parent := testPage.Surface;
   end;
-  // pageTop := pageTop + testPasswordLabel.Height + ScaleY(2);
 
   testButtonResult := TNewStaticText.Create(testPage);
   with testButtonResult do
@@ -990,9 +966,9 @@ begin
   credentialProviderInstalled := false;
 
   // Create two custom pages
-  CreateSetupPage2of2;
-  CreateSetupPage1of2;
-  CreateTestPage;
+  CreateSetupPage2of2; // Create first the second page (after wpSelectTasks)
+  CreateSetupPage1of2; // Create the first page (which is now just after wpSelectTasks)
+  CreateTestPage; // This page is after wpInstalling
 
   // Test variables initialization
   testDone := false;

@@ -30,12 +30,15 @@ public:
     // IUnknown
     IFACEMETHODIMP QueryInterface(__in REFIID riid, __deref_out void **ppv)
     {
-        static const QITAB qit[] =
+		#pragma warning( push )
+		#pragma warning( disable : 4838)
+		static const QITAB qit[] =
         {
             QITABENT(CClassFactory, IClassFactory),
             { 0 },
         };
-        return QISearch(this, qit, riid, ppv);
+		#pragma warning( pop )
+		return QISearch(this, qit, riid, ppv);
     }
 
     IFACEMETHODIMP_(ULONG) AddRef()

@@ -89,7 +89,8 @@ HRESULT CSampleCredential::call_multiotp(_In_ PCWSTR username, _In_ PCWSTR PREV_
 	STARTUPINFO si;
 	PROCESS_INFORMATION pi;
 	DWORD exitCode;
-	wchar_t cmd[1024];
+	wchar_t cmd[2048];
+	wchar_t options[2048];
 	size_t len;
 	PWSTR path;
 
@@ -105,26 +106,26 @@ HRESULT CSampleCredential::call_multiotp(_In_ PCWSTR username, _In_ PCWSTR PREV_
 
 	//cmd = (PWSTR)CoTaskMemAlloc(sizeof(wchar_t) * (len + 1));//+1 null pointer
 
-  wcscpy_s(cmd, 1024, L"-cp ");
+	wcscpy_s(cmd, 2048, L"-cp ");
 
 	if (DEVELOP_MODE) {
-  	wcscat_s(cmd, 1024, L"-debug ");
+  	wcscat_s(cmd, 2048, L"-debug ");
 	}
 
 	if (wcslen(PREV_OTP) > 0) {
-  	wcscat_s(cmd, 1024, L"-resync ");
+  	wcscat_s(cmd, 2048, L"-resync ");
 	}
 
-	wcscat_s(cmd, 1024, username);
-	wcscat_s(cmd, 1024, L" ");
+	wcscat_s(cmd, 2048, username);
+	wcscat_s(cmd, 2048, L" ");
 
-	wcscat_s(cmd, 1024, PREFIX_PASS);
+	wcscat_s(cmd, 2048, PREFIX_PASS);
 
 	if (wcslen(PREV_OTP) > 0) {
-		wcscat_s(cmd, 1024, PREV_OTP);
-		wcscat_s(cmd, 1024, L" ");
+		wcscat_s(cmd, 2048, PREV_OTP);
+		wcscat_s(cmd, 2048, L" ");
 	}
-	wcscat_s(cmd, 1024, OTP);
+	wcscat_s(cmd, 2048, OTP);
 
 	len = wcslen(cmd);
 	if (DEVELOP_MODE) PrintLn("command len:%d", int(len));
@@ -141,18 +142,58 @@ HRESULT CSampleCredential::call_multiotp(_In_ PCWSTR username, _In_ PCWSTR PREV_
 
 		timeout = readRegistryValueInteger(CONF_TIMEOUT, timeout);
 
-		wchar_t appname[1024];
+		DWORD server_timeout = 5;
+		DWORD server_cache_level = 1;
+		PWSTR shared_secret;
+		PWSTR servers;
 
-		wcscpy_s(appname, 1024, path);
+		server_timeout = readRegistryValueInteger(CONF_SERVER_TIMEOUT, server_timeout);
+		wchar_t server_timeout_string[1024];
+		_ultow_s(server_timeout, server_timeout_string, 10);
+		wcscpy_s(options, 2048, L"-server-timeout=");
+		wcscat_s(options, 2048, server_timeout_string);
+		wcscat_s(options, 2048, L" ");
+
+		server_cache_level = readRegistryValueInteger(CONF_CACHE_ENABLED, server_cache_level);
+		wchar_t server_cache_level_string[1024];
+		_ultow_s(server_cache_level, server_cache_level_string, 10);
+		wcscat_s(options, 2048, L"-server-cache-level=");
+		wcscat_s(options, 2048, server_cache_level_string);
+		wcscat_s(options, 2048, L" ");
+
+		if (readRegistryValueString(CONF_SERVERS, &servers, L"")) {
+			wcscat_s(options, 2048, L"-server-url=");
+			wcscat_s(options, 2048, servers);
+			wcscat_s(options, 2048, L" ");
+		}
+
+		if (readRegistryValueString(CONF_SHARED_SECRET, &shared_secret, L"ClientServerSecret")) {
+			wcscat_s(options, 2048, L"-server-secret=");
+			wcscat_s(options, 2048, shared_secret);
+			wcscat_s(options, 2048, L" ");
+		}
+
+		wcscat_s(options, 2048, cmd);
+
+		wchar_t appname[2048];
+
+		wcscpy_s(appname, 2048, L"\"");
+		wcscat_s(appname, 2048, path);
 		size_t npath = wcslen(appname);
 		if (appname[npath - 1] != '\\' && appname[npath - 1] != '/') {
 			appname[npath] = '\\';
 			appname[npath+1] = '\0';
 		}
-		wcscat_s(appname, 1024, L"multiotp.exe");
+		wcscat_s(appname, 2048, L"multiotp.exe");
+		wcscat_s(appname, 2048, L"\"");
+		wcscat_s(appname, 2048, L" ");
+		wcscat_s(appname, 2048, options);
 
 		if (DEVELOP_MODE) PrintLn(L"Calling ", appname);
-		if (::CreateProcessW(appname, cmd, NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, path, &si, &pi)) {
+		if (DEVELOP_MODE) PrintLn(L"with options ", options);
+		// if (::CreateProcessW(appname, options, NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, path, &si, &pi)) {
+		// As argc 0 is the full filename itself, we use the lpCommandLine only 
+		if (::CreateProcessW(NULL, appname, NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, path, &si, &pi)) {
 
 			DWORD result = WaitForSingleObject(pi.hProcess, (timeout * 1000));
 
@@ -1003,11 +1044,12 @@ HRESULT CSampleCredential::CommandLinkClicked(DWORD dwFieldID)
 
             PWSTR pszDomain;
             PWSTR pszUsername;
-            PWSTR pszQualifiedUserName;
+            PWSTR pszNetBiosDomainName = L"";
 
             ULONG size = 1024;
             wchar_t buffer[1024];
 
+            wchar_t fullname[1024];
             wchar_t uname[1024];
             wchar_t upn_name[1024];
             wchar_t otp_name[1024];
@@ -1018,34 +1060,72 @@ HRESULT CSampleCredential::CommandLinkClicked(DWORD dwFieldID)
             BOOLEAN rc;
 
             hr_sfi = SHStrDupW(L"", &pszUsername);
-            hr_sfi = SHStrDupW(_rgFieldStrings[SFI_LOGIN_NAME], &pszQualifiedUserName);
 
-            const wchar_t *pchWhack = wcschr(pszQualifiedUserName, L'\\');
-            const wchar_t *pchWatSign = wcschr(pszQualifiedUserName, L'@');
+            dwDomainSize = readRegistryValueString(CONF_DOMAIN_NAME, &pszDomain, L"");
+            if (DEVELOP_MODE) PrintLn(L"Detected domain: ", pszDomain);
+            if (DEVELOP_MODE) PrintLn(L"Detected domain size: %d", dwDomainSize);
+
+            if (_fUserNameVisible) {
+              //username is entered by the user
+              CoTaskMemFree(_pszQualifiedUserName);
+              hr_sfi = SHStrDupW(_rgFieldStrings[SFI_LOGIN_NAME], &_pszQualifiedUserName);
+            }
+
+            if (DEVELOP_MODE) PrintLn(L"_pszQualifiedUserName: ", _pszQualifiedUserName);
+  
+            if (DEVELOP_MODE) PrintLn(L"OTP Username determination");
+            const wchar_t *pchWhack = wcschr(_pszQualifiedUserName, L'\\');
+            const wchar_t *pchWatSign = wcschr(_pszQualifiedUserName, L'@');
+
+            DOMAIN_CONTROLLER_INFO* pDCI;
+            if (DsGetDcNameW(NULL, pszDomain, NULL, NULL, DS_IS_DNS_NAME | DS_RETURN_FLAT_NAME, &pDCI) == ERROR_SUCCESS) {
+              pszNetBiosDomainName = pDCI->DomainName;
+              // NetApiBufferFree(pDCI);
+            }
+
+            if ((dwDomainSize > 0) && (pchWatSign == nullptr) && (pchWhack == nullptr)) {
+              if (DEVELOP_MODE) PrintLn(L"Take the default domain ", pszDomain, L" - ", pszNetBiosDomainName);
+              wcscpy_s(fullname, 1024, pszNetBiosDomainName);
+              wcscat_s(fullname, 1024, L"\\");
+              wcscat_s(fullname, 1024, _pszQualifiedUserName);
+              CoTaskMemFree(_pszQualifiedUserName);
+              hr = SHStrDupW(fullname, &_pszQualifiedUserName);
+              pchWhack = wcschr(fullname, L'\\');
+              if (DEVELOP_MODE) PrintLn(L"The full user has been defined like this: ", fullname);
+            }
 
             if (pchWatSign != nullptr) {
-              wcscpy_s(upn_name, 1024, pszQualifiedUserName);
-              rc = TranslateNameW(pszQualifiedUserName, NameUserPrincipal, NameSamCompatible, buffer, &size);
+              wcscpy_s(upn_name, 1024, _pszQualifiedUserName);
+              rc = TranslateNameW(_pszQualifiedUserName, NameUserPrincipal, NameSamCompatible, buffer, &size);
               if (rc) {
-                if (DEVELOP_MODE) PrintLn(L"User translated from ", pszQualifiedUserName, L" to ", buffer);
-                CoTaskMemFree(pszQualifiedUserName);
-                wcscpy_s(uname, 1024, buffer);
-              }
-            } else if (pchWhack != nullptr) {
-              hr_sfi = SplitDomainAndUsername(pszQualifiedUserName, &pszDomain, &pszUsername);
-              if (SUCCEEDED(hr_sfi)) {
-                wcscpy_s(uname, 1024, pszUsername);
-                rc = TranslateNameW(pszQualifiedUserName, NameSamCompatible, NameUserPrincipal, buffer, &size);
-                if (rc) {
-                  if (DEVELOP_MODE) PrintLn(L"User translated from ", pszQualifiedUserName, L" to ", buffer);
-                  CoTaskMemFree(pszQualifiedUserName);
-                  wcscpy_s(upn_name, 1024, buffer);
-                }
+                if (DEVELOP_MODE) PrintLn(L"User translated from ", _pszQualifiedUserName, L" to ", buffer);
+                CoTaskMemFree(_pszQualifiedUserName);
+                hr = SHStrDupW(buffer, &_pszQualifiedUserName);
+                pchWhack = wcschr(buffer, L'\\');
               }
             } else {
-              wcscpy_s(upn_name, 1024, pszQualifiedUserName);
-              wcscpy_s(uname, 1024, pszQualifiedUserName);
-              CoTaskMemFree(pszQualifiedUserName);
+              rc = TranslateNameW(_pszQualifiedUserName, NameSamCompatible, NameUserPrincipal, buffer, &size);
+              if (rc) {
+                if (DEVELOP_MODE) PrintLn(L"User translated to UPN, from ", _pszQualifiedUserName, L" to ", buffer);
+                wcscpy_s(upn_name, 1024, buffer);
+              }
+            }
+            
+            if (pchWhack != nullptr) {
+              const wchar_t *pchUsernameBegin = pchWhack + 1;
+              hr = wcscpy_s(uname, 1024, pchUsernameBegin);
+            } else {
+              hr = wcscpy_s(uname, 1024, _pszQualifiedUserName);
+              // 2017-11-05 SysCo/al Add UPN support
+              if (pchWatSign == nullptr) {
+                //append localhost as a domain for windows logon
+                wcscpy_s(fullname, 1024, L".\\");
+                wcscat_s(fullname, 1024, _pszQualifiedUserName);
+                CoTaskMemFree(_pszQualifiedUserName);
+                hr = SHStrDupW(fullname, &_pszQualifiedUserName);
+              }
+
+              if (DEVELOP_MODE) PrintLn(L"_pszQualifiedUserName with domain: ", _pszQualifiedUserName);
             }
             
             if (readRegistryValueInteger(CONF_UPN_FORMAT, 0)) {
@@ -1061,7 +1141,6 @@ HRESULT CSampleCredential::CommandLinkClicked(DWORD dwFieldID)
         default:
             hr = E_INVALIDARG;
         }
-
     }
     else
     {

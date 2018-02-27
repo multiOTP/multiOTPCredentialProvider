@@ -6,7 +6,7 @@ multiOTP Credential Provider for multiOTP is a free and open source implementati
 (c) 2015-2016 ArcadeJust ("RDP only" enhancement)  
 (c) 2013-2015 Last Squirrel IT  
 
-Current build: 5.1.0.5 (2018-02-22)
+Current build: 5.1.0.7 (2018-02-27)
 
 Binary download: https://download.multiotp.net/credential-provider/
 
@@ -81,24 +81,27 @@ Report if you have any problems or questions regarding this app.
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
-2018-02-21 5.1.0.5 SysCo/al To avoid virus false positive alert, multiOTP.exe is NO more packaged in one single file using  Enigma,
-                              a php folder is now included in the multiOTP folder
-2018-02-21 5.1.0.4 SysCo/al Credential Provider registry entries are used if available
-2018-02-19 5.1.0.3 SysCo/al Setup wizard has one more page for better layout
-                            Options stored in the multiOTPOptions registry are read and have more priorities than config file
-                            Login title can be customized using the multiOTPLoginTitle registry
-                            Tile image can be customized by saving a 128x128 bmp in the file [multiOTPPath]\multiotp.bmp
-                            The default installation folder is now [ProgramFiles]\multiOTP
-2017-12-11 5.0.6.2 SysCo/al [Receive an OTP by SMS] link can be displayed or not (option during installation)
-                            UPN username format can be sent to the multiOTP server (by default, legacy username)
-                            Better documentation
-2017-12-04 5.0.6.1 SysCo/al Default domain name support
-                            User can request an SMS code using a command link
-                            [Synchronize OTP] link removed (useless, synchronization is done automatically by typing OTP1 + [space] + OTP2)
-2017-11-10 5.0.6.0 SysCo/al Specific Credential Provider mode in the CLI version
-2017-11-05 5.0.5.9 SysCo/al Full support for login@domain.name UPN notation (AD/LDAP should be synchronized using the userPrincipalName instead of sAMAccountName identifier)
-2017-11-04 5.0.5.6 SysCo/al Removed digit OTP only check for the OTP field
-                            Friendly name of the second factor field renamed from PIN to OTP
-2017-06-02 5.0.4.6 SysCo/al Fixed default folder detection for the multiotp.exe file
-2016-11-04 5.0.2.6 SysCo/al First public release with an installer, based on hard work done by Last Squirrel IT and ArcadeJust
+2018-02-27 5.1.0.7 SysCo/al FIX: [Receive an OTP by SMS] link is now fixed for Windows 10
+2018-02-26 5.1.0.6 SysCo/al ENH: Credential Provider registry entries are now always used when calling multiOTP.exe
+2018-02-21 5.1.0.5 SysCo/al FIX: To avoid virus false positive alert, multiOTP.exe is NO more packaged in one single file
+                                 using Enigma, a php folder is now included in the multiOTP folder
+                            FIX: multiOTPOptions registry entry is now useless is ignored
+2018-02-21 5.1.0.4 SysCo/al ENH: Credential Provider registry entries are used if available
+2018-02-19 5.1.0.3 SysCo/al ENH: Setup wizard has one more page for better layout
+                            ENH: Options stored in the multiOTPOptions registry are read and have more priorities than config file
+                            ENH: Login title can be customized using the multiOTPLoginTitle registry
+                            ENH: Tile image can be customized by saving a 128x128 bmp in the file [multiOTPPath]\multiotp.bmp
+                            ENH: The default installation folder is now [ProgramFiles]\multiOTP
+2017-12-11 5.0.6.2 SysCo/al ENH: [Receive an OTP by SMS] link can be displayed or not (option during installation)
+                            ENH: UPN username format can be sent to the multiOTP server (by default, legacy username)
+                            ENH: Better documentation
+2017-12-04 5.0.6.1 SysCo/al ENH: Default domain name support
+                            ENH: User can request an SMS code using a command link
+                            FIX: [Synchronize OTP] link removed (useless, synchronization is done automatically by typing OTP1 + [space] + OTP2)
+2017-11-10 5.0.6.0 SysCo/al ENH: Specific Credential Provider mode in the CLI version
+2017-11-05 5.0.5.9 SysCo/al ENH: Full support for login@domain.name UPN notation (AD/LDAP should be synchronized using the userPrincipalName instead of sAMAccountName identifier)
+2017-11-04 5.0.5.6 SysCo/al FIX: Removed digit OTP only check for the OTP field
+                            ENH: Friendly name of the second factor field renamed from PIN to OTP
+2017-06-02 5.0.4.6 SysCo/al FIX: Fixed default folder detection for the multiotp.exe file
+2016-11-04 5.0.2.6 SysCo/al ENG: First public release with an installer, based on hard work done by Last Squirrel IT and ArcadeJust
 ```
