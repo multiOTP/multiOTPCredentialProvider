@@ -44,7 +44,7 @@ PREREQUISITES
 
 INSTALLATION
 ============
-- Launch the installer (in the installer directory) and configure the various parameters during the detup. You must have administrator access.
+- Launch the installer (in the installer directory) and configure the various parameters during the setup. You must have administrator access.
 
 
 UNINSTALLATION
