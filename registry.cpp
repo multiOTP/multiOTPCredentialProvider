@@ -2,6 +2,45 @@
 #include "guid.h"
 #include "helpers.h"
 
+VOID writeRegistryValueString(_In_ CONF_VALUE conf_value, _In_ PWSTR writeValue) {
+	HKEY regKey;
+	HKEY rootKeyValue = s_CONF_VALUES[conf_value].ROOT_KEY;
+	PWSTR confKeyName = s_CONF_VALUES[conf_value].KEY_NAME;
+	PWSTR confValueName = s_CONF_VALUES[conf_value].VALUE_NAME;
+	DWORD dwSize = 0;
+	//	size_t len;
+	wchar_t confKeyNameCLSID[1024];
+	HRESULT hr;
+	PWSTR clsid;
+	hr = StringFromCLSID(CLSID_CSample, &clsid);
+	if (hr == S_OK) {
+		if (DEVELOP_MODE) PrintLn(L"hr is OK");
+		wcscpy_s(confKeyNameCLSID, 1024, confKeyName);
+		if (confKeyName == (PWSTR)MULTIOTP_SETTINGS) {
+			wcscat_s(confKeyNameCLSID, 1024, clsid);
+		}
+		CoTaskMemFree(clsid); //not needed
+		if (DEVELOP_MODE) PrintLn(L"Writing REGISTRY Key: ", confKeyNameCLSID, L"\\", confValueName);
+
+		DWORD keyType = 0;
+		DWORD dataSize = 0;
+		LONG result = ::RegOpenKeyEx(rootKeyValue, confKeyNameCLSID, 0, KEY_QUERY_VALUE | KEY_SET_VALUE, &regKey);
+		if (result == ERROR_SUCCESS) {
+    		result = ::RegSetValueEx(
+				regKey,
+				confValueName,
+				0,
+				REG_SZ,
+				(const BYTE*)writeValue,
+				sizeof(wchar_t) * (1 + (DWORD)wcslen(writeValue)) );
+		}
+	}
+	else {
+		if (DEVELOP_MODE) PrintLn(L"hr is KO");
+	}
+}
+
+
 DWORD readRegistryValueString(_In_ CONF_VALUE conf_value, _Outptr_result_nullonfailure_ PWSTR *data, _In_ PWSTR defaultValue) {
 	HKEY rootKeyValue = s_CONF_VALUES[conf_value].ROOT_KEY;
 	PWSTR confKeyName = s_CONF_VALUES[conf_value].KEY_NAME;

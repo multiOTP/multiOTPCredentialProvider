@@ -584,7 +584,7 @@ HRESULT CLMSFilter::Filter(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus, DWORD dwFlag
 
 	/*PrintLn("================TEST======================");
 	PWSTR path;
-	if (readRegistryValueString(CONF_PATH, &path)) {
+	if (readRegistryValueString(CONF_PATH, &path) > 1) {
 		PrintLn(path);
 		CoTaskMemFree(path);
 	}

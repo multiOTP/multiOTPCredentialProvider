@@ -137,7 +137,7 @@ HRESULT CSampleCredential::call_multiotp(_In_ PCWSTR username, _In_ PCWSTR PREV_
 
 	si.cb = sizeof(si);
 
-	if (readRegistryValueString(CONF_PATH, &path, L"c:\\multiotp\\")) {
+	if (readRegistryValueString(CONF_PATH, &path, L"c:\\multiotp\\") > 1) {
 		DWORD timeout = 60;
 
 		timeout = readRegistryValueInteger(CONF_TIMEOUT, timeout);
@@ -161,13 +161,13 @@ HRESULT CSampleCredential::call_multiotp(_In_ PCWSTR username, _In_ PCWSTR PREV_
 		wcscat_s(options, 2048, server_cache_level_string);
 		wcscat_s(options, 2048, L" ");
 
-		if (readRegistryValueString(CONF_SERVERS, &servers, L"")) {
+		if (readRegistryValueString(CONF_SERVERS, &servers, L"") > 1) {
 			wcscat_s(options, 2048, L"-server-url=");
 			wcscat_s(options, 2048, servers);
 			wcscat_s(options, 2048, L" ");
 		}
 
-		if (readRegistryValueString(CONF_SHARED_SECRET, &shared_secret, L"ClientServerSecret")) {
+		if (readRegistryValueString(CONF_SHARED_SECRET, &shared_secret, L"ClientServerSecret") > 1) {
 			wcscat_s(options, 2048, L"-server-secret=");
 			wcscat_s(options, 2048, shared_secret);
 			wcscat_s(options, 2048, L" ");
@@ -290,17 +290,17 @@ HRESULT CSampleCredential::Initialize(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
 	PWSTR pszDomain, pszHostname, pszLoginTitle;
 	wchar_t szDomainInfo[1024], szLoginTitle[1024];
 
-	if (readRegistryValueString(CONF_DOMAIN_NAME, &pszDomain, L"") > 0) {
+	if (readRegistryValueString(CONF_DOMAIN_NAME, &pszDomain, L"") > 1) {
 		StringCchPrintf(szDomainInfo, ARRAYSIZE(szDomainInfo), L"Domain: %s", pszDomain);
 	}
-	else if (readRegistryValueString(CONF_HOST_NAME, &pszHostname, L"") > 0) {
+	else if (readRegistryValueString(CONF_HOST_NAME, &pszHostname, L"") > 1) {
 		StringCchPrintf(szDomainInfo, ARRAYSIZE(szDomainInfo), L"Computer: %s", pszHostname);
 	}
 	else {
 		StringCchPrintf(szDomainInfo, ARRAYSIZE(szDomainInfo), L" ");
 	}
 
-	if (readRegistryValueString(CONF_LOGIN_TITLE, &pszLoginTitle, L"") > 0) {
+	if (readRegistryValueString(CONF_LOGIN_TITLE, &pszLoginTitle, L"") > 1) {
 		StringCchPrintf(szLoginTitle, ARRAYSIZE(szLoginTitle), pszLoginTitle);
 	}
 	else {
@@ -676,7 +676,7 @@ HRESULT CSampleCredential::GetBitmapValue(DWORD dwFieldID, _Outptr_result_nullon
     if ((SFI_TILEIMAGE == dwFieldID))
     {
 		HBITMAP hbmp = nullptr;
-        if (readRegistryValueString(CONF_PATH, &path, L"c:\\multiotp\\")) {
+        if (readRegistryValueString(CONF_PATH, &path, L"c:\\multiotp\\") > 1) {
             wchar_t bitmap_path[1024];
             wcscpy_s(bitmap_path, 1024, path);
             size_t npath = wcslen(bitmap_path);
@@ -792,7 +792,6 @@ HRESULT CSampleCredential::SetStringValue(DWORD dwFieldID, _In_ PCWSTR pwz)
         wchar_t szDomainInfo[1024];
 
         DWORD dwDomainSize = 0;
-        DWORD dwHostnameSize = 0;
 
         hr_sfi = SHStrDupW(L"", &pszUsername);
         hr_sfi = SHStrDupW(_rgFieldStrings[SFI_LOGIN_NAME], &pszQualifiedUserName);
@@ -807,16 +806,16 @@ HRESULT CSampleCredential::SetStringValue(DWORD dwFieldID, _In_ PCWSTR pwz)
           if (SUCCEEDED(hr_sfi)) {
             StringCchPrintf(szDomainInfo, ARRAYSIZE(szDomainInfo), L"Domain: %s", pszDomain);
             if (wcscmp(pszDomain, L".") == 0) {
-              dwHostnameSize = readRegistryValueString(CONF_HOST_NAME, &pszHostname, L"");
+              readRegistryValueString(CONF_HOST_NAME, &pszHostname, L"");
               StringCchPrintf(szDomainInfo, ARRAYSIZE(szDomainInfo), L"Computer: %s", pszHostname);
             }
           }
         }
         else {
-          if (readRegistryValueString(CONF_DOMAIN_NAME, &pszDomain, L"") > 0) {
+          if (readRegistryValueString(CONF_DOMAIN_NAME, &pszDomain, L"") > 1) {
             StringCchPrintf(szDomainInfo, ARRAYSIZE(szDomainInfo), L"Domain: %s", pszDomain);
           }
-          else if (readRegistryValueString(CONF_HOST_NAME, &pszHostname, L"") > 0) {
+          else if (readRegistryValueString(CONF_HOST_NAME, &pszHostname, L"") > 1) {
             StringCchPrintf(szDomainInfo, ARRAYSIZE(szDomainInfo), L"Computer: %s", pszHostname);
           }
           else {
@@ -961,7 +960,7 @@ HRESULT CSampleCredential::CommandLinkClicked(DWORD dwFieldID)
 	PWSTR pszLoginTitle;
 	wchar_t szLoginTitle[1024];
 
-	if (readRegistryValueString(CONF_LOGIN_TITLE, &pszLoginTitle, L"") > 0) {
+	if (readRegistryValueString(CONF_LOGIN_TITLE, &pszLoginTitle, L"") > 1) {
 		StringCchPrintf(szLoginTitle, ARRAYSIZE(szLoginTitle), pszLoginTitle);
 	}
 	else {
@@ -1077,13 +1076,25 @@ HRESULT CSampleCredential::CommandLinkClicked(DWORD dwFieldID)
             const wchar_t *pchWhack = wcschr(_pszQualifiedUserName, L'\\');
             const wchar_t *pchWatSign = wcschr(_pszQualifiedUserName, L'@');
 
-            DOMAIN_CONTROLLER_INFO* pDCI;
-            if (DsGetDcNameW(NULL, pszDomain, NULL, NULL, DS_IS_DNS_NAME | DS_RETURN_FLAT_NAME, &pDCI) == ERROR_SUCCESS) {
-              pszNetBiosDomainName = pDCI->DomainName;
-              // NetApiBufferFree(pDCI);
-            }
+			if (dwDomainSize > 1) {
+				DOMAIN_CONTROLLER_INFO* pDCI;
+				if (DsGetDcNameW(NULL, pszDomain, NULL, NULL, DS_IS_DNS_NAME | DS_RETURN_FLAT_NAME, &pDCI) == ERROR_SUCCESS) {
+					pszNetBiosDomainName = pDCI->DomainName;
 
-            if ((dwDomainSize > 0) && (pchWatSign == nullptr) && (pchWhack == nullptr)) {
+					if (DEVELOP_MODE) PrintLn(L"Before writing registry with value: ", pszNetBiosDomainName);
+					// Write flat domain name in the internal multiOTP Credential registry cache
+					writeRegistryValueString(CONF_FLAT_DOMAIN, pszNetBiosDomainName);
+
+					// NetApiBufferFree(pDCI);
+				}
+				else {
+					// Read flat domain name from the internal multiOTP Credential registry cache
+					readRegistryValueString(CONF_FLAT_DOMAIN, &pszNetBiosDomainName, L"");
+					if (DEVELOP_MODE) PrintLn(L"Flat domain named retrieved in the registry : ", pszNetBiosDomainName);
+				}
+			}
+
+            if ((dwDomainSize > 1) && (pchWatSign == nullptr) && (pchWhack == nullptr)) {
               if (DEVELOP_MODE) PrintLn(L"Take the default domain ", pszDomain, L" - ", pszNetBiosDomainName);
               wcscpy_s(fullname, 1024, pszNetBiosDomainName);
               wcscat_s(fullname, 1024, L"\\");
@@ -1193,14 +1204,24 @@ HRESULT CSampleCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIAL
 	const wchar_t *pchWhack = wcschr(_pszQualifiedUserName, L'\\');
 	const wchar_t *pchWatSign = wcschr(_pszQualifiedUserName, L'@');
 
+	if (domainSize > 1) {
+		DOMAIN_CONTROLLER_INFO* pDCI;
+		if (DsGetDcNameW(NULL, domain, NULL, NULL, DS_IS_DNS_NAME | DS_RETURN_FLAT_NAME, &pDCI) == ERROR_SUCCESS) {
+			strNetBiosDomainName = pDCI->DomainName;
+			if (DEVELOP_MODE) PrintLn(L"Before writing registry with value: ", strNetBiosDomainName);
+			// Write flat domain name in the internal multiOTP Credential registry cache
+		    writeRegistryValueString(CONF_FLAT_DOMAIN, strNetBiosDomainName);
 
-	DOMAIN_CONTROLLER_INFO* pDCI;
-	if (DsGetDcNameW(NULL, domain, NULL, NULL, DS_IS_DNS_NAME | DS_RETURN_FLAT_NAME, &pDCI) == ERROR_SUCCESS) {
-		strNetBiosDomainName = pDCI->DomainName;
-		// NetApiBufferFree(pDCI);
+			// NetApiBufferFree(pDCI);
+		}
+		else {
+			// Read flat domain name from the internal multiOTP Credential registry cache
+			readRegistryValueString(CONF_FLAT_DOMAIN, &strNetBiosDomainName, L"");
+			if (DEVELOP_MODE) PrintLn(L"Flat domain named retrieved in the registry : ", strNetBiosDomainName);
+		}
 	}
 
-	if ((domainSize > 0) && (pchWatSign == nullptr) && (pchWhack == nullptr)) {
+	if ((domainSize > 1) && (pchWatSign == nullptr) && (pchWhack == nullptr)) {
 		if (DEVELOP_MODE) PrintLn(L"Take the default domain ", domain, L" - ", strNetBiosDomainName);
 		wcscpy_s(fullname, 1024, strNetBiosDomainName);
 		wcscat_s(fullname, 1024, L"\\");

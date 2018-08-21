@@ -16,6 +16,7 @@
 #define MULTIOTP_SERVERS          L"multiOTPServers"
 #define MULTIOTP_SERVER_TIMEOUT   L"multiOTPServerTimeout"
 #define MULTIOTP_SHARED_SECRET    L"multiOTPSharedSecret"
+#define MULTIOTP_FLAT_DOMAIN      L"multiOTPFlatDomain"
 
 #define RDP_SETTINGS              L"SYSTEM\\CurrentControlSet\\Control\\Terminal Server\\WinStations\\RDP-Tcp"
 #define RDP_PORT                  L"PortNumber"
@@ -44,13 +45,14 @@ enum CONF_VALUE
 	CONF_SERVERS              = 8,
 	CONF_SERVER_TIMEOUT       = 9,
 	CONF_SHARED_SECRET        = 10,
+	CONF_FLAT_DOMAIN          = 11,
 
-	CONF_RDP_PORT             = 11,
+	CONF_RDP_PORT             = 12,
 
-	CONF_DOMAIN_NAME          = 12,
-	CONF_HOST_NAME            = 13,
+	CONF_DOMAIN_NAME          = 13,
+	CONF_HOST_NAME            = 14,
 
-	CONF_NUM_VALUES           = 14,
+	CONF_NUM_VALUES           = 15,
 };
 
 static const REGISTRY_KEY s_CONF_VALUES[] =
@@ -66,6 +68,7 @@ static const REGISTRY_KEY s_CONF_VALUES[] =
 	{ HKEY_CLASSES_ROOT, MULTIOTP_SETTINGS, MULTIOTP_SERVERS },
 	{ HKEY_CLASSES_ROOT, MULTIOTP_SETTINGS, MULTIOTP_SERVER_TIMEOUT },
 	{ HKEY_CLASSES_ROOT, MULTIOTP_SETTINGS, MULTIOTP_SHARED_SECRET },
+	{ HKEY_CLASSES_ROOT, MULTIOTP_SETTINGS, MULTIOTP_FLAT_DOMAIN },
 
 	{ HKEY_LOCAL_MACHINE, RDP_SETTINGS, RDP_PORT },
 
@@ -73,5 +76,6 @@ static const REGISTRY_KEY s_CONF_VALUES[] =
 	{ HKEY_LOCAL_MACHINE, TCPIP_SETTINGS, TCPIP_HOSTNAME },
 };
 
+VOID writeRegistryValueString(_In_ CONF_VALUE conf_value, _In_ PWSTR writeValue);
 DWORD readRegistryValueString( _In_ CONF_VALUE conf_value, _Outptr_result_nullonfailure_ PWSTR *data, _In_ PWSTR defaultValue);
 DWORD readRegistryValueInteger(_In_ CONF_VALUE conf_value, _In_ DWORD defaultValue );

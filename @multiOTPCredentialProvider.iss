@@ -1,7 +1,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "multiOTP Credential Provider"
-#define MyAppVersion "5.1.0.8"
+#define MyAppVersion "5.3.0.0"
 #define MyAppShortName "multiOTP"
 #define MyAppPublisher "SysCo systemes de communication sa"
 #define MyAppURL "https://github.com/multiOTP/multiOTPCredentialProvider"
@@ -27,9 +27,9 @@ DefaultDirName={pf32}\{#MyAppShortName}
 DefaultGroupName={#MyAppName}
 UninstallDisplayIcon={app}\multiotp.exe
 DisableProgramGroupPage=yes
-OutputDir=D:\Data\projects\multiotp\multiOTPCredentialProvider\installer
-OutputBaseFilename=multiOTPCredentialProvider-5.1.0.8
-SetupIconFile=D:\Data\projects\multiotp\ico\multiOTP.ico
+OutputDir=C:\Data\projects\multiotp\multiOTPCredentialProvider\installer
+OutputBaseFilename=multiOTPCredentialProvider-5.3.0.0
+SetupIconFile=C:\Data\projects\multiotp\ico\multiOTP.ico
 WizardImageFile=..\bmp\multiOTP-wizard-164x314.bmp
 WizardSmallImageFile=..\bmp\multiOTP-wizard-55x58.bmp
 Compression=lzma
@@ -945,7 +945,7 @@ begin
   multiOTPSharedSecret := 'ClientServerSecret';
   multiOTPCacheEnabled := 1;
   multiOTPRDPOnly := 1;
-  multiOTPTimeout := 10;
+  multiOTPTimeout := 60;
   multiOTPPrefixPass := 0;
   multiOTPDisplaySmsLink := 0;
   multiOTPUPNFormat := 0;
