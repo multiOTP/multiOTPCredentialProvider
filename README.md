@@ -1,4 +1,4 @@
-multiOTPCredentialProvider
+multiOTPCredentialProvider 
 ==========================
 multiOTP Credential Provider for multiOTP is a free and open source implementation of a V2 Credential Provider for the multiOTP strong two-factor authentication solution (Apache License, Version 2.0)
 
