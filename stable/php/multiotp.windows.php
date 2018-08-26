@@ -35,8 +35,8 @@
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.3.0.0
- * @date      2018-08-21
+ * @version   5.3.0.3
+ * @date      2018-08-26
  * @since     2010-06-08
  * @copyright (c) 2010-2018 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -76,9 +76,9 @@
  * Return codes
  *
  *   0 OK: Token accepted
-
+ *
  *  10 INFO: Access Challenge returned back to the client
-
+ *
  *  11 INFO: User successfully created or updated
  *  12 INFO: User successfully deleted
  *  13 INFO: User PIN code successfully changed
@@ -88,7 +88,8 @@
  *  17 INFO: UrlLink successfully created
  *  18 INFO: SMS code request received
  *  19 INFO: Requested operation successfully done
-
+ *
+ *  20 ERROR: User blacklisted
  *  21 ERROR: User doesn't exist
  *  22 ERROR: User already exists
  *  23 ERROR: Invalid algorithm
@@ -105,26 +106,43 @@
  *  33 ERROR: Encryption hash error, encryption key is not the same
  *  34 ERROR: Linked user doesn't exist
  *  35 ERROR: User not created
+ *  36 ERROR: Token doesn't exist
  *  37 ERROR: Token already attributed
  *  38 ERROR: User is deactivated
  *  39 ERROR: Requested operation aborted
  *
+ *  40 ERROR: SQL query error
  *  41 ERROR: SQL error
+ *  42 ERROR: They key is not in the table schema
+ *  43 ERROR: SQL entry cannot be updated
  *
  *  50 ERROR: QRcode not created
  *  51 ERROR: UrlLink not created (no provisionable client for this protocol)
+ *  58 ERROR: File is missing
+ *  59 ERROR: Bad restore configuration password
  *
  *  60 ERROR: No information on where to send SMS code
  *  61 ERROR: SMS code request received, but an error occured during transmission
  *  62 ERROR: SMS provider not supported
+ *  63 ERROR: This SMS code has expired
+ *  64 ERROR: Cannot resent an SMS code right now
+ *  69 ERROR: Failed to send email
  *
  *  70 ERROR: Server authentication error
  *  71 ERROR: Server request is not correctly formatted
  *  72 ERROR: Server answer is not correctly formatted
+ *  79 ERROR: AD/LDAP connection error
  *
  *  80 ERROR: Server cache error
  *  81 ERROR: Cache too old for this user, account autolocked
+ *  82 ERROR: User not allowed for this device
+ *  88 ERROR: Device is not defined as a HA slave
+ *  89 ERROR: Device is not defined as a HA master
  *
+ *  94 ERROR: API request error
+ *  95 ERROR: API authentication failed
+ *  96 ERROR: Authentication failed (CRC error)
+ *  97 ERROR: Authentication failed (wrong private id)
  *  98 ERROR: Authentication failed (wrong token length)
  *  99 ERROR: Authentication failed (and other possible unknown errors)
  *
@@ -175,12 +193,40 @@
  *
  * Users feedbacks and comments
  *
+ * 2018-08-25 Muzammel (PK)
+ *   Thanks for your questions about the client/server process,
+ *    which has been enhanced based on the exchange we had.
+ *
+ * 2018-07-31 Sergey, Kiev (UA)
+ *   Thanks for your questions regarding -restore-config in the command line version.
+ *   The restore function has been corrected
+ *
  * 2018-02-13 Jonathan Garber (via GitHub)
  *   Thanks for your feedback about various issues.
+ *
+ * 2017-11-22 vak255 (via GitHub)
+ *   Thanks for your feedback about a bad handled unicode issue.
+ *   All strtoXXX and strpos have been changed to the the multibyte version.
+ *
+ * 2017-06-11 Richard Green
+ *   Thanks for your proposal about specific LDAPTLS configuration values to be moved in the config parameters.
  *
  * 2017-04-19 Frank van der Aa, Vanboxtel BV (NL)
  *   Thanks a lot for your valuable implementation suggestion about PostgreSQL.
  *   The proposed code has been adapted and integrated in the project.
+ *
+ * 2017-02-14 Frank van der Aa, Vanboxtel BV (NL)
+ *   Thanks for your proposal about GetList() method sorted output.
+ *
+ * 2017-02-09 Frank van der Aa, Vanboxtel BV (NL)
+ *   Thanks for your debug about lockedlistarray[], the proposed
+ *   GetDelayedUsersList() method and the delayed users display on the web GUI.
+ *
+ * 2017-02-02 Stefan Kügler, SerNet GmbH (DE)
+ *   Thanks for your feedback on the last edition.
+ *
+ * 2017-01-24 Jean-François Perillo, Kudelski Security (CH)
+ *   As proposed by Jean-François, requested LDAP password for synchronized users can be overwritten.
  *
  * 2017-01-05 Stefan Kügler, SerNet GmbH (DE)
  *   Thanks for your feedbacks on the last beta edition.
@@ -392,6 +438,7 @@
  *
  * Change Log
  *
+ *   2018-08-26 5.3.0.3 SysCo/al FIX: Restore configuration has been fixed in the command line edition
  *   2018-08-21 5.3.0.0 SysCo/al ENH: help text enhanced, without2fa option added
  *   2018-07-16 5.2.0.2 SysCo/al ENH: new commande line option ldap-users-dn
  *   2018-03-16 5.1.1.1 SysCo/al FIX: command line -set error for ldap-pwd and prefix-pin
@@ -597,8 +644,8 @@ if (!isset($multiotp)) {
  * PHP 5.3.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.3.0.0
- * @date      2018-08-21
+ * @version   5.3.0.3
+ * @date      2018-08-26
  * @since     2010-06-08
  * @copyright (c) 2010-2018 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -793,15 +840,23 @@ if (!isset($multiotp)) {
  *
  * Users feedbacks and comments
  *
+ * 2018-08-25 Muzammel (PK)
+ *   Thanks for your questions about the client/server process,
+ *    which has been enhanced based on the exchange we had.
+ *
+ * 2018-07-31 Sergey, Kiev (UA)
+ *   Thanks for your questions regarding -restore-config in the command line version.
+ *   The restore function has been corrected
+ *
  * 2018-02-13 Jonathan Garber (via GitHub)
  *   Thanks for your feedback about various issues.
  *
  * 2017-11-22 vak255 (via GitHub)
  *   Thanks for your feedback about a bad handled unicode issue.
- *   All strtoXXX and strpos have been changed to the the multibyte version
+ *   All strtoXXX and strpos have been changed to the the multibyte version.
  *
  * 2017-06-11 Richard Green
- *   Thanks for your proposal about specific LDAPTLS configuration values to be moved in the confiug parameters
+ *   Thanks for your proposal about specific LDAPTLS configuration values to be moved in the config parameters.
  *
  * 2017-04-19 Frank van der Aa, Vanboxtel BV (NL)
  *   Thanks a lot for your valuable implementation suggestion about PostgreSQL.
@@ -1035,6 +1090,12 @@ if (!isset($multiotp)) {
  *
  * Change Log
  *
+ *   2018-08-26 5.3.0.3 SysCo/al FIX: Better without2FA algorithm support
+ *                               FIX: Restore configuration has been fixed in the command line edition
+ *                               ENH: Cache-level and cache-lifetime can be set separately for each user
+ *                               ENH: In client/server mode, only unencrypted user attributes are sent back to a successful client request
+ *                               ENH: Enhanced monitoring
+ *   2018-08-22 5.3.0.1 SysCo/al ENH: Monitoring fields added (create_host, create_time, last_update_host)
  *   2018-08-21 5.3.0.0 SysCo/al FIX: stream_timeout is no more pushed to 20 seconds in PostHttpDataXmlRequest if we are in Credential Provider mode
  *                               FIX: RemoveTokenFromUser() method corrected. Token administrative information corrected,
  *                                    new software token created for the user
@@ -1346,8 +1407,8 @@ class Multiotp
  * @brief     Main class definition of the multiOTP project.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.3.0.0
- * @date      2018-08-21
+ * @version   5.3.0.3
+ * @date      2018-08-26
  * @since     2010-07-18
  */
 {
@@ -1438,8 +1499,8 @@ class Multiotp
    * @retval  void
    *
    * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-   * @version   5.3.0.0
-   * @date      2018-08-21
+   * @version   5.3.0.3
+   * @date      2018-08-26
    * @since     2010-07-18
    */
   function __construct(
@@ -1458,11 +1519,11 @@ class Multiotp
 
       if (!isset($this->_class)) { $this->_class = base64_decode('bXVsdGlPVFA='); }
       if (!isset($this->_version)) {
-        $temp_version = '@version   5.3.0.0'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
+        $temp_version = '@version   5.3.0.3'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
         $this->_version = trim(substr($temp_version, 8));
       }
       if (!isset($this->_date)) {
-        $temp_date = '@date      2018-08-21'; // You should update the date with the date of your changes
+        $temp_date = '@date      2018-08-26'; // You should update the date with the date of your changes
         $this->_date = trim(substr($temp_date, 8));
       }
       if (!isset($this->_copyright)) { $this->_copyright = base64_decode('KGMpIDIwMTAtMjAxOCBTeXNDbyBzeXN0ZW1lcyBkZSBjb21tdW5pY2F0aW9uIHNh'); }
@@ -1544,8 +1605,13 @@ class Multiotp
 
       $this->_sql_tables_schema['cache']   = array(
           'active_users_count'      => "int(10) DEFAULT -1",
+          'create_host'             => "varchar(255) DEFAULT ''",
+          'create_time'             => "int(10) DEFAULT 0",
           'devices_count'           => "int(10) DEFAULT -1",
+          'last_sync_update'        => "int(10) DEFAULT 0",
+          'last_sync_update_host'   => "varchar(255) DEFAULT ''",
           'last_update'             => "int(10) DEFAULT 0",
+          'last_update_host'        => "varchar(255) DEFAULT ''",
           'locked_users_count'      => "int(10) DEFAULT -1",
           'locked_users_list'       => "int(10) DEFAULT -1",
           'delayed_users_count'     => "int(10) DEFAULT -1",
@@ -1576,6 +1642,8 @@ class Multiotp
           // No console authentication by default
           'console_authentication'      => "int(1) DEFAULT 0",
           // Debug mode (to enable it permanently)
+          'create_host'             => "varchar(255) DEFAULT ''",
+          'create_time'                 => "int(10) DEFAULT 0",
           'debug'                       => "int(1) DEFAULT 0",
           'default_algorithm'           => "varchar(255) DEFAULT 'totp'",
           'default_dialin_ip_mask'      => "varchar(255) DEFAULT ''",
@@ -1596,7 +1664,10 @@ class Multiotp
           'hash_salt_full_path'         => "varchar(255) DEFAULT ''",
           'issuer'                      => "varchar(255) DEFAULT 'multiOTP'",
           'language'                    => "varchar(255) DEFAULT 'en'",
+          'last_sync_update'            => "int(10) DEFAULT 0",
+          'last_sync_update_host'       => "varchar(255) DEFAULT ''",
           'last_update'                 => "int(10) DEFAULT 0",
+          'last_update_host'            => "varchar(255) DEFAULT ''",
           'ldap_expired_password_valid' => "int(1) DEFAULT 1",
           'ldap_account_suffix'         => "varchar(255) DEFAULT ''",
           'ldap_activated'              => "int(1) DEFAULT 0",
@@ -1650,7 +1721,7 @@ class Multiotp
           'self_registration'           => "int(1) DEFAULT 1",
           // Client-server configuration
           'server_cache_level'          => "int(10) DEFAULT 1",
-          // 1552000 = 6 monthes
+          // 15552000 = 6 monthes
           'server_cache_lifetime'       => "int(10) DEFAULT 15552000",
           'server_secret'               => "varchar(255) DEFAULT 'ClientServerSecret'",
           'server_timeout'              => "int(10) DEFAULT 5",
@@ -1706,11 +1777,16 @@ class Multiotp
           'cache_result_enabled'       => "int(1) DEFAULT 0",
           'cache_timeout'              => "int(10) DEFAULT 3600",
           'challenge_response_enabled' => "int(1) DEFAULT 0",
+          'create_host'             => "varchar(255) DEFAULT ''",
+          'create_time'                => "int(10) DEFAULT 0",
           'description'                => "varchar(255) DEFAULT ''",
           'device_secret'              => "varchar(255) DEFAULT ''",
           'force_no_prefix_pin'        => "int(1) DEFAULT 0",
           'ip_or_fqdn'                 => "varchar(255) DEFAULT ''",
+          'last_sync_update'           => "int(10) DEFAULT 0",
+          'last_sync_update_host'      => "varchar(255) DEFAULT ''",
           'last_update'                => "int(10) DEFAULT 0",
+          'last_update_host'           => "varchar(255) DEFAULT ''",
           'shortname'                  => "varchar(255) DEFAULT ''",
           'sms_challenge_enabled'      => "int(1) DEFAULT 0",
           'subnet'                     => "varchar(255) DEFAULT ''",
@@ -1722,18 +1798,28 @@ class Multiotp
 
       $this->_sql_tables_schema['groups']  = array(
           'group_id'                => "varchar(255) DEFAULT ''",
+          'create_host'             => "varchar(255) DEFAULT ''",
+          'create_time'             => "int(10) DEFAULT 0",
           'description'             => "varchar(255) DEFAULT ''",
           'name'                    => "varchar(255) DEFAULT ''",
+          'last_sync_update'        => "int(10) DEFAULT 0",
+          'last_sync_update_host'   => "varchar(255) DEFAULT ''",
           'last_update'             => "int(10) DEFAULT 0",
+          'last_update_host'        => "varchar(255) DEFAULT ''",
           'encryption_hash'         => "varchar(255) DEFAULT ''");
       $this->_sql_tables_index['groups']   = '*group_id*name*';
       $this->_sql_tables_ignore['groups'] = "**";
 
       $this->_sql_tables_schema['log']     = array(
           'category'                => "varchar(255) DEFAULT ''",
+          'create_host'             => "varchar(255) DEFAULT ''",
+          'create_time'             => "int(10) DEFAULT 0",
           'datetime'                => "datetime DEFAULT NULL",
           'destination'             => "varchar(255) DEFAULT ''",
+          'last_sync_update'        => "int(10) DEFAULT 0",
+          'last_sync_update_host'   => "varchar(255) DEFAULT ''",
           'last_update'             => "int(10) DEFAULT 0",
+          'last_update_host'        => "varchar(255) DEFAULT ''",
           'logentry'                => "text",
           'note'                    => "varchar(255) DEFAULT ''",
           'severity'                => "varchar(255) DEFAULT ''",
@@ -1745,6 +1831,8 @@ class Multiotp
       $this->_sql_tables_schema['tokens']  = array(
           'algorithm'               => "varchar(255) DEFAULT ''",
           'attributed_users'        => "varchar(255) DEFAULT ''",
+          'create_host'             => "varchar(255) DEFAULT ''",
+          'create_time'             => "int(10) DEFAULT 0",
           'delta_time'              => "int(10) DEFAULT 0",
           'description'             => "varchar(255) DEFAULT ''",
           'error_counter'           => "int(10) DEFAULT 0",
@@ -1757,7 +1845,10 @@ class Multiotp
           'last_error'              => "int(10) DEFAULT 0",
           'last_event'              => "int(10) DEFAULT -1",
           'last_login'              => "int(10) DEFAULT 0",
+          'last_sync_update'        => "int(10) DEFAULT 0",
+          'last_sync_update_host'   => "varchar(255) DEFAULT ''",
           'last_update'             => "int(10) DEFAULT 0",
+          'last_update_host'        => "varchar(255) DEFAULT ''",
           'locked'                  => "int(1) DEFAULT 0",
           'manufacturer'            => "varchar(255) DEFAULT 'multiOTP'",
           'model'                   => "varchar(255) DEFAULT ''",
@@ -1780,9 +1871,13 @@ class Multiotp
           'attributed_tokens'       => "varchar(255) DEFAULT ''",
           // Autolock time (for cached data)
           'autolock_time'           => "int(10) DEFAULT 0",
+          'cache_level'             => "int(10) DEFAULT 1",
+          'cache_lifetime'          => "int(10) DEFAULT 15552000",
           // Challenge initialization
           'challenge'               => "varchar(255) DEFAULT ''",
           'challenge_validity'      => "int(10) DEFAULT 0",
+          'create_host'             => "varchar(255) DEFAULT ''",
+          'create_time'             => "int(10) DEFAULT 0",
           // Delta time in seconds for a time based token
           'delta_time'              => "int(10) DEFAULT 0",
           // Desactivated user info
@@ -1807,7 +1902,10 @@ class Multiotp
           'last_login'              => "int(10) DEFAULT 0",
           'last_login_for_cache'    => "int(10) DEFAULT 0",
           'last_success_credential' => "varchar(255) DEFAULT ''",
+          'last_sync_update'        => "int(10) DEFAULT 0",
+          'last_sync_update_host'   => "varchar(255) DEFAULT ''",
           'last_update'             => "int(10) DEFAULT 0",
+          'last_update_host'        => "varchar(255) DEFAULT ''",
           // LDAP password hash caching mechanism
           'ldap_hash_cache'         => "varchar(255) DEFAULT ''",
           'ldap_hash_validity'      => "int(10) DEFAULT 0",
@@ -2157,6 +2255,32 @@ class Multiotp
   }
 
 
+  function SetUserCacheLevel(
+      $value
+  ) {
+      $this->_config_data['cache_level'] = intval($value);
+  }
+
+
+  function GetUserCacheLevel()
+  {
+      return intval($this->_config_data['cache_level']);
+  }
+
+
+  function SetUserCacheLifetime(
+      $value
+  ) {
+      $this->_config_data['cache_lifetime'] = intval($value);
+  }
+
+
+  function GetUserCacheLifetime()
+  {
+      return intval($this->_config_data['cache_lifetime']);
+  }
+
+
   function SetUserDialinIpAddress(
       $first_param,
       $second_param = "*-*"
@@ -2382,6 +2506,23 @@ class Multiotp
   }
 
 
+  /**
+   * @brief   Touch special file(s) for each modified element, like a "dirty flag"
+   *          The file name is based on a suffix, the suffix(es) are contained in an array
+   *
+   * @param   string $type_fn          Type of the data ('data', 'file', ...)
+   * @param   string  $item_fn         Item category ('Configuration', 'User', 'Token', ...)
+   * @param   string  $id_fn           Id of the item
+   * @param   boolean $folder_touched  At the end of the process, call the FolderTouched() method
+   * @param   string  $touch_info      Specific touch information, can be used by FolderTouched() method
+   *
+   * @retval  void
+   *
+   * @author  Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
+   * @version 5.0.2.5
+   * @date    2018-08-21
+   * @since   2016-10-16
+   */
   function TouchFolder(
     $type_fn = "",
     $item_fn = "",
@@ -2534,6 +2675,7 @@ class Multiotp
 
     $this->_errors_text[50] = "ERROR: QRcode not created";
     $this->_errors_text[51] = "ERROR: UrlLink not created (no provisionable client for this protocol)";
+    $this->_errors_text[58] = "ERROR: File is missing";
     $this->_errors_text[59] = "ERROR: Bad restore configuration password";
 
     $this->_errors_text[60] = "ERROR: No information on where to send SMS code";
@@ -2620,6 +2762,8 @@ class Multiotp
    *   string  id_value            Value of the indexed item
    *   string  id_case_sensitive   We want to be case sensitive for the backend storage
    *   boolean automatically       The process is done automatically (for long content only)
+   *   string  automatic_host      The process is automatically initiated from this host
+   *   boolean sync_process        The process is automatically initiated for a synchronization
    *   boolean update_last_change  Update the last_update field (true by default)
    *   boolean no_encryption_hash  No encryption hash, and no field are encrypted (false by default)
    *   boolean encrypt_all         Encrypt all lines (if used with no_encryption_hash, no encryption hash are generated)
@@ -2660,6 +2804,8 @@ class Multiotp
         $id_value           = isset($write_data_array['id_value'])?$write_data_array['id_value']:'';
         $id_case_sensitive  = isset($write_data_array['id_case_sensitive'])?$write_data_array['id_case_sensitive']:false;
         $automatically      = isset($write_data_array['automatically'])?$write_data_array['automatically']:false;
+        $automatic_host     = isset($write_data_array['automatic_host'])?$write_data_array['automatic_host']:'';
+        $sync_process       = isset($write_data_array['sync_process'])?$write_data_array['sync_process']:false;
         $update_last_change = isset($write_data_array['update_last_change'])?$write_data_array['update_last_change']:true;
         $no_encryption_hash = isset($write_data_array['no_encryption_hash'])?$write_data_array['no_encryption_hash']:false;
 
@@ -2691,6 +2837,8 @@ class Multiotp
         $raw_file           = '';
         $return_content     = false;
         $flush_attributes   = array();
+        $sync_process       = false;
+        $automatic_host     = "";
       }
       $backup_format = ('' != $backup_file);
       if ($backup_format) {
@@ -2753,9 +2901,24 @@ class Multiotp
       }
 
       $now_epoch = time();
-      if ($update_last_change) {
-          $data_array['last_update'] = $now_epoch;
+      if (0 >= (isset($data_array['create_time']) ? $data_array['create_time'] : 0)) {
+          $data_array['create_time'] = $now_epoch;
       }
+
+      if ('' == (isset($data_array['create_host']) ? $data_array['create_host'] : '')) {
+          $data_array['create_host'] = $this->GetCreateHost();
+      }
+      
+      if (($update_last_change) && (!$automatically)) {
+          $data_array['last_update'] = $now_epoch;
+          $data_array['last_update_host'] = $this->GetCreateHost();
+      }
+
+      if ($sync_process) {
+          $data_array['last_sync_update'] = $now_epoch;
+          $data_array['last_sync_update_host'] = $automatic_host;
+      }
+
       $result = false;
 
       $item_created = FALSE;
@@ -3591,6 +3754,7 @@ class Multiotp
     $update_config     = isset($rc_array['update_config'])     ? (TRUE === $rc_array['update_config']) : FALSE;
     $ignore_config     = isset($rc_array['ignore_config'])     ? (TRUE === $rc_array['ignore_config']) : FALSE;
     $automatically     = isset($rc_array['automatically'])     ? (TRUE === $rc_array['automatically']) : FALSE;
+    $sync_process      = isset($rc_array['sync_process'])      ? (TRUE === $rc_array['sync_process'])  : FALSE;
 
     if (!is_array($ignore_attributes)) {
       $ignore_attributes = array('multiotp-database-format', 'actual_version', 'anonymous_');
@@ -3754,7 +3918,7 @@ class Multiotp
                       break;
                     case 'Device':
                       if (!$deleted) {
-                        $this->WriteDeviceData(array("automatically" => $automatically));
+                        $this->WriteDeviceData(array("automatically" => $automatically, "sync_process" => $sync_process));
                         if ($this->GetVerboseFlag()) {
                           $this->WriteLog("Info: *Device ".$id_value." updated", FALSE, FALSE, 8888, 'System', '');
                         }
@@ -3767,7 +3931,7 @@ class Multiotp
                       break;
                     case 'Group':
                       if (!$deleted) {
-                        $this->WriteGroupData(array("automatically" => $automatically));
+                        $this->WriteGroupData(array("automatically" => $automatically, "sync_process" => $sync_process));
                         if ($this->GetVerboseFlag()) {
                           $this->WriteLog("Info: *Group ".$id_value." updated", FALSE, FALSE, 8888, 'System', '');
                         }
@@ -3780,7 +3944,7 @@ class Multiotp
                       break;
                     case 'Token':
                       if (!$deleted) {
-                        $this->WriteTokenData(array("automatically" => $automatically));
+                        $this->WriteTokenData(array("automatically" => $automatically, "sync_process" => $sync_process));
                         if ($this->GetVerboseFlag()) {
                           $this->WriteLog("Info: *Token ".$id_value." updated", FALSE, FALSE, 8888, 'System', '');
                         }
@@ -3794,7 +3958,7 @@ class Multiotp
                     case 'User':
                       if (!$deleted) {
                         $this->UserRestoreBeforeWrite();
-                        $this->WriteUserData(array("automatically" => $automatically));
+                        $this->WriteUserData(array("automatically" => $automatically, "sync_process" => $sync_process));
                         if ($this->GetVerboseFlag()) {
                           $this->WriteLog("Info: *User ".$id_value." updated", FALSE, FALSE, 8888, 'System', '');
                         }
@@ -3890,6 +4054,9 @@ class Multiotp
       } // if fopen
     } else { // if file_exists
       $result = false; // File doesn't exist
+      if ($this->GetVerboseFlag()) {
+        $this->WriteLog("Info: *backup File $backup_file doesn't exist", FALSE, FALSE, 8888, 'System', '');
+      }
     }
     return $result;
   }
@@ -4998,6 +5165,12 @@ class Multiotp
           }
       }
       return $result;
+  }
+
+
+  function GetCreateHost()
+  {
+      return $this->GetSystemName();
   }
 
 
@@ -8256,6 +8429,7 @@ class Multiotp
    * @param   int     $synchronized [0|1]
    * @param   int     $ldap_pwd_needed [0|1]
    * @param   boolean $automatically
+   * @param   boolean $sync_process
    * @return  boolean
    *
    *********************************************************************/
@@ -8274,7 +8448,8 @@ class Multiotp
                       $activated = 1,
                       $synchronized = 0,
                       $ldap_pwd_needed = -1,
-                      $automatically = FALSE
+                      $automatically = FALSE,
+                      $sync_process = FALSE
   ) {
       // A user cannot be created with a leading backslash
       $user = str_replace("\\", "", $user_raw);
@@ -8353,7 +8528,9 @@ class Multiotp
               $this->SetUserDescription($description);
               $this->SetUserActivated($activated);
               $this->SetUserSynchronized($synchronized);
-              $result = $this->WriteUserData($automatically); // WriteUserData write in the log file
+              // WriteUserData write in the log file
+              $result = $this->WriteUserData(array("automatically" => $automatically, "sync_process" => $sync_process));
+
           }
       }
       return $result;
@@ -8910,6 +9087,7 @@ class Multiotp
    * @param   string  $ldap_pwd_needed
    * @param   string  $preferred_language
    * @param   string  $dialin_ip_address
+   * @param   boolean $sync_process          Process is initiated by sync
    * @return  boolean
    *
    *********************************************************************/
@@ -8929,7 +9107,8 @@ class Multiotp
                           $synchronized_dn = '',
                           $ldap_pwd_needed = -1,
                           $language = '',
-                          $dialin_ip_address = ''
+                          $dialin_ip_address = '',
+                          $sync_process = false
   ) {
       // A user cannot be created with a leading backslash
       $user = str_replace("\\", "", $user_raw);
@@ -9021,7 +9200,9 @@ class Multiotp
 
               $this->SetUserDialinIpAddress($dialin_ip_address);
 
-              $result = $this->WriteUserData($automatically); // WriteUserData write in the log file
+              // WriteUserData write in the log file
+              $result = $this->WriteUserData(array("automatically" => $automatically, "sync_process" => $sync_process));
+
           }
       }
       return $result;
@@ -9776,10 +9957,14 @@ class Multiotp
         if (!isset($write_user_data_array['update_last_change'])) {
           $write_user_data_array['update_last_change'] = true;
         }
+        if (!isset($write_user_data_array['sync_process'])) {
+          $write_user_data_array['sync_process'] = false;
+        }
       } else {
         $temp_array = array();
         $temp_array['automatically']      = $write_user_data_array;
         $temp_array['update_last_change'] = $update_last_change_param;
+        $temp_array['sync_process']       = false;
         $write_user_data_array = $temp_array;
       }
 
@@ -13437,10 +13622,10 @@ class Multiotp
                           return FALSE;
                       }
                       if ('' != $ldap_connection->get_warning_message()) {
-                          $this->WriteLog("Warning: ".$ldap_connection->get_warning_message(), FALSE, FALSE, 98, 'LDAP', '');
+                          $this->WriteLog("Warning: LDAP warning: ".$ldap_connection->get_warning_message(), FALSE, FALSE, 98, 'LDAP', '');
                       }
                       if ($this->GetVerboseFlag() && ('' != $ldap_connection->get_debug_message())) {
-                          $this->WriteLog("Debug: *".$ldap_connection->get_debug_message(), FALSE, FALSE, 98, 'LDAP', '');
+                          $this->WriteLog("Debug: *LDAP debug: ".$ldap_connection->get_debug_message(), FALSE, FALSE, 98, 'LDAP', '');
                       }
 
                       do {
@@ -13567,7 +13752,7 @@ class Multiotp
                                               foreach ($groups_array_raw as $id => $group_name){
                                                   $extra_groups=$ldap_connection->recursive_groups($group_name, $this->IsLdapRecursiveCacheOnly());
                                                   if ('' != $ldap_connection->get_warning_message()) {
-                                                      $this->WriteLog("Warning: ".$ldap_connection->get_warning_message(), FALSE, FALSE, 98, 'LDAP', '');
+                                                      $this->WriteLog("Warning: LDAP warning: ".$ldap_connection->get_warning_message(), FALSE, FALSE, 98, 'LDAP', '');
                                                   }
                                                   $groups_array_raw=array_merge($groups_array_raw,$extra_groups);
                                               }
@@ -13784,10 +13969,10 @@ class Multiotp
                           return FALSE;
                       }
                       if ('' != $ldap_connection->get_warning_message()) {
-                          $this->WriteLog("Warning: ".$ldap_connection->get_warning_message(), FALSE, FALSE, 98, 'LDAP', '');
+                          $this->WriteLog("Warning: LDAP warning: ".$ldap_connection->get_warning_message(), FALSE, FALSE, 98, 'LDAP', '');
                       }
                       if ($this->GetVerboseFlag() && ('' != $ldap_connection->get_debug_message())) {
-                          $this->WriteLog("Debug: *".$ldap_connection->get_debug_message(), FALSE, FALSE, 98, 'LDAP', '');
+                          $this->WriteLog("Debug: *LDAP debug: ".$ldap_connection->get_debug_message(), FALSE, FALSE, 98, 'LDAP', '');
                       }
 
                       do {
@@ -13914,7 +14099,7 @@ class Multiotp
                                               foreach ($groups_array_raw as $id => $group_name){
                                                   $extra_groups=$ldap_connection->recursive_groups($group_name, $this->IsLdapRecursiveCacheOnly());
                                                   if ('' != $ldap_connection->get_warning_message()) {
-                                                      $this->WriteLog("Warning: ".$ldap_connection->get_warning_message(), FALSE, FALSE, 98, 'LDAP', '');
+                                                      $this->WriteLog("Warning: LDAP warning: ".$ldap_connection->get_warning_message(), FALSE, FALSE, 98, 'LDAP', '');
                                                   }
                                                   $groups_array_raw=array_merge($groups_array_raw,$extra_groups);
                                               }
@@ -14298,10 +14483,10 @@ class Multiotp
                           return FALSE;
                       }
                       if ('' != $ldap_connection->get_warning_message()) {
-                          $this->WriteLog("Warning: ".$ldap_connection->get_warning_message(), FALSE, FALSE, 98, 'LDAP', '');
+                          $this->WriteLog("Warning: LDAP warning: ".$ldap_connection->get_warning_message(), FALSE, FALSE, 98, 'LDAP', '');
                       }
                       if ($this->GetVerboseFlag() && ('' != $ldap_connection->get_debug_message())) {
-                          $this->WriteLog("Debug: *".$ldap_connection->get_debug_message(), FALSE, FALSE, 98, 'LDAP', '');
+                          $this->WriteLog("Debug: *DEBUG warning: ".$ldap_connection->get_debug_message(), FALSE, FALSE, 98, 'LDAP', '');
                       }
 
                       do {
@@ -14459,7 +14644,7 @@ class Multiotp
                                               foreach ($groups_array_raw as $id => $group_name){
                                                   $extra_groups=$ldap_connection->recursive_groups($group_name, $this->IsLdapRecursiveCacheOnly());
                                                   if ('' != $ldap_connection->get_warning_message()) {
-                                                      $this->WriteLog("Warning: ".$ldap_connection->get_warning_message(), FALSE, FALSE, 98, 'LDAP', '');
+                                                      $this->WriteLog("Warning: LDAP warning: ".$ldap_connection->get_warning_message(), FALSE, FALSE, 98, 'LDAP', '');
                                                   }
                                                   $groups_array_raw=array_merge($groups_array_raw,$extra_groups);
                                               }
@@ -15615,7 +15800,7 @@ class Multiotp
       // We don't accept any input without at least 3 characters (like 'sms'), except for without2FA
       $input_is_empty = ('' == $input_to_check);
       if (strlen($input_to_check) < 3) {
-          $input_to_check.= "! <3 digits";
+          $input_to_check.= "! <3 digits !";
       }
       
       $server_result = -1;
@@ -15631,12 +15816,12 @@ class Multiotp
                       $input_to_check = trim(substr($input_to_check,$pos+1));
                       $input_is_empty = ('' == $input_to_check);
                       if (strlen($input_to_check) < 3) {
-                          $input_to_check.= "! <3 digits";
+                          $input_to_check.= "!! <3 digits !!";
                       }
                   }
               }
           }
-      
+
           if ('' != $this->GetChapPassword()) {
               if (32 < strlen($this->GetChapPassword())) {
                   $hex_id = substr($this->GetChapPassword(),0,2);
@@ -15646,7 +15831,8 @@ class Multiotp
       
               $server_result = $this->CheckUserTokenOnServer($real_user, $this->GetChapPassword(), 'CHAP', $hex_id, $this->GetChapChallenge());
           } else {
-              $server_result = $this->CheckUserTokenOnServer($real_user, $input_to_check);
+              // We authorize to check an empty OTP (possibly for without2FA)
+              $server_result = $this->CheckUserTokenOnServer($real_user, ($input_is_empty ? "" : $input_to_check));
           }
 
           if ($this->_xml_dump_in_log) {
@@ -15690,7 +15876,7 @@ class Multiotp
                   $input_to_check = trim(substr($input_to_check,$pos+1));
                   $input_is_empty = ('' == $input_to_check);
                   if (strlen($input_to_check) < 3) {
-                      $input_to_check.= "! <3 digits!";
+                      $input_to_check.= "!!! <3 digits !!!";
                   }
               }
       
@@ -16588,6 +16774,9 @@ class Multiotp
                   $result = 98;
                   $this->WriteLog("Error: authentication typed by the user is ".strlen($input_to_check)." chars long instead of ".strlen($calculated_token)." chars", FALSE, FALSE, $result, 'User');
               }
+              if ($this->IsDeveloperMode()) {
+                $this->WriteLog("Developer: *authentication typed by the user is $input_to_check", FALSE, FALSE, 8888, 'Debug', '');
+              }
           }
           
           if ($this->GetUserErrorCounter() >= $this->GetMaxBlockFailures()) {
@@ -16687,7 +16876,7 @@ class Multiotp
 
                   $input_is_empty = ('' == $input_to_check);
                   if (strlen($input_to_check) < 3) {
-                      $input_to_check.= "! <3 digits";
+                      $input_to_check.= "!!!! <3 digits !!!!";
                   }
 
                   $now_steps         = intval($now_epoch / $interval);
@@ -16927,6 +17116,9 @@ class Multiotp
                               $result = 98;
                               $this->WriteLog("Info: *(authentication typed by the user is ".strlen($input_to_check)." chars long instead of ".strlen($calculated_token)." chars", FALSE, FALSE, $result, 'User', $user);
                           }
+                      }
+                      if ($this->IsDeveloperMode()) {
+                        $this->WriteLog("Developer: *authentication typed by the user is $input_to_check", FALSE, FALSE, 8888, 'Debug', '');
                       }
                   }
                   
@@ -20177,7 +20369,20 @@ EOL;
                       
                       $now_epoch = time();
                       $cache_lifetime = $this->GetServerCacheLifetime();
+                      if ($cache_lifetime > $this->GetUserCacheLifetime()) {
+                          $cache_lifetime = $this->GetUserCacheLifetime();
+                          if ($this->GetVerboseFlag()) {
+                              $this->WriteLog("Info: *Cache lifetime lowered to $cache_lifetime for the user $user_id", FALSE, FALSE, 8888, 'Server-Client', '');
+                          }
+                      }
 
+                      if ($cache_level > $this->GetUserCacheLevel()) {
+                          $cache_level = $this->GetUserCacheLevel();
+                          if ($this->GetVerboseFlag()) {
+                              $this->WriteLog("Info: *Cache leve lowered to $cache_level for the user $user_id", FALSE, FALSE, 8888, 'Server-Client', '');
+                          }
+                      }
+                      
                       if ((0 < $cache_level) && (0 == intval($error_code))) {
                           if ($this->GetVerboseFlag()) {
                               $this->WriteLog("Info: *Cache level is set to $cache_level", FALSE, FALSE, 8888, 'Server-Client', '');
@@ -20186,6 +20391,7 @@ EOL;
                           reset($this->_user_data);
                           while(list($key, $value) = each($this->_user_data)) {
                               if ('' != trim($key)) {
+                                // CheckUserToken will return all attributes, included encrypted ones, but only if user is authenticated successfully
                                   if ('encryption_hash' != $key) {
                                       $user_data.= mb_strtolower($key);
                                       if ('autolock_time' == $key) {
@@ -20232,7 +20438,12 @@ EOL;
                       reset($this->_user_data);
                       while(list($key, $value) = each($this->_user_data)) {
                           if ('' != trim($key)) {
-                              if ('encryption_hash' != $key) {
+                              // ReadUserData will only return non-encrypted attributes
+                              if (('encryption_hash' != $key) &&
+                                  (!((FALSE !== mb_strpos(mb_strtolower($this->GetAttributesToEncrypt()), mb_strtolower('*'.$key.'*'))) ||
+                                     ("*all*" == mb_strtolower($this->GetAttributesToEncrypt())))
+                                  )
+                                 ) {
                                   $user_data.= mb_strtolower($key);
                                   $value = $this->Encrypt($key, $value, $this->GetServerSecret($remote_ip));
                                   $user_data = $user_data.":";
@@ -69895,14 +70106,19 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
             }
             break;
         case "restore-config":
-            if  ($param_count < 3) {
+            if  ($param_count < 2) {
                 $result = 30; // ERROR: At least one parameter is missing
             } else {
                 $backup_file = ('' != trim($all_args[2])) ? $all_args[2] : 'multiotp.cfg';
-                if (TRUE === ($multiotp->RestoreConfiguration(array('restore_file' => $backup_file, 'encryption_key' => $all_args[1])))) {
-                  $result = 19; // INFO: Requested operation successfully done
+                if (file_exists($backup_file)) {
+                    if (TRUE === ($multiotp->RestoreConfiguration(array('backup_file' => $backup_file,
+                                                                        'restore_key' => $all_args[1])))) {
+                      $result = 19; // INFO: Requested operation successfully done
+                    } else {
+                      $result = 99; // ERROR
+                    }
                 } else {
-                  $result = 99; // ERROR
+                  $result = 58; // ERROR: File is missing
                 }
             }
             break;
@@ -70280,6 +70496,14 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                     $actual_array = explode("=",$all_args[$params],2);
                     if (2 == count($actual_array)) {
                         switch ($actual_array[0]) {
+                            case 'cache-level':
+                                $multiotp->SetUserCacheLevel(intval($actual_array[1]));
+                                $write_user_data = true;
+                                break;
+                            case 'cache-lifetime':
+                                $multiotp->SetUserCacheLifetime(intval($actual_array[1]));
+                                $write_user_data = true;
+                                break;
                             case 'description':
                                 $multiotp->SetUserDescription($actual_array[1]);
                                 $write_user_data = true;
@@ -71028,7 +71252,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo "     radius-reply-separator: [,|:|;|cr|crlf] returned attributes separator".$crlf;
                 echo "                             ('crlf' for TekRADIUS, ',' for FreeRADIUS)".$crlf;
                 echo "          self-registration: [1|0] enable/disable self-registration of tokens".$crlf;
-                echo "         server-cache-level: [0|1] enable/allow cache from server to client".$crlf;
+                echo "         server-cache-level: [1|0] enable/allow cache from server to client".$crlf;
                 echo "      server-cache-lifetime: lifetime in seconds of the cached information".$crlf;
                 echo "              server-secret: shared secret used for client/server operation".$crlf;
                 echo "             server-timeout: timeout value for the connection to the server".$crlf;
@@ -71062,6 +71286,8 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo $crlf;
                 echo " multiotp -set user option1=value1 option2=value2 ... optionN=valueN".$crlf;
                 echo "  options are  email: update the email of the user".$crlf;
+                echo "         cache-level: [1|0] enable/allow cache for this user on the client".$crlf;
+                echo "      cache-lifetime: set/update lifetime in seconds of cached information".$crlf;
                 echo "         description: set a description to the user, used for example during".$crlf;
                 echo "                      the QRcode generation as the description of the account".$crlf;
                 echo "               group: set/update the group of the user".$crlf;
@@ -71091,7 +71317,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo $crlf;
                 echo "Client/server inline parameters:".$crlf;
                 echo $crlf;
-                echo " -server-cache-level=[0|1] enable/allow cache from server to client".$crlf;
+                echo " -server-cache-level=[1|0] enable/allow cache from server to client".$crlf;
                 echo " -server-secret=shared secret used for client/server operation".$crlf;
                 echo " -server-timeout=timeout value for the connection to the server".$crlf;
                 echo " -server-url=full url of the server(s) for client/server mode".$crlf;
@@ -71109,8 +71335,8 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo $crlf;
                 echo "Backup/restore commands:".$crlf;
                 echo $crlf;
-                echo " multiotp -backup-config password [file-name]".$crlf;
-                echo " multiotp -restore-config password file-name".$crlf;
+                echo " multiotp -backup-config  password [file-name]".$crlf;
+                echo " multiotp -restore-config password [file-name]".$crlf;
                 echo "   By default, the file name is multiotp.cfg in the current folder.".$crlf;
                 echo $crlf;
                 echo $crlf;

@@ -1,7 +1,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "multiOTP Credential Provider"
-#define MyAppVersion "5.3.0.0"
+#define MyAppVersion "5.3.0.3"
 #define MyAppShortName "multiOTP"
 #define MyAppPublisher "SysCo systemes de communication sa"
 #define MyAppURL "https://github.com/multiOTP/multiOTPCredentialProvider"
@@ -28,7 +28,7 @@ DefaultGroupName={#MyAppName}
 UninstallDisplayIcon={app}\multiotp.exe
 DisableProgramGroupPage=yes
 OutputDir=C:\Data\projects\multiotp\multiOTPCredentialProvider\installer
-OutputBaseFilename=multiOTPCredentialProvider-5.3.0.0
+OutputBaseFilename=multiOTPCredentialProvider-5.3.0.3
 SetupIconFile=C:\Data\projects\multiotp\ico\multiOTP.ico
 WizardImageFile=..\bmp\multiOTP-wizard-164x314.bmp
 WizardSmallImageFile=..\bmp\multiOTP-wizard-55x58.bmp
@@ -696,7 +696,8 @@ begin
   testDone := true;
   testSuccess := false;
 
-  if ('' = testUsernameEdit.Text) Or ('' = testOtpdEdit.Text) Or ('' = testPasswordEdit.Text) Then Begin
+  // testOtpdEdit can be empty now (5.3.0.3 and further)
+  if ('' = testUsernameEdit.Text) Or ('' = testPasswordEdit.Text) Then Begin
       testButtonResult.Caption := ExpandConstant('{cm:multiOTPUsernamePasswordOrOtpMissing}');
   end else begin
     ParseDomainUserName(testUsernameEdit.Text, Domain, UserName, UPNUserName);
@@ -715,7 +716,7 @@ begin
       testButtonResult.Caption := ExpandConstant('{cm:multiOTPWindowsUsernameOrPasswordIncorrect}');
     end else if (ERROR_SUCCESS <> ErrorCode) then begin
       testButtonResult.Caption := ExpandConstant('{cm:multiOTPWindowsLoginFailed}: ') + SysErrorMessage(DLLGetLastError);
-    end else if Not Exec(ExpandConstant('{app}\multiotp.exe'), '-cp ' + OTPUsername +' '+PrefixPass + testOtpdEdit.Text, ExpandConstant('{app}'), SW_HIDE, ewWaitUntilTerminated, ResultCode) then begin
+    end else if Not Exec(ExpandConstant('{app}\multiotp.exe'), '-cp "' + OTPUsername + '" "' + PrefixPass + testOtpdEdit.Text + '"', ExpandConstant('{app}'), SW_HIDE, ewWaitUntilTerminated, ResultCode) then begin
       MsgBox(ExpandConstant('{cm:multiOTPSystemErrorDuringmultiOTPTest}') + ' ('+IntToStr(ResultCode)+')', mbCriticalError, MB_OK);
       ResultCode := 99;
     end else if (0 = ResultCode) then begin

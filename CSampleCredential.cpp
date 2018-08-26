@@ -119,7 +119,9 @@ HRESULT CSampleCredential::call_multiotp(_In_ PCWSTR username, _In_ PCWSTR PREV_
 	wcscat_s(cmd, 2048, username);
 	wcscat_s(cmd, 2048, L" ");
 
+	wcscat_s(cmd, 2048, L"\"");
 	wcscat_s(cmd, 2048, PREFIX_PASS);
+	wcscat_s(cmd, 2048, L"\"");
 
 	if (wcslen(PREV_OTP) > 0) {
 		wcscat_s(cmd, 2048, PREV_OTP);
@@ -1290,7 +1292,8 @@ HRESULT CSampleCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIAL
 	if (DEVELOP_MODE) PrintLn(L"_pszQualifiedUserName before the check is the following: ", _pszQualifiedUserName);
 
 	if ( ( ( _fShowControls) && (wcslen(_rgFieldStrings[SFI_PREV_OTP]) > 0) && (wcslen(_rgFieldStrings[SFI_OTP]) > 0) ) ||   //resync OTP
-		 ( (!_fShowControls) && (wcslen(_rgFieldStrings[SFI_PASSWORD]) > 0) && (wcslen(_rgFieldStrings[SFI_OTP]) > 0) )      //validate OTP
+		 ( (!_fShowControls) && (wcslen(_rgFieldStrings[SFI_PASSWORD]) > 0) && (wcslen(_rgFieldStrings[SFI_OTP]) > 0) ) ||   //validate OTP
+		 ( (!_fShowControls) && (wcslen(_rgFieldStrings[SFI_PASSWORD]) > 0) ) // validate connexion with password but without OTP !
 		){
 		if (SUCCEEDED(hr)) {
 			if (DEVELOP_MODE) PrintLn(L"OTP User:", otp_name);
