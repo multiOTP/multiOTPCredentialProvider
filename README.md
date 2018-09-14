@@ -1,4 +1,4 @@
-multiOTPCredentialProvider 
+multiOTPCredentialProvider
 ==========================
 multiOTP Credential Provider for multiOTP is a free and open source implementation of a V2 Credential Provider for the multiOTP strong two-factor authentication solution (Apache License, Version 2.0)
 
@@ -6,7 +6,7 @@ multiOTP Credential Provider for multiOTP is a free and open source implementati
 (c) 2015-2016 ArcadeJust ("RDP only" enhancement)  
 (c) 2013-2015 Last Squirrel IT  
 
-Current build: 5.3.0.3 (2018-08-26)
+Current build: 5.4.0.1 (2018-09-14)
 
 Binary download: https://download.multiotp.net/credential-provider/
 
@@ -118,6 +118,9 @@ Report if you have any problems or questions regarding this app.
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
+2019-09-14 5.4.0.1 SysCo/al FIX: Better domain name and hostname detection
+                            FIX: The cache lifetime check process was buggy since 5.3.0.3
+                            ENH: multiOTP Credential Provider has been reviewed
 2018-08-26 5.3.0.3 SysCo/al FIX: Users without 2FA token are now supported
 2018-08-21 5.3.0.0 SysCo/yj FIX: Save flat domain name in the registry. While offline, use this value instead of asking the DC
                    SysCo/al ENH: Enigma Virtual Box updated to version 9.00 (to create the special all-in-one-file)

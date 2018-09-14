@@ -1,24 +1,42 @@
-//
-// THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
-// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO
-// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
-// PARTICULAR PURPOSE.
-//
-// Copyright (c) Microsoft Corporation. All rights reserved.
-//
-// Standard dll required functions and class factory implementation.
+/**
+ * BASE CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
+ * ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+ * PARTICULAR PURPOSE.
+ *
+ * Copyright (c) Microsoft Corporation. All rights reserved.
+ *
+ * Standard dll required functions and class factory implementation.
+ *
+ * Extra code provided "as is" for the multiOTP open source project
+ *
+ * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
+ * @version   5.4.0.1
+ * @date      2018-09-14
+ * @since     2013
+ * @copyright (c) 2016-2018 SysCo systemes de communication sa
+ * @copyright (c) 2015-2016 ArcadeJust ("RDP only" enhancement)
+ * @copyright (c) 2013-2015 Last Squirrel IT 
+ * @copyright Apache License, Version 2.0
+ *
+ *
+ * Change Log
+ *
+ *   2018-03-11 5.2.0.0 SysCo/al New implementation from scratch
+ *
+ *********************************************************************/
 
 #include <windows.h>
 #include <unknwn.h>
 #include "Dll.h"
-#include "helpers.h"
+#include "MultiotpHelpers.h"
 
 static long g_cRef = 0;   // global dll reference count
 HINSTANCE g_hinst = NULL; // global dll hinstance
 
-extern HRESULT CSample_CreateInstance(__in REFIID riid, __deref_out void** ppv);
+extern HRESULT Multiotp_CreateInstance(__in REFIID riid, __deref_out void** ppv);
 extern HRESULT CLMSFilter_CreateInstance(__in REFIID riid, __deref_out void** ppv);
-EXTERN_C GUID CLSID_CSample;
+EXTERN_C GUID CLSID_Multiotp;
 
 class CClassFactory : public IClassFactory
 {
@@ -60,21 +78,22 @@ public:
         HRESULT hr;
         if (!pUnkOuter)
         {
-            //hr = CSample_CreateInstance(riid, ppv);
+            // hr = Multiotp_CreateInstance(riid, ppv);
+			// Begin Extra Code to handle the filter
 			if (IID_ICredentialProvider == riid) {
-				if (DEVELOP_MODE) PrintLn("invoke IID_ICredentialProvider");
-				hr = CSample_CreateInstance(riid, ppv);
+				if (DEVELOP_MODE) PrintLn("Dll:Invoke IID_ICredentialProvider");
+				hr = Multiotp_CreateInstance(riid, ppv);
 			}
 			else if (IID_ICredentialProviderFilter == riid) {
-				if (DEVELOP_MODE) PrintLn("invoke IID_ICredentialProviderFilter");
+				if (DEVELOP_MODE) PrintLn("Dll:Invoke IID_ICredentialProviderFilter");
 				hr = CLMSFilter_CreateInstance(riid, ppv);
 			}
 			else {
 				*ppv = NULL;
 				hr = CLASS_E_NOAGGREGATION;
-				if (DEVELOP_MODE) PrintLn("invoke unknown object");
+				if (DEVELOP_MODE) PrintLn("Dll:Invoke unknown object");
 			}
-
+			// End Extra Code
         }
         else
         {
@@ -110,7 +129,7 @@ HRESULT CClassFactory_CreateInstance(__in REFCLSID rclsid, __in REFIID riid, __d
 
     HRESULT hr;
 
-    if (CLSID_CSample == rclsid) 
+    if (CLSID_Multiotp == rclsid)
     {
         CClassFactory* pcf = new CClassFactory();
         if (pcf)
@@ -132,19 +151,19 @@ HRESULT CClassFactory_CreateInstance(__in REFCLSID rclsid, __in REFIID riid, __d
 
 void DllAddRef()
 {
-	if (DEVELOP_MODE) PrintLn("DllAddRef");
+	if (DEVELOP_MODE) PrintLn("Dll:DllAddRef");
     InterlockedIncrement(&g_cRef);
 }
 
 void DllRelease()
 {
-	if (DEVELOP_MODE) PrintLn("DllRelease");
+	if (DEVELOP_MODE) PrintLn("Dll:DllRelease");
     InterlockedDecrement(&g_cRef);
 }
 
 STDAPI DllCanUnloadNow()
 {
-	if (DEVELOP_MODE) PrintLn("DllCanUnloadNow?");
+	if (DEVELOP_MODE) PrintLn("Dll:DllCanUnloadNow?");
     return (g_cRef > 0) ? S_FALSE : S_OK;
 }
 
@@ -169,3 +188,4 @@ STDAPI_(BOOL) DllMain(__in HINSTANCE hinstDll, __in DWORD dwReason, __in void *)
     g_hinst = hinstDll;
     return TRUE;
 }
+

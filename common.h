@@ -1,18 +1,38 @@
-//
-// THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
-// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO
-// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
-// PARTICULAR PURPOSE.
-//
-// Copyright (c) Microsoft Corporation. All rights reserved.
-//
-// This file contains some global variables that describe what our
-// sample tile looks like.  For example, it defines what fields a tile has
-// and which fields show in which states of LogonUI. This sample illustrates
-// the use of each UI field type.
+/**
+ * BASE CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
+ * ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+ * PARTICULAR PURPOSE.
+ *
+ * Copyright (c) Microsoft Corporation. All rights reserved.
+ *
+ * This file contains some global variables that describe what our
+ * sample tile looks like.  For example, it defines what fields a tile has
+ * and which fields show in which states of LogonUI. This sample illustrates
+ * the use of each UI field type.
+ *
+ * It includes also the multiOTP response structure definition
+ *
+ * Extra code provided "as is" for the multiOTP open source project
+ *
+ * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
+ * @version   5.2.0.0
+ * @date      2018-03-11
+ * @since     2013
+ * @copyright (c) 2016-2018 SysCo systemes de communication sa
+ * @copyright (c) 2015-2016 ArcadeJust ("RDP only" enhancement)
+ * @copyright (c) 2013-2015 Last Squirrel IT 
+ * @copyright Apache License, Version 2.0
+ *
+ *
+ * Change Log
+ *
+ *   2018-03-11 5.2.0.0 SysCo/al New implementation from scratch
+ *
+ *********************************************************************/
 
 #pragma once
-#include "helpers.h"
+#include "MultiotpHelpers.h"
 
 // The indexes of each of the fields in our credential provider's tiles. Note that we're
 // using each of the nine available field types here.
@@ -34,12 +54,13 @@
 //     SFI_NUM_FIELDS        = 13,  // Note: if new fields are added, keep NUM_FIELDS last.  This is used as a count of the number of fields
 // };
 
-enum SAMPLE_FIELD_ID
+// TODO
+enum MULTIOTP_FIELD_ID
 {
     SFI_TILEIMAGE            = 0,
     SFI_LABEL                = 1,
-    SFI_LOGIN_NAME           = 2,
-    SFI_LARGE_TEXT           = 3,
+    SFI_LARGE_TEXT           = 2,
+    SFI_LOGIN_NAME           = 3,
     SFI_PASSWORD             = 4,
     SFI_NEWPASSWORD          = 5,
     SFI_SUBMIT_BUTTON        = 6,
@@ -50,7 +71,7 @@ enum SAMPLE_FIELD_ID
     SFI_SYNCHRONIZE_LINK     = 11,
     SFI_FAILURE_TEXT         = 12,
     SFI_NEXT_LOGIN_ATTEMPT   = 13,
-    SFI_NUM_FIELDS           = 14,
+    SFI_NUM_FIELDS           = 14, // Note: if new fields are added, keep NUM_FIELDS last.  This is used as a count of the number of fields
 };
 
 
@@ -69,71 +90,100 @@ struct FIELD_STATE_PAIR
 // The field state value indicates whether the field is displayed
 // in the selected tile, the deselected tile, or both.
 // The Field interactive state indicates when
+
+// static const FIELD_STATE_PAIR s_rgFieldStatePairs[] =
+// {
+//     { CPFS_DISPLAY_IN_BOTH,            CPFIS_NONE    },    // SFI_TILEIMAGE *
+//     { CPFS_HIDDEN,                     CPFIS_NONE    },    // SFI_LABEL *
+//     { CPFS_DISPLAY_IN_BOTH,            CPFIS_NONE    },    // SFI_LARGE_TEXT *
+//     { CPFS_DISPLAY_IN_SELECTED_TILE,   CPFIS_FOCUSED },    // SFI_PASSWORD *
+//     { CPFS_DISPLAY_IN_SELECTED_TILE,   CPFIS_NONE    },    // SFI_SUBMIT_BUTTON *
+//     { CPFS_DISPLAY_IN_SELECTED_TILE,   CPFIS_NONE    },    // SFI_LAUNCHWINDOW_LINK
+//     { CPFS_DISPLAY_IN_SELECTED_TILE,   CPFIS_NONE    },    // SFI_HIDECONTROLS_LINK
+//     { CPFS_DISPLAY_IN_SELECTED_TILE,   CPFIS_NONE    },    // SFI_FULLNAME_TEXT
+//     { CPFS_DISPLAY_IN_SELECTED_TILE,   CPFIS_NONE    },    // SFI_DISPLAYNAME_TEXT
+//     { CPFS_DISPLAY_IN_SELECTED_TILE,   CPFIS_NONE    },    // SFI_LOGONSTATUS_TEXT
+//     { CPFS_DISPLAY_IN_SELECTED_TILE,   CPFIS_NONE    },    // SFI_CHECKBOX
+//     { CPFS_DISPLAY_IN_SELECTED_TILE,   CPFIS_NONE    },    // SFI_EDIT_TEXT
+//     { CPFS_DISPLAY_IN_SELECTED_TILE,   CPFIS_NONE    },    // SFI_COMBOBOX
+// };
+
+// TODO
 static const FIELD_STATE_PAIR s_rgFieldStatePairs[] =
 {
-  { CPFS_DISPLAY_IN_BOTH,            CPFIS_NONE    },    // SFI_TILEIMAGE
-  { CPFS_HIDDEN,                     CPFIS_NONE    },    // SFI_LABEL
-	{ CPFS_HIDDEN,                     CPFIS_NONE    },    // SFI_LOGIN_NAME
-	{ CPFS_DISPLAY_IN_BOTH,            CPFIS_NONE    },    // SFI_LARGE_TEXT
-  { CPFS_DISPLAY_IN_SELECTED_TILE,   CPFIS_FOCUSED },    // SFI_PASSWORD
-  { CPFS_HIDDEN,                     CPFIS_NONE    },    // SFI_NEWPASSWORD
-  { CPFS_DISPLAY_IN_SELECTED_TILE,   CPFIS_NONE    },    // SFI_SUBMIT_BUTTON
-  { CPFS_HIDDEN,                     CPFIS_NONE    },    // SFI_PREV_OTP
-	{ CPFS_DISPLAY_IN_SELECTED_TILE,   CPFIS_NONE    },    // SFI_OTP
-	{ CPFS_DISPLAY_IN_SELECTED_TILE,   CPFIS_NONE    },    // SFI_DOMAIN_INFO
-	{ CPFS_HIDDEN,                     CPFIS_NONE    },    // SFI_REQUIRE_SMS
-	{ CPFS_HIDDEN,                     CPFIS_NONE    },    // SFI_SYNCHRONIZE_LINK
-	{ CPFS_HIDDEN,                     CPFIS_NONE    },    // SFI_FAILURE_TEXT
-	{ CPFS_HIDDEN,                     CPFIS_NONE    },    // SFI_NEXT_LOGIN_ATTEMPT
-//    { CPFS_DISPLAY_IN_SELECTED_TILE,   CPFIS_NONE    },    // SFI_DISPLAYNAME_TEXT
-//    { CPFS_DISPLAY_IN_SELECTED_TILE,   CPFIS_NONE    },    // SFI_LOGONSTATUS_TEXT
-//    { CPFS_DISPLAY_IN_SELECTED_TILE,   CPFIS_NONE    },    // SFI_CHECKBOX
-//    { CPFS_DISPLAY_IN_SELECTED_TILE,   CPFIS_NONE    },    // SFI_EDIT_TEXT
-//    { CPFS_DISPLAY_IN_SELECTED_TILE,   CPFIS_NONE    },    // SFI_COMBOBOX
+    { CPFS_DISPLAY_IN_BOTH,            CPFIS_NONE    },    // SFI_TILEIMAGE *
+    { CPFS_HIDDEN,                     CPFIS_NONE    },    // SFI_LABEL *
+    { CPFS_DISPLAY_IN_BOTH,            CPFIS_NONE    },    // SFI_LARGE_TEXT *
+    { CPFS_HIDDEN,                     CPFIS_NONE    },    // SFI_LOGIN_NAME
+    { CPFS_DISPLAY_IN_SELECTED_TILE,   CPFIS_FOCUSED },    // SFI_PASSWORD *
+    { CPFS_HIDDEN,                     CPFIS_NONE    },    // SFI_NEWPASSWORD
+    { CPFS_DISPLAY_IN_SELECTED_TILE,   CPFIS_NONE    },    // SFI_SUBMIT_BUTTON *
+    { CPFS_HIDDEN,                     CPFIS_NONE    },    // SFI_PREV_OTP
+    { CPFS_DISPLAY_IN_SELECTED_TILE,   CPFIS_NONE    },    // SFI_OTP
+    { CPFS_DISPLAY_IN_SELECTED_TILE,   CPFIS_NONE    },    // SFI_DOMAIN_INFO
+    { CPFS_HIDDEN,                     CPFIS_NONE    },    // SFI_REQUIRE_SMS
+    { CPFS_HIDDEN,                     CPFIS_NONE    },    // SFI_SYNCHRONIZE_LINK
+    { CPFS_HIDDEN,                     CPFIS_NONE    },    // SFI_FAILURE_TEXT
+    { CPFS_HIDDEN,                     CPFIS_NONE    },    // SFI_NEXT_LOGIN_ATTEMPT
 };
+
 
 // Field descriptors for unlock and logon.
 // The first field is the index of the field.
 // The second is the type of the field.
 // The third is the name of the field, NOT the value which will appear in the field.
-// https://msdn.microsoft.com/en-us/library/windows/desktop/bb773243(v=vs.85).aspx
+// static const CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR s_rgCredProvFieldDescriptors[] =
+// {
+//     { SFI_TILEIMAGE,         CPFT_TILE_IMAGE,    L"Image",                      CPFG_CREDENTIAL_PROVIDER_LOGO  },
+//     { SFI_LABEL,             CPFT_SMALL_TEXT,    L"Tooltip",                    CPFG_CREDENTIAL_PROVIDER_LABEL },
+//     { SFI_LARGE_TEXT,        CPFT_LARGE_TEXT,    L"Sample Credential Provider"                                 },
+//     { SFI_PASSWORD,          CPFT_PASSWORD_TEXT, L"Password text"                                              },
+//     { SFI_SUBMIT_BUTTON,     CPFT_SUBMIT_BUTTON, L"Submit"                                                     },
+//     { SFI_LAUNCHWINDOW_LINK, CPFT_COMMAND_LINK,  L"Launch helper window"                                       },
+//     { SFI_HIDECONTROLS_LINK, CPFT_COMMAND_LINK,  L"Hide additional controls"                                   },
+//     { SFI_FULLNAME_TEXT,     CPFT_SMALL_TEXT,    L"Full name: "                                                },
+//     { SFI_DISPLAYNAME_TEXT,  CPFT_SMALL_TEXT,    L"Display name: "                                             },
+//     { SFI_LOGONSTATUS_TEXT,  CPFT_SMALL_TEXT,    L"Logon status: "                                             },
+//     { SFI_CHECKBOX,          CPFT_CHECKBOX,      L"Checkbox"                                                   },
+//     { SFI_EDIT_TEXT,         CPFT_EDIT_TEXT,     L"Edit text"                                                  },
+//     { SFI_COMBOBOX,          CPFT_COMBOBOX,      L"Combobox"                                                   },
+// };
+
+// TODO
 static const CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR s_rgCredProvFieldDescriptors[] =
 {
-	{ SFI_TILEIMAGE,         CPFT_TILE_IMAGE,    L"Image",                      CPFG_CREDENTIAL_PROVIDER_LOGO  },
-	{ SFI_LABEL,             CPFT_SMALL_TEXT,    L"Tooltip",                    CPFG_CREDENTIAL_PROVIDER_LABEL },
-	{ SFI_LOGIN_NAME,        CPFT_EDIT_TEXT,     L"Login name"                                                 },
-	{ SFI_LARGE_TEXT,        CPFT_LARGE_TEXT,    L"multiOTP Login"                                             },
-	{ SFI_PASSWORD,          CPFT_PASSWORD_TEXT, L"Password text"                                              },
-	{ SFI_NEWPASSWORD,       CPFT_PASSWORD_TEXT, L"New Password"                                               },
-	{ SFI_SUBMIT_BUTTON,     CPFT_SUBMIT_BUTTON, L"Submit"                                                     },
-	{ SFI_PREV_OTP,          CPFT_PASSWORD_TEXT, L"PREVIOUS OTP"                                               },
-	{ SFI_OTP,               CPFT_PASSWORD_TEXT, L"OTP"                                                        },               
-	{ SFI_DOMAIN_INFO,       CPFT_SMALL_TEXT,    L"Default domain: "                                           },
-	{ SFI_REQUIRE_SMS,       CPFT_COMMAND_LINK,  L"Receive an OTP by SMS"                                      },
-	{ SFI_SYNCHRONIZE_LINK,  CPFT_COMMAND_LINK,  L"Synchronize multiOTP"                                       },
-	{ SFI_FAILURE_TEXT,      CPFT_SMALL_TEXT,    L"Logon Failure"                                              },
-	{ SFI_NEXT_LOGIN_ATTEMPT,CPFT_COMMAND_LINK,  L"Next Login attempt"                                         },
-//    { SFI_FULLNAME_TEXT,     CPFT_SMALL_TEXT,    L"Full name: "                                                },
-//    { SFI_DISPLAYNAME_TEXT,  CPFT_SMALL_TEXT,    L"Display name: "                                             },
-//    { SFI_LOGONSTATUS_TEXT,  CPFT_SMALL_TEXT,    L"Logon status: "                                             },
-//    { SFI_CHECKBOX,          CPFT_CHECKBOX,      L"Checkbox"                                                   },
-//    { SFI_EDIT_TEXT,         CPFT_EDIT_TEXT,     L"Edit text"                                                  },
-//    { SFI_COMBOBOX,          CPFT_COMBOBOX,      L"Combobox"                                                   },
+  { SFI_TILEIMAGE,         CPFT_TILE_IMAGE,    L"Image",                      CPFG_CREDENTIAL_PROVIDER_LOGO  },
+  { SFI_LABEL,             CPFT_SMALL_TEXT,    L"Tooltip",                    CPFG_CREDENTIAL_PROVIDER_LABEL },
+  { SFI_LARGE_TEXT,        CPFT_LARGE_TEXT,    L"multiOTP Login"                                             },
+  { SFI_LOGIN_NAME,        CPFT_EDIT_TEXT,     L"Login name"                                                 },
+  { SFI_PASSWORD,          CPFT_PASSWORD_TEXT, L"Password text"                                              },
+  { SFI_NEWPASSWORD,       CPFT_PASSWORD_TEXT, L"New Password"                                               },
+  { SFI_SUBMIT_BUTTON,     CPFT_SUBMIT_BUTTON, L"Submit"                                                     },
+  { SFI_PREV_OTP,          CPFT_PASSWORD_TEXT, L"PREVIOUS OTP"                                               },
+  { SFI_OTP,               CPFT_PASSWORD_TEXT, L"OTP"                                                        },
+  { SFI_DOMAIN_INFO,       CPFT_SMALL_TEXT,    L"Default domain: "                                           },
+  { SFI_REQUIRE_SMS,       CPFT_COMMAND_LINK,  L"Receive an OTP by SMS"                                      },
+  { SFI_SYNCHRONIZE_LINK,  CPFT_COMMAND_LINK,  L"Synchronize multiOTP"                                       },
+  { SFI_FAILURE_TEXT,      CPFT_SMALL_TEXT,    L"Logon Failure"                                              },
+  { SFI_NEXT_LOGIN_ATTEMPT,CPFT_COMMAND_LINK,  L"Next Login attempt"                                         },
 };
 
-//static const PWSTR s_rgComboBoxStrings[] =
-//{
-//    L"First",
-//    L"Second",
-//    L"Third",
-//};
+
+static const PWSTR s_rgComboBoxStrings[] =
+{
+    L"First",
+    L"Second",
+    L"Third",
+};
+
+
 struct MULTIOTP_RESPONSE
 {
 	HRESULT ErrorNum;
 	PWSTR MessageText;
 };
 
-// Last update : 2017-11-05 SysCo/al
+// Last update : 2018-03-11 SysCo/al
 static const MULTIOTP_RESPONSE s_rgmultiOTPResponse[] =
 {
 	{ 0,  L"SUCCESS : Token accepted" },

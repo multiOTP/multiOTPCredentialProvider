@@ -1,7 +1,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "multiOTP Credential Provider"
-#define MyAppVersion "5.3.0.3"
+#define MyAppVersion "5.4.0.1"
 #define MyAppShortName "multiOTP"
 #define MyAppPublisher "SysCo systemes de communication sa"
 #define MyAppURL "https://github.com/multiOTP/multiOTPCredentialProvider"
@@ -28,7 +28,7 @@ DefaultGroupName={#MyAppName}
 UninstallDisplayIcon={app}\multiotp.exe
 DisableProgramGroupPage=yes
 OutputDir=C:\Data\projects\multiotp\multiOTPCredentialProvider\installer
-OutputBaseFilename=multiOTPCredentialProvider-5.3.0.3
+OutputBaseFilename=multiOTPCredentialProvider-5.4.0.1
 SetupIconFile=C:\Data\projects\multiotp\ico\multiOTP.ico
 WizardImageFile=..\bmp\multiOTP-wizard-164x314.bmp
 WizardSmallImageFile=..\bmp\multiOTP-wizard-55x58.bmp
@@ -87,6 +87,7 @@ multiOTPSharedSecretLabel=Secret shared with your multiOTP server(s)
 multiOTPSharedSecretSample=On your multiOTP server, Menu Configuration/Devices, Edit/Add a device
 multiOTPSharedSecretSample2=that match the IP and subnet mask of this current Windows machine
 multiOTPCacheEnabledCheckBox=Enable cache support on this machine if authorized by the server(s)
+multiotpDisableAutoReconnectCheckBox=Disable automatic RDP reconnection
 multiOTPRDPOnlyCheckBox=Only RDP connection must be protected with strong authentication
 multiOTPPrefixPassCheckBox=Send to multiOTP the concatenation of the windows password and the OTP
 multiOTPDisplaySmsLinkCheckBox=Display the [Receive an OTP by SMS] link
@@ -133,6 +134,7 @@ multiOTPReturnCodeSuffix= in multiOTP documentation
 ;french.multiOTPSharedSecretSample=Sur votre serveur multiOTP, Menu Configuration/Appareils, Editer/Ajouter un appareil
 ;french.multiOTPSharedSecretSample2=that match the IP and subnet mask of this current Windows machine
 ;french.multiOTPCacheEnabledCheckBox=Enable cache support on this machine if authorized by the server(s)
+;french.multiotpDisableAutoReconnect=Disable automatic RDP reconnection
 ;french.multiOTPRDPOnlyCheckBox=Only RDP connection must be protected with strong authentication
 ;french.multiOTPPrefixPassCheckBox=Send to multiOTP the concatenation of the windows password and the OTP
 ;french.multiOTPDisplaySmsLinkCheckBox=Display the [Receive an OTP by SMS] link
@@ -187,6 +189,7 @@ var
   multiOTPServerTimeout: Cardinal;
   multiOTPSharedSecret: String;
   multiOTPCacheEnabled: Cardinal;
+  multiotpDisableAutoReconnect: Cardinal;
   multiOTPRDPOnly: Cardinal;
   multiOTPTimeout: Cardinal;
   multiOTPPrefixPass: Cardinal;
@@ -198,6 +201,7 @@ var
   multiOTPServerTimeoutEdit: TEdit;
   multiOTPSharedSecretEdit: TEdit;
   multiOTPCacheEnabledCheckBox: TCheckBox;
+  multiOTPDisableAutoReconnectCheckBox: TCheckBox;
   multiOTPRDPOnlyCheckBox: TCheckBox;
   multiOTPTimeoutEdit: TEdit;
   multiOTPPrefixPassCheckBox: TCheckBox;
@@ -294,7 +298,6 @@ end;
 procedure ParseDomainUserName(const Value: string; var Domain, UserName, UPNUserName: string);
 var
   DelimPos: Integer;
-  TranslateResult: Boolean;
   buffer : string;
   buffer2 : string;
   nSize : DWORD;
@@ -510,21 +513,6 @@ begin
     ExpandConstant('{cm:multiOTPconfiguration}'),
     ExpandConstant('{cm:multiOTPconfigurationDescription}'));
 
-  multiOTPCacheEnabledCheckBox := TCheckBox.Create(Page);
-  with multiOTPCacheEnabledCheckBox do begin
-    Top := pageTop;
-    Left := pageLeft + 12;
-    Width := Page.SurfaceWidth;
-    Caption := ExpandConstant('{cm:multiOTPCacheEnabledCheckBox}');
-    if (1 = multiOTPCacheEnabled) then begin
-      State := cbChecked;
-    end else begin
-      State := cbUnchecked;
-    end;
-    Parent := Page.Surface;
-  end;
-  pageTop := pageTop + multiOTPCacheEnabledCheckBox.Height + ScaleY(0);
-
   multiOTPRDPOnlyCheckBox := TCheckBox.Create(Page);
   with multiOTPRDPOnlyCheckBox do begin
     Top := pageTop;
@@ -539,6 +527,51 @@ begin
     Parent := Page.Surface;
   end;
   pageTop := pageTop + multiOTPRDPOnlyCheckBox.Height + ScaleY(0);
+  
+  multiOTPDisableAutoReconnectCheckBox := TCheckBox.Create(Page);
+  with multiOTPDisableAutoReconnectCheckBox do begin
+    Top := pageTop;
+    Left := pageLeft + 12;
+    Width := Page.SurfaceWidth;
+    Caption := ExpandConstant('{cm:multiOTPDisableAutoReconnectCheckBox}');
+    if (1 = multiOTPDisableAutoReconnect) then begin
+      State := cbChecked;
+    end else begin
+      State := cbUnchecked;
+    end;
+    Parent := Page.Surface;
+  end;
+  pageTop := pageTop + multiOTPDisableAutoReconnectCheckBox.Height + ScaleY(4);
+  
+  multiOTPCacheEnabledCheckBox := TCheckBox.Create(Page);
+  with multiOTPCacheEnabledCheckBox do begin
+    Top := pageTop;
+    Left := pageLeft + 12;
+    Width := Page.SurfaceWidth;
+    Caption := ExpandConstant('{cm:multiOTPCacheEnabledCheckBox}');
+    if (1 = multiOTPCacheEnabled) then begin
+      State := cbChecked;
+    end else begin
+      State := cbUnchecked;
+    end;
+    Parent := Page.Surface;
+  end;
+  pageTop := pageTop + multiOTPCacheEnabledCheckBox.Height + ScaleY(4);
+
+  multiOTPDisplaySmsLinkCheckBox := TCheckBox.Create(Page);
+  with multiOTPDisplaySmsLinkCheckBox do begin
+    Top := pageTop;
+    Left := pageLeft + 12;
+    Width := Page.SurfaceWidth;
+    Caption := ExpandConstant('{cm:multiOTPDisplaySmsLinkCheckBox}');
+    if (1 = multiOTPDisplaySmsLink) then begin
+      State := cbChecked;
+    end else begin
+      State := cbUnchecked;
+    end;
+    Parent := Page.Surface;
+  end;
+  pageTop := pageTop + multiOTPDisplaySmsLinkCheckBox.Height + ScaleY(4);
 
   multiOTPPrefixPassCheckBox := TCheckBox.Create(Page);
   with multiOTPPrefixPassCheckBox do begin
@@ -555,21 +588,6 @@ begin
   end;
   pageTop := pageTop + multiOTPPrefixPassCheckBox.Height + ScaleY(0);
 
-  multiOTPDisplaySmsLinkCheckBox := TCheckBox.Create(Page);
-  with multiOTPDisplaySmsLinkCheckBox do begin
-    Top := pageTop;
-    Left := pageLeft + 12;
-    Width := Page.SurfaceWidth;
-    Caption := ExpandConstant('{cm:multiOTPDisplaySmsLinkCheckBox}');
-    if (1 = multiOTPDisplaySmsLink) then begin
-      State := cbChecked;
-    end else begin
-      State := cbUnchecked;
-    end;
-    Parent := Page.Surface;
-  end;
-  pageTop := pageTop + multiOTPDisplaySmsLinkCheckBox.Height + ScaleY(0);
-
   multiOTPUPNFormatCheckBox := TCheckBox.Create(Page);
   with multiOTPUPNFormatCheckBox do begin
     Top := pageTop;
@@ -583,7 +601,7 @@ begin
     end;
     Parent := Page.Surface;
   end;
-  pageTop := pageTop + multiOTPUPNFormatCheckBox.Height + ScaleY(3);
+  pageTop := pageTop + multiOTPUPNFormatCheckBox.Height + ScaleY(8);
   
   multiOTPTimeoutLabel := TNewStaticText.Create(Page);
   with multiOTPTimeoutLabel do begin
@@ -650,6 +668,13 @@ begin
     multiOTPRDPOnly := 0;
   end;
   RegWriteDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPRDPOnly', multiOTPRDPOnly);
+  
+  if (cbChecked = multiOTPDisableAutoReconnectCheckBox.State) then begin
+    multiotpDisableAutoReconnect := 1;
+  end else begin
+    multiotpDisableAutoReconnect := 0;
+  end;
+  RegWriteDWordValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services','fDisableAutoReconnect', multiotpDisableAutoReconnect);
 
   multiOTPTimeout := StrToIntDef(multiOTPTimeoutEdit.Text, multiOTPTimeout);
   RegWriteDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPTimeout', multiOTPTimeout);
@@ -934,9 +959,6 @@ end;
 
 
 procedure InitializeWizard;
-var
-  stringValue: String;
-  UserName: string;
 
 begin
   // Default values
@@ -945,6 +967,7 @@ begin
   multiOTPServerTimeout := 5;
   multiOTPSharedSecret := 'ClientServerSecret';
   multiOTPCacheEnabled := 1;
+  multiotpDisableAutoReconnect := 0;
   multiOTPRDPOnly := 1;
   multiOTPTimeout := 60;
   multiOTPPrefixPass := 0;
@@ -957,6 +980,7 @@ begin
   RegQueryDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPServerTimeout', multiOTPServerTimeout);
   RegQueryStringValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPSharedSecret', multiOTPSharedSecret);
   RegQueryDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPCacheEnabled', multiOTPCacheEnabled);
+  RegQueryDWordValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services','fDisableAutoReconnect', multiotpDisableAutoReconnect);
   RegQueryDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPRDPOnly', multiOTPRDPOnly);
   RegQueryDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPTimeout', multiOTPTimeout);
   RegQueryDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPPrefixPass', multiOTPPrefixPass);
