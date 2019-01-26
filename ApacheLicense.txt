@@ -189,7 +189,7 @@
 
    Copyright 2014-2015 LastSquirrelIT
    Copyright 2015-2016 ArcadeJust
-   Copyright 2010-2018 SysCo systemes de communication sa
+   Copyright 2010-2019 SysCo systemes de communication sa
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.

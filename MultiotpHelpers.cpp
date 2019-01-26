@@ -13,10 +13,10 @@
  * Extra code provided "as is" for the multiOTP open source project
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.4.0.1
- * @date      2018-09-14
+ * @version   5.4.1.6
+ * @date      2019-01-25
  * @since     2013
- * @copyright (c) 2016-2018 SysCo systemes de communication sa
+ * @copyright (c) 2016-2019 SysCo systemes de communication sa
  * @copyright (c) 2015-2016 ArcadeJust ("RDP only" enhancement)
  * @copyright (c) 2013-2015 Last Squirrel IT 
  * @copyright Apache License, Version 2.0
@@ -24,6 +24,7 @@
  *
  * Change Log
  *
+ *   2019-01-25 5.4.1.6 SysCo/al Username between "" (space in username)
  *   2018-03-11 5.2.0.0 SysCo/al New implementation from scratch
  *
  *********************************************************************/
@@ -1090,9 +1091,10 @@ HRESULT multiotp_request(_In_ PCWSTR username,
 	if (wcslen(PREV_OTP) > 0) {
 		wcscat_s(cmd, 2048, L"-resync ");
 	}
-
+   
+	wcscat_s(cmd, 2048, L"\"");
 	wcscat_s(cmd, 2048, username);
-	wcscat_s(cmd, 2048, L" ");
+	wcscat_s(cmd, 2048, L"\" ");   
 
 	wcscat_s(cmd, 2048, L"\"");
 	wcscat_s(cmd, 2048, PREFIX_PASS);

@@ -1,11 +1,13 @@
-; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
-
 #define MyAppName "multiOTP Credential Provider"
-#define MyAppVersion "5.4.0.1"
+#define MyAppVersion "5.4.1.6"
 #define MyAppShortName "multiOTP"
 #define MyAppPublisher "SysCo systemes de communication sa"
 #define MyAppURL "https://github.com/multiOTP/multiOTPCredentialProvider"
-#define MyAppCopyright "Copyright (c) 2010-2018 SysCo / ArcadeJust / LastSquirrelIT (Apache License)"
+#define MyAppCopyright "Copyright (c) 2010-2019 SysCo / ArcadeJust / LastSquirrelIT (Apache License)"
+
+;Dependency installation based on: http://github.com/stfx/innodependencyinstaller
+#define use_msiproduct
+#define use_vc2017
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
@@ -28,12 +30,15 @@ DefaultGroupName={#MyAppName}
 UninstallDisplayIcon={app}\multiotp.exe
 DisableProgramGroupPage=yes
 OutputDir=C:\Data\projects\multiotp\multiOTPCredentialProvider\installer
-OutputBaseFilename=multiOTPCredentialProvider-5.4.0.1
+OutputBaseFilename=multiOTPCredentialProvider-5.4.1.6
 SetupIconFile=C:\Data\projects\multiotp\ico\multiOTP.ico
 WizardImageFile=..\bmp\multiOTP-wizard-164x314.bmp
 WizardSmallImageFile=..\bmp\multiOTP-wizard-55x58.bmp
 Compression=lzma
 SolidCompression=yes
+
+PrivilegesRequired=admin
+
 ; "ArchitecturesInstallIn64BitMode=x64" requests that the install be
 ; done in "64-bit mode" on x64, meaning it should use the native
 ; 64-bit Program Files directory and the 64-bit view of the registry.
@@ -43,6 +48,10 @@ ArchitecturesInstallIn64BitMode=x64
 ; installation to run on all architectures (including Itanium,
 ; since it's capable of running 32-bit code too).
 
+; downloading and installing dependencies will only work if the memo/ready page is enabled (default and current behaviour)
+DisableReadyPage=no
+DisableReadyMemo=no
+
 ; Signing options
 ;SignTool=standard
 ;SignedUninstaller=yes
@@ -50,6 +59,10 @@ ArchitecturesInstallIn64BitMode=x64
 ;[Languages]
 ;Name: "english"; MessagesFile: "compiler:Default.isl"
 ;Name: "french"; MessagesFile: "compiler:Languages\French.isl"
+
+; supported languages for Dependency installer
+#include "scripts\lang\english.iss"
+;#include "scripts\lang\french.iss"
 
 [Files]
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
@@ -169,6 +182,26 @@ multiOTPReturnCodeSuffix= in multiOTP documentation
 ;french.multiOTPReturnCodePrefix=Check exit code 
 ;french.multiOTPReturnCodeSuffix= in multiOTP documentation
 
+DependenciesDir=MyProgramDependencies
+WindowsServicePack=Windows %1 Service Pack %2
+
+; shared code for installing the Dependency products
+#include "scripts\products.iss"
+
+; helper functions
+#include "scripts\products\stringversion.iss"
+#include "scripts\products\winversion.iss"
+#include "scripts\products\fileversion.iss"
+
+; actual products
+#ifdef use_msiproduct
+#include "scripts\products\msiproduct.iss"
+#endif
+#ifdef use_vc2017
+#include "scripts\products\vcredist2017.iss"
+#endif
+
+
 [Code]
 var
   testPage: TWizardPage;
@@ -254,6 +287,20 @@ type
     ComputerNamePhysicalDnsFullyQualified,
     ComputerNameMax
   );
+
+  
+// Initialize Dependency distribution
+function InitializeSetup(): boolean;
+begin
+	// initialize windows version
+	initwinversion();
+
+#ifdef use_vc2017
+	vcredist2017('14'); // min allowed version is 14.0
+#endif
+	Result := true;
+end;
+
 
 function LogonUser(lpszUsername, lpszDomain, lpszPassword: string;
   dwLogonType, dwLogonProvider: DWORD; var phToken: THandle): BOOL;
