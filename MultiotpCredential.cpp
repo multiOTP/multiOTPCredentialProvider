@@ -1,28 +1,40 @@
 /**
-* BASE CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
-* ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO
-* THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
-* PARTICULAR PURPOSE.
-*
-* Copyright (c) Microsoft Corporation. All rights reserved.
-*
-* Extra code provided "as is" for the multiOTP open source project
-*
-* @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-* @version   5.4.1.6
-* @date      2019-01-25
-* @since     2013
-* @copyright (c) 2016-2019 SysCo systemes de communication sa
-* @copyright (c) 2015-2016 ArcadeJust ("RDP only" enhancement)
-* @copyright (c) 2013-2015 Last Squirrel IT
-* @copyright Apache License, Version 2.0
-*
-*
-* Change Log
-*
-*   2018-03-11 5.2.0.0 SysCo/al New implementation from scratch
-*
-*********************************************************************/
+ * BASE CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
+ * ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+ * PARTICULAR PURPOSE.
+ *
+ * Copyright (c) Microsoft Corporation. All rights reserved.
+ *
+ * Extra code provided "as is" for the multiOTP open source project
+ *
+ * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
+ * @version   5.6.1.5
+ * @date      2019-10-23
+ * @since     2013
+ * @copyright (c) 2016-2019 SysCo systemes de communication sa
+ * @copyright (c) 2015-2016 ArcadeJust ("RDP only" enhancement)
+ * @copyright (c) 2013-2015 Last Squirrel IT
+ * @copyright Apache License, Version 2.0
+ *
+ *
+ * Change Log
+ *
+ *   2019-10-23 5.6.1.5 SysCo/al FIX: Prefix password parameter was buggy (better handling of parameters in debug mode)
+ *                               FIX: swprintf_s problem with special chars (thanks to anekix)
+ *                               ENH: Optional manual default computer/domain setup
+ *   2019-01-25 5.4.1.6 SysCo/al FIX: Username with space are now supported
+ *                               ENH: Added integrated Visual C++ 2017 Redistributable installation
+ *   2018-09-14 5.4.0.1 SysCo/al FIX: Better domain name and hostname detection
+ *                               FIX: The cache lifetime check process was buggy since 5.3.0.3
+ *                               ENH: multiOTP Credential Provider files and objects have been reorganized
+ *   2018-08-26 5.3.0.3 SysCo/al FIX: Users without 2FA token are now supported
+ *   2018-08-21 5.3.0.0 SysCo/yj FIX: Save flat domain name in the registry. While offline, use this value instead of asking the DC
+ *                      SysCo/al ENH: The multiOTP timeout (how long the Credential Provider wait a response from
+ *                                    the multiOTP process) is now 60 seconds by default (instead of 10)
+ *   2018-03-11 5.2.0.0 SysCo/al New implementation from scratch
+ *
+ *********************************************************************/
 
 #ifndef WIN32_NO_STATUS
 #include <ntstatus.h>
@@ -115,10 +127,19 @@ HRESULT MultiotpCredential::Initialize(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus,
 
 	LPOLESTR clsid;
 
-	PWSTR pszDomain, pszHostname, pszLoginTitle;
+	PWSTR pszDefaultPrefix, pszDomain, pszHostname, pszLoginTitle;
 	wchar_t szDomainInfo[1024], szLoginTitle[1024];
 
-	if (readRegistryValueString(CONF_DOMAIN_NAME, &pszDomain, L"") > 1) {
+	if (readRegistryValueString(CONF_DEFAULT_PREFIX, &pszDefaultPrefix, L"") >= 1) {
+		if (wcscmp(pszDefaultPrefix, L".") == 0) {
+			readRegistryValueString(CONF_HOST_NAME, &pszHostname, L"");
+			StringCchPrintf(szDomainInfo, ARRAYSIZE(szDomainInfo), L"Computer: %s", pszHostname);
+		}
+		else {
+			StringCchPrintf(szDomainInfo, ARRAYSIZE(szDomainInfo), L"Computer/domain: %s", pszDefaultPrefix);
+		}
+	}
+	else if (readRegistryValueString(CONF_DOMAIN_NAME, &pszDomain, L"") > 1) {
 		StringCchPrintf(szDomainInfo, ARRAYSIZE(szDomainInfo), L"Domain: %s", pszDomain);
 	}
 	else if (readRegistryValueString(CONF_HOST_NAME, &pszHostname, L"") > 1) {
@@ -617,7 +638,8 @@ HRESULT MultiotpCredential::SetStringValue(DWORD dwFieldID, _In_ PCWSTR pwz)
 
         HRESULT hr_sfi = S_OK;
 
-        PWSTR pszDomain;
+		PWSTR pszDefaultPrefix;
+		PWSTR pszDomain;
         PWSTR pszUsername;
         PWSTR pszHostname;
         PWSTR pszQualifiedUserName;
@@ -645,7 +667,16 @@ HRESULT MultiotpCredential::SetStringValue(DWORD dwFieldID, _In_ PCWSTR pwz)
           }
         }
         else {
-          if (readRegistryValueString(CONF_DOMAIN_NAME, &pszDomain, L"") > 1) {
+		  if (readRegistryValueString(CONF_DEFAULT_PREFIX, &pszDefaultPrefix, L"") >= 1) {
+			if (wcscmp(pszDefaultPrefix, L".") == 0) {
+			  readRegistryValueString(CONF_HOST_NAME, &pszHostname, L"");
+			  StringCchPrintf(szDomainInfo, ARRAYSIZE(szDomainInfo), L"Computer: %s", pszHostname);
+			}
+			else {
+			  StringCchPrintf(szDomainInfo, ARRAYSIZE(szDomainInfo), L"Computer/domain: %s", pszDefaultPrefix);
+			}
+		  }
+          else if (readRegistryValueString(CONF_DOMAIN_NAME, &pszDomain, L"") > 1) {
             StringCchPrintf(szDomainInfo, ARRAYSIZE(szDomainInfo), L"Domain: %s", pszDomain);
           }
           else if (readRegistryValueString(CONF_HOST_NAME, &pszHostname, L"") > 1) {
@@ -911,7 +942,8 @@ HRESULT MultiotpCredential::CommandLinkClicked(DWORD dwFieldID)
 
             HRESULT hr_sfi = S_OK;
 
-            PWSTR pszDomain;
+			PWSTR pszDefaultPrefix;
+			PWSTR pszDomain;
             PWSTR pszUsername;
             PWSTR pszNetBiosDomainName = L"";
 
@@ -923,15 +955,20 @@ HRESULT MultiotpCredential::CommandLinkClicked(DWORD dwFieldID)
             wchar_t upn_name[1024];
             wchar_t otp_name[1024];
 
-            DWORD dwDomainSize = 0;
+			DWORD dwDefaultPrefixSize = 0;
+			DWORD dwDomainSize = 0;
             
             BOOLEAN rc;
 
             hr_sfi = SHStrDupW(L"", &pszUsername);
 
-            dwDomainSize = readRegistryValueString(CONF_DOMAIN_NAME, &pszDomain, L"");
-            if (DEVELOP_MODE) PrintLn(L"MultiotpCredential::Detected domain: ", pszDomain);
-            if (DEVELOP_MODE) PrintLn("MultiotpCredential::Detected domain size: %d", dwDomainSize);
+			dwDefaultPrefixSize = readRegistryValueString(CONF_DEFAULT_PREFIX, &pszDefaultPrefix, L"");
+			dwDomainSize = readRegistryValueString(CONF_DOMAIN_NAME, &pszDomain, L"");
+
+			if (DEVELOP_MODE) {
+				PrintLn(L"MultiotpCredential::Detected domain: ", pszDomain);
+				PrintLn("MultiotpCredential::Detected domain size: %d", dwDomainSize);
+			}
 
             if (_fUserNameVisible) {
               //username is entered by the user
@@ -939,11 +976,22 @@ HRESULT MultiotpCredential::CommandLinkClicked(DWORD dwFieldID)
               hr_sfi = SHStrDupW(_rgFieldStrings[SFI_LOGIN_NAME], &_pszQualifiedUserName);
             }
 
-            if (DEVELOP_MODE) PrintLn(L"MultiotpCredential::_pszQualifiedUserName: ", _pszQualifiedUserName);
-  
-            if (DEVELOP_MODE) PrintLn("MultiotpCredential::OTP Username determination");
+			if (DEVELOP_MODE) {
+				PrintLn(L"MultiotpCredential::_pszQualifiedUserName: ", _pszQualifiedUserName);
+				PrintLn("MultiotpCredential::OTP Username determination");
+			}
+
             const wchar_t *pchWhack = wcschr(_pszQualifiedUserName, L'\\');
             const wchar_t *pchWatSign = wcschr(_pszQualifiedUserName, L'@');
+
+			if ((dwDefaultPrefixSize >= 1) && (pchWatSign == nullptr) && (pchWhack == nullptr)) {
+				wcscpy_s(fullname, 1024, pszDefaultPrefix);
+				wcscat_s(fullname, 1024, L"\\");
+				wcscat_s(fullname, 1024, _pszQualifiedUserName);
+				CoTaskMemFree(_pszQualifiedUserName);
+				hr = SHStrDupW(fullname, &_pszQualifiedUserName);
+				pchWhack = wcschr(fullname, L'\\');
+			}
 
 			if (dwDomainSize > 1) {
 				DOMAIN_CONTROLLER_INFO* pDCI;
@@ -1051,16 +1099,19 @@ HRESULT MultiotpCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIA
     wchar_t upn_name[1024];
     wchar_t otp_name[1024];
 
-    PWSTR domain = L"";
-    DWORD domainSize = 0;
+	PWSTR pszDefaultPrefix = L"";
+	PWSTR pszDomain = L"";
+	DWORD dwDefaultPrefixSize = 0;
+	DWORD dwDomainSize = 0;
 
 	PWSTR strNetBiosDomainName = L"";
 
 	BOOLEAN rc;
 
-	domainSize = readRegistryValueString(CONF_DOMAIN_NAME, &domain, L"");
-	if (DEVELOP_MODE) PrintLn(L"MultiotpCredential::Detected domain: ", domain);
-	if (DEVELOP_MODE) PrintLn("MultiotpCredential::Detected domain size: %d", domainSize);
+	dwDefaultPrefixSize = readRegistryValueString(CONF_DOMAIN_NAME, &pszDefaultPrefix, L"");
+	dwDomainSize = readRegistryValueString(CONF_DOMAIN_NAME, &pszDomain, L"");
+	if (DEVELOP_MODE) PrintLn(L"MultiotpCredential::Detected domain: ", pszDomain);
+	if (DEVELOP_MODE) PrintLn("MultiotpCredential::Detected domain size: %d", dwDomainSize);
 
 	if (_fUserNameVisible) {
 		//username is entered by the user
@@ -1074,9 +1125,18 @@ HRESULT MultiotpCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIA
 	const wchar_t *pchWhack = wcschr(_pszQualifiedUserName, L'\\');
 	const wchar_t *pchWatSign = wcschr(_pszQualifiedUserName, L'@');
 
-	if (domainSize > 1) {
+	if ((dwDefaultPrefixSize >= 1) && (pchWatSign == nullptr) && (pchWhack == nullptr)) {
+		wcscpy_s(fullname, 1024, pszDefaultPrefix);
+		wcscat_s(fullname, 1024, L"\\");
+		wcscat_s(fullname, 1024, _pszQualifiedUserName);
+		CoTaskMemFree(_pszQualifiedUserName);
+		hr = SHStrDupW(fullname, &_pszQualifiedUserName);
+		pchWhack = wcschr(fullname, L'\\');
+	}
+
+	if (dwDomainSize > 1) {
 		DOMAIN_CONTROLLER_INFO* pDCI;
-		if (DsGetDcNameW(NULL, domain, NULL, NULL, DS_IS_DNS_NAME | DS_RETURN_FLAT_NAME, &pDCI) == ERROR_SUCCESS) {
+		if (DsGetDcNameW(NULL, pszDomain, NULL, NULL, DS_IS_DNS_NAME | DS_RETURN_FLAT_NAME, &pDCI) == ERROR_SUCCESS) {
 			strNetBiosDomainName = pDCI->DomainName;
 			if (DEVELOP_MODE) PrintLn(L"Before writing registry with value: ", strNetBiosDomainName);
 			// Write flat domain name in the internal multiOTP Credential registry cache
@@ -1091,8 +1151,8 @@ HRESULT MultiotpCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIA
 		}
 	}
 
-	if ((domainSize > 1) && (pchWatSign == nullptr) && (pchWhack == nullptr)) {
-		if (DEVELOP_MODE) PrintLn(L"MultiotpCredential::Take the default domain ", domain, L" - ", strNetBiosDomainName);
+	if ((dwDomainSize > 1) && (pchWatSign == nullptr) && (pchWhack == nullptr)) {
+		if (DEVELOP_MODE) PrintLn(L"MultiotpCredential::Take the default domain ", pszDomain, L" - ", strNetBiosDomainName);
 		wcscpy_s(fullname, 1024, strNetBiosDomainName);
 		wcscat_s(fullname, 1024, L"\\");
 		wcscat_s(fullname, 1024, _pszQualifiedUserName);
@@ -1282,14 +1342,14 @@ HRESULT MultiotpCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIA
         hr = ProtectIfNecessaryAndCopyPassword(_rgFieldStrings[SFI_PASSWORD], _cpus, &pwzProtectedPassword);
         if (SUCCEEDED(hr))
         {
-            PWSTR pszDomain;
-            PWSTR pszUsername;
-            hr = SplitDomainAndUsername(_pszQualifiedUserName, &pszDomain, &pszUsername);
+            PWSTR pszSplitDomain;
+            PWSTR pszSplitUsername;
+            hr = SplitDomainAndUsername(_pszQualifiedUserName, &pszSplitDomain, &pszSplitUsername);
             if (SUCCEEDED(hr))
             {
-				if (DEVELOP_MODE) PrintLn(L"MultiotpCredential::SplitDomainAndUsername = ", pszDomain, L": ", pszUsername);
+				if (DEVELOP_MODE) PrintLn(L"MultiotpCredential::SplitDomainAndUsername = ", pszSplitDomain, L": ", pszSplitUsername);
                 KERB_INTERACTIVE_UNLOCK_LOGON kiul;
-                hr = KerbInteractiveUnlockLogonInit(pszDomain, pszUsername, pwzProtectedPassword, _cpus, &kiul);
+                hr = KerbInteractiveUnlockLogonInit(pszSplitDomain, pszSplitUsername, pwzProtectedPassword, _cpus, &kiul);
                 if (SUCCEEDED(hr))
                 {
                     // We use KERB_INTERACTIVE_UNLOCK_LOGON in both unlock and logon scenarios.  It contains a
@@ -1312,8 +1372,8 @@ HRESULT MultiotpCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIA
                         }
                     }
                 }
-                CoTaskMemFree(pszDomain);
-                CoTaskMemFree(pszUsername);
+                CoTaskMemFree(pszSplitDomain);
+                CoTaskMemFree(pszSplitUsername);
 			}
 			else {
 				if (DEVELOP_MODE) PrintLn(L"MultiotpCredential::SplitDomainAndUsername failed for user: ", _pszQualifiedUserName);

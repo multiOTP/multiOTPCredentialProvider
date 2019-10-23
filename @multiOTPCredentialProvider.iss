@@ -1,5 +1,5 @@
 #define MyAppName "multiOTP Credential Provider"
-#define MyAppVersion "5.4.1.6"
+#define MyAppVersion "5.6.1.5"
 #define MyAppShortName "multiOTP"
 #define MyAppPublisher "SysCo systemes de communication sa"
 #define MyAppURL "https://github.com/multiOTP/multiOTPCredentialProvider"
@@ -29,11 +29,11 @@ DefaultDirName={pf32}\{#MyAppShortName}
 DefaultGroupName={#MyAppName}
 UninstallDisplayIcon={app}\multiotp.exe
 DisableProgramGroupPage=yes
-OutputDir=C:\Data\projects\multiotp\multiOTPCredentialProvider\installer
-OutputBaseFilename=multiOTPCredentialProvider-5.4.1.6
-SetupIconFile=C:\Data\projects\multiotp\ico\multiOTP.ico
-WizardImageFile=..\bmp\multiOTP-wizard-164x314.bmp
-WizardSmallImageFile=..\bmp\multiOTP-wizard-55x58.bmp
+OutputDir=installer
+OutputBaseFilename=multiOTPCredentialProvider-5.6.1.5
+SetupIconFile=ico\multiOTP.ico
+WizardImageFile=bmp\multiOTP-wizard-164x314.bmp
+WizardSmallImageFile=bmp\multiOTP-wizard-55x58.bmp
 Compression=lzma
 SolidCompression=yes
 
@@ -70,16 +70,16 @@ Source: "stable\multiotp.exe"; DestDir: "{app}"; Flags: ignoreversion; AfterInst
 Source: "stable\x64\multiOTPCredentialProvider.dll"; DestDir: "{sys}"; Flags: ignoreversion; Check: Is64BitInstallMode
 Source: "stable\i386\multiOTPCredentialProvider.dll"; DestDir: "{sys}"; Flags: ignoreversion; Check: not Is64BitInstallMode
 Source: "stable\php\*"; DestDir: "{app}\php"; Flags: ignoreversion createallsubdirs recursesubdirs
-Source: "..\core\qrcode\*"; DestDir: "{app}\qrcode"; Flags: ignoreversion createallsubdirs recursesubdirs
-Source: "..\core\templates\emailtemplate.html"; DestDir: "{app}\templates"; Flags: ignoreversion
-Source: "..\core\templates\scratchtemplate.html"; DestDir: "{app}\templates"; Flags: ignoreversion
+Source: "stable\templates\template.html"; DestDir: "{app}\templates"; Flags: ignoreversion
+Source: "stable\templates\emailtemplate.html"; DestDir: "{app}\templates"; Flags: ignoreversion
+Source: "stable\templates\scratchtemplate.html"; DestDir: "{app}\templates"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\{cm:ProgramOnTheWeb,{#MyAppName}}"; Filename: "{#MyAppURL}"
 Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 
 [Registry]
-; Imported Registry File: "\Data\projects\multiotp\multiOTPCredentialProvider\register.reg"
+; Imported Registry File: "register.reg"
 Root: "HKLM"; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential Providers\{{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}"; ValueType: string; ValueData: "multiOTPCredentialProvider"; Flags: uninsdeletekey
 Root: "HKLM"; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential Provider Filters\{{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}"; ValueType: string; ValueData: "multiOTPCredentialProvider"; Flags: uninsdeletekey
 Root: "HKCR"; Subkey: "CLSID\{{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}\InprocServer32"; ValueType: string; ValueData: "multiOTPCredentialProvider.dll"; Flags: uninsdeletekey
@@ -90,6 +90,8 @@ Root: "HKCR"; Subkey: "CLSID\{{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}"; ValueType
 [CustomMessages]
 ProgramOnTheWeb=%1 on the Web
 UninstallProgram=Uninstall %1
+multiOTPDefaultPrefixLabel=Default logon prefix
+multiOTPDefaultPrefixSample=(. = local computer, default is empty for automatic detection of domain name)
 multiOTPLoginTitleLabel=multiOTP Login Title
 multiOTPserversLabel=URL of your multiOTP server(s), separated by semi-colons
 multiOTPServersSample=Example: https://192.168.1.88 ; http://ip.address.of.server:8112
@@ -137,6 +139,8 @@ multiOTPReturnCodeSuffix= in multiOTP documentation
 
 ;french.ProgramOnTheWeb=%1 sur Internet
 ;french.UninstallProgram=Désinstaller %1
+;french.multiOTPDefaultPrefixLabel=Default logon prefix
+;french.multiOTPDefaultPrefixSample=(. = local computer, default is empty for automatic detection of domain name)
 ;french.multiOTPLoginTitleLabel=Titre du fournisseur de connexion multiOTP
 ;french.multiOTPserversLabel=URL de votre/vos serveur(s) multiOTP, séparés par un point-virgule
 ;french.multiOTPServersSample=Exemple: https://192.168.1.88 ; http://adresse.ip.du.serveur:8112
@@ -217,6 +221,7 @@ var
   testPasswordEdit: TEdit;
   testOtpdEdit: TEdit;
 
+  multiOTPDefaultPrefix: String;
   multiOTPLoginTitle: String;
   multiOTPServers: String;
   multiOTPServerTimeout: Cardinal;
@@ -229,6 +234,7 @@ var
   multiOTPDisplaySmsLink: Cardinal;
   multiOTPUPNFormat: Cardinal;
 
+  multiOTPDefaultPrefixEdit: TEdit;
   multiOTPLoginTitleEdit: TEdit;
   multiOTPServersEdit: TEdit;
   multiOTPServerTimeoutEdit: TEdit;
@@ -547,6 +553,8 @@ end;
 procedure CreateSetupPage2of2;
 var
   Page: TWizardPage;
+  multiOTPDefaultPrefixLabel: TNewStaticText;
+  multiOTPDefaultPrefixSample: TNewStaticText;
   multiOTPTimeoutLabel: TNewStaticText;
   pageTop: Integer;
   pageLeft: Integer;
@@ -669,7 +677,40 @@ begin
     Width := 2 * multiOTPTimeoutLabel.Height;
     Text := IntToStr(multiOTPTimeout);
   end;
-  pageTop := pageTop + multiOTPTimeoutLabel.Height + ScaleY(0);
+  pageTop := pageTop + multiOTPTimeoutLabel.Height + ScaleY(8);
+
+  multiOTPDefaultPrefixLabel := TNewStaticText.Create(Page);
+  with multiOTPDefaultPrefixLabel do begin
+    AutoSize := True;
+    WordWrap := False;
+    Top := pageTop;
+    Left := pageLeft + 12;
+    Caption := ExpandConstant('{cm:multiOTPDefaultPrefixLabel} : ');
+    Parent := Page.Surface;
+  end;
+
+  multiOTPDefaultPrefixEdit := TEdit.Create(Page);
+  with multiOTPDefaultPrefixEdit do
+  begin
+    Parent := Page.Surface;
+    Left := pageLeft + 12 + multiOTPDefaultPrefixLabel.Width;
+    Top := pageTop - ScaleY(3);
+    Width := 15 * ScaleX(multiOTPDefaultPrefixLabel.Font.Size);
+    Text := multiOTPDefaultPrefix;
+  end;
+  pageTop := pageTop + multiOTPDefaultPrefixEdit.Height + ScaleY(0);
+
+  multiOTPDefaultPrefixSample := TNewStaticText.Create(Page);
+  with multiOTPDefaultPrefixSample do begin
+    AutoSize := True;
+    WordWrap := False;
+    Top := pageTop;
+    Left := pageLeft + 12;
+    Font.Style := [fsItalic];
+    Caption := ExpandConstant('{cm:multiOTPDefaultPrefixSample}');
+    Parent := Page.Surface;
+  end;
+  pageTop := pageTop + multiOTPDefaultPrefixSample.Height;
 
 end;
 
@@ -689,6 +730,9 @@ var
   ExecStdout: AnsiString;
 
 begin
+
+  multiOTPDefaultPrefix := multiOTPDefaultPrefixEdit.Text;
+  RegWriteStringValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPDefaultPrefix', multiOTPDefaultPrefix);
 
   multiOTPLoginTitle := multiOTPLoginTitleEdit.Text;
   RegWriteStringValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPLoginTitle', multiOTPLoginTitle);
@@ -1009,6 +1053,7 @@ procedure InitializeWizard;
 
 begin
   // Default values
+  multiOTPDefaultPrefix := '';
   multiOTPLoginTitle := 'multiOTP Login';
   multiOTPServers := 'https://192.168.1.88';
   multiOTPServerTimeout := 5;
@@ -1022,6 +1067,7 @@ begin
   multiOTPUPNFormat := 0;
 
   // Read registry values if they exists
+  RegQueryStringValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPDefaultPrefix', multiOTPDefaultPrefix);
   RegQueryStringValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPLoginTitle', multiOTPLoginTitle);
   RegQueryStringValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPServers', multiOTPServers);
   RegQueryDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPServerTimeout', multiOTPServerTimeout);
