@@ -1,29 +1,25 @@
 /**
- *
- * BASE CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
- * ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO
- * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
- * PARTICULAR PURPOSE.
- *
- * Copyright (c) Microsoft Corporation. All rights reserved.
- *
- * Helper functions for copying parameters and packaging the buffer
- * for GetSerialization.
+ * multiOTP Credential Provider
  *
  * Extra code provided "as is" for the multiOTP open source project
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.6.1.5
- * @date      2019-10-23
+ * @version   5.8.1.0
+ * @date      2021-02-12
  * @since     2013
- * @copyright (c) 2016-2019 SysCo systemes de communication sa
+ * @copyright (c) 2016-2021 SysCo systemes de communication sa
  * @copyright (c) 2015-2016 ArcadeJust ("RDP only" enhancement)
  * @copyright (c) 2013-2015 Last Squirrel IT
+ * @copyright (c) 2012 Dominik Pretzsch
+ * @copyright (c) Microsoft Corporation. All rights reserved.
  * @copyright Apache License, Version 2.0
  *
  *
  * Change Log
  *
+ *   2020-08-31 5.8.0.0 SysCo/al ENH: Retarget to the last SDK 10.0.19041.1
+ *   2019-12-20 5.6.2.0 SysCo/al ENH: Files reorganization.
+ *                               ENH: "Change password on login" support
  *   2019-10-23 5.6.1.5 SysCo/al FIX: Prefix password parameter was buggy (better handling of parameters in debug mode)
  *                               FIX: swprintf_s problem with special chars (thanks to anekix)
  *   2019-01-25 5.4.1.6 SysCo/al FIX: Username with space are now supported
@@ -51,6 +47,32 @@
 #include "MultiotpRegistry.h"
 
 // Begin extra code (debug tools)
+
+
+void DebugBox(const char* title, int line, const wchar_t* message) {
+    if (DISPLAY_DEBUG_BOX) {
+        char fulltitle[1024];
+        wchar_t wfulltitle[1024];
+        wchar_t wfullmessage[2048];
+        size_t outSize;
+        sprintf_s(fulltitle, sizeof(fulltitle), "#%d: %s", line, title);
+        mbstowcs_s(&outSize, wfulltitle, fulltitle, strlen(fulltitle) + 1);
+
+        wcscpy_s(wfullmessage, 2048, wfulltitle);
+        wcscat_s(wfullmessage, 2048, L"\n\n");
+        wcscat_s(wfullmessage, 2048, message);
+
+        MessageBox(NULL, wfullmessage, wfulltitle, MB_OK | MB_SYSTEMMODAL);
+    }
+}
+
+void DebugBox(const char* title, int line, const char* message) {
+    wchar_t wmessage[1024];
+    size_t outSize;
+    mbstowcs_s(&outSize, wmessage, message, strlen(message) + 1);
+    DebugBox(title, line, wmessage);
+}
+
 void PrintLn(const wchar_t *message, const wchar_t *message2, const wchar_t *message3, const wchar_t *message4, const wchar_t *message5)
 {
 	INIT_ZERO_CHAR(date_time, MAX_TIME_SIZE);
@@ -142,22 +164,26 @@ void PrintLn(int line)
 
 void WriteLogFile(const char* szString)
 {
-	FILE* pFile;
-	if (fopen_s(&pFile, LOGFILE_NAME, "a") == 0)
-	{
-		fprintf(pFile, "%s", szString);
-		fclose(pFile);
-	}
+    if (DEBUG_MODE) {
+        FILE* pFile;
+        if (fopen_s(&pFile, LOGFILE_NAME, "a") == 0)
+        {
+            fprintf(pFile, "%s", szString);
+            fclose(pFile);
+        }
+    }
 }
 
 void WriteLogFile(const wchar_t* szString)
 {
-	FILE* pFile;
-	if (fopen_s(&pFile, LOGFILE_NAME, "a") == 0)
-	{
-		fwprintf(pFile, L"%s", szString);
-		fclose(pFile);
-	}
+    if (DEBUG_MODE) {
+        FILE* pFile;
+        if (fopen_s(&pFile, LOGFILE_NAME, "a") == 0)
+        {
+            fwprintf(pFile, L"%s", szString);
+            fclose(pFile);
+        }
+    }
 }
 
 void GetCurrentTimeAndDate(char(&time)[MAX_TIME_SIZE])
@@ -476,6 +502,55 @@ HRESULT KerbInteractiveUnlockLogonPack(
     return hr;
 }
 
+HRESULT KerbChangePasswordPack(
+    const KERB_CHANGEPASSWORD_REQUEST& rkcrIn,
+    BYTE** prgb,
+    DWORD* pcb
+)
+{
+    HRESULT hr;
+
+    DWORD cb = sizeof(rkcrIn) +
+        rkcrIn.DomainName.Length +
+        rkcrIn.AccountName.Length +
+        rkcrIn.OldPassword.Length +
+        rkcrIn.NewPassword.Length;
+
+    KERB_CHANGEPASSWORD_REQUEST* pkcr = (KERB_CHANGEPASSWORD_REQUEST*)CoTaskMemAlloc(cb);
+
+    if (pkcr)
+    {
+        pkcr->MessageType = rkcrIn.MessageType;
+
+        BYTE* pbBuffer = (BYTE*)pkcr + sizeof(KERB_CHANGEPASSWORD_REQUEST);
+
+        _UnicodeStringPackedUnicodeStringCopy(rkcrIn.DomainName, (PWSTR)pbBuffer, &pkcr->DomainName);
+        pkcr->DomainName.Buffer = (PWSTR)(pbBuffer - (BYTE*)pkcr);
+        pbBuffer += pkcr->DomainName.Length;
+
+        _UnicodeStringPackedUnicodeStringCopy(rkcrIn.AccountName, (PWSTR)pbBuffer, &pkcr->AccountName);
+        pkcr->AccountName.Buffer = (PWSTR)(pbBuffer - (BYTE*)pkcr);
+        pbBuffer += pkcr->AccountName.Length;
+
+        _UnicodeStringPackedUnicodeStringCopy(rkcrIn.OldPassword, (PWSTR)pbBuffer, &pkcr->OldPassword);
+        pkcr->OldPassword.Buffer = (PWSTR)(pbBuffer - (BYTE*)pkcr);
+        pbBuffer += pkcr->OldPassword.Length;
+
+        _UnicodeStringPackedUnicodeStringCopy(rkcrIn.NewPassword, (PWSTR)pbBuffer, &pkcr->NewPassword);
+        pkcr->NewPassword.Buffer = (PWSTR)(pbBuffer - (BYTE*)pkcr);
+
+        *prgb = (BYTE*)pkcr;
+        *pcb = cb;
+
+        hr = S_OK;
+    }
+    else
+    {
+        hr = E_OUTOFMEMORY;
+    }
+    return hr;
+}
+
 //
 // This function packs the string pszSourceString in pszDestinationString
 // for use with LSA functions including LsaLookupAuthenticationPackage.
@@ -675,6 +750,9 @@ void KerbInteractiveUnlockLogonUnpackInPlace(
     DWORD cb
     )
 {
+
+    PrintLn("KerbInteractiveUnlockLogonUnpackInPlace method");
+
     if (sizeof(*pkiul) <= cb)
     {
         KERB_INTERACTIVE_LOGON *pkil = &pkiul->Logon;
@@ -696,6 +774,13 @@ void KerbInteractiveUnlockLogonUnpackInPlace(
             pkil->Password.Buffer = pkil->Password.Buffer
                 ? (PWSTR)((BYTE*)pkiul + (ULONG_PTR)pkil->Password.Buffer)
                 : nullptr;
+
+            PrintLn("pkil->LogonDomainName.Buffer");
+            PrintLn(pkil->LogonDomainName.Buffer);
+            PrintLn("pkil->UserName.Buffer");
+            PrintLn(pkil->UserName.Buffer);
+            PrintLn("pkil->Password.Buffer");
+            PrintLn(pkil->Password.Buffer);
         }
     }
 }
@@ -1288,3 +1373,80 @@ void ErrorInfo(LPTSTR lpszFunction)
 	// ExitProcess(dw);
 }
 // End extra code (ErrorInfo)
+
+void SeparateUserAndDomainName(
+    __in wchar_t* fq_username,
+    __out wchar_t* username,
+    __in int sizeUsername,
+    __out_opt wchar_t* domain,
+    __in_opt int sizeDomain
+)
+{
+    int pos;
+    for (pos = 0; fq_username[pos] != L'\\' && fq_username[pos] != L'@' && fq_username[pos] != NULL; pos++);
+
+    if (fq_username[pos] != NULL)
+    {
+        if (fq_username[pos] == L'\\')
+        {
+            int i;
+            for (i = 0; i < pos && i < sizeDomain; i++)
+                domain[i] = fq_username[i];
+            domain[i] = L'\0';
+
+            for (i = 0; fq_username[pos + i + 1] != NULL && i < sizeUsername; i++)
+                username[i] = fq_username[pos + i + 1];
+            username[i] = L'\0';
+        }
+        else
+        {
+            int i;
+            for (i = 0; i < pos && i < sizeUsername; i++)
+                username[i] = fq_username[i];
+            username[i] = L'\0';
+
+            for (i = 0; fq_username[pos + i + 1] != NULL && i < sizeDomain; i++)
+                domain[i] = fq_username[pos + i + 1];
+            domain[i] = L'\0';
+        }
+    }
+    else
+    {
+        int i;
+        for (i = 0; i < pos && i < sizeUsername; i++)
+            username[i] = fq_username[i];
+        username[i] = L'\0';
+    }
+}
+
+void WideCharToChar(
+    __in PWSTR data,
+    __in int buffSize,
+    __out char* pc
+)
+{
+    WideCharToMultiByte(
+        CP_ACP,
+        0,
+        data,
+        -1,
+        pc,
+        buffSize,
+        NULL,
+        NULL);
+}
+
+void CharToWideChar(
+    __in char* data,
+    __in int buffSize,
+    __out PWSTR pc
+)
+{
+    MultiByteToWideChar(
+        CP_ACP,
+        0,
+        data,
+        -1,
+        pc,
+        buffSize);
+}

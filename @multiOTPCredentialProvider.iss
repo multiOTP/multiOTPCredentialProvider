@@ -1,19 +1,20 @@
 #define MyAppName "multiOTP Credential Provider"
-#define MyAppVersion "5.6.1.5"
+#define MyAppVersion "5.8.1.0"
 #define MyAppShortName "multiOTP"
 #define MyAppPublisher "SysCo systemes de communication sa"
 #define MyAppURL "https://github.com/multiOTP/multiOTPCredentialProvider"
-#define MyAppCopyright "Copyright (c) 2010-2019 SysCo / ArcadeJust / LastSquirrelIT (Apache License)"
+#define MyAppCopyright "Copyright (c) 2010-2021 SysCo / ArcadeJust / LastSquirrelIT (Apache License)"
+#define MyAppId="{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}"
 
 ;Dependency installation based on: http://github.com/stfx/innodependencyinstaller
 #define use_msiproduct
-#define use_vc2017
+#define use_vc2015_2019
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
 ; Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
-AppId={{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}
+AppId={{#MyAppId}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppVerName={#MyAppName} {#MyAppVersion}
@@ -25,12 +26,12 @@ VersionInfoVersion={#MyAppVersion}
 VersionInfoCopyright={#MyAppCopyright}
 VersionInfoProductName={#MyAppName}
 ; DefaultDirName={sd}\{#MyAppShortName}
-DefaultDirName={pf32}\{#MyAppShortName}
+DefaultDirName={commonpf32}\{#MyAppShortName}
 DefaultGroupName={#MyAppName}
 UninstallDisplayIcon={app}\multiotp.exe
 DisableProgramGroupPage=yes
 OutputDir=installer
-OutputBaseFilename=multiOTPCredentialProvider-5.6.1.5
+OutputBaseFilename=multiOTPCredentialProvider-5.8.1.0
 SetupIconFile=ico\multiOTP.ico
 WizardImageFile=bmp\multiOTP-wizard-164x314.bmp
 WizardSmallImageFile=bmp\multiOTP-wizard-55x58.bmp
@@ -66,6 +67,7 @@ DisableReadyMemo=no
 
 [Files]
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
+; ignoreversion is used on specific files here, as we have to be consistant and be able to upgrade/downgrade
 Source: "stable\multiotp.exe"; DestDir: "{app}"; Flags: ignoreversion; AfterInstall: AfterInstallProcedure
 Source: "stable\x64\multiOTPCredentialProvider.dll"; DestDir: "{sys}"; Flags: ignoreversion; Check: Is64BitInstallMode
 Source: "stable\i386\multiOTPCredentialProvider.dll"; DestDir: "{sys}"; Flags: ignoreversion; Check: not Is64BitInstallMode
@@ -73,6 +75,8 @@ Source: "stable\php\*"; DestDir: "{app}\php"; Flags: ignoreversion createallsubd
 Source: "stable\templates\template.html"; DestDir: "{app}\templates"; Flags: ignoreversion
 Source: "stable\templates\emailtemplate.html"; DestDir: "{app}\templates"; Flags: ignoreversion
 Source: "stable\templates\scratchtemplate.html"; DestDir: "{app}\templates"; Flags: ignoreversion
+Source: "stable\x64\SetACL.exe"; DestDir: "{app}\tools"; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: "stable\i386\SetACL.exe"; DestDir: "{app}\tools"; Flags: ignoreversion; Check: not Is64BitInstallMode
 
 [Icons]
 Name: "{group}\{cm:ProgramOnTheWeb,{#MyAppName}}"; Filename: "{#MyAppURL}"
@@ -80,12 +84,12 @@ Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 
 [Registry]
 ; Imported Registry File: "register.reg"
-Root: "HKLM"; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential Providers\{{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}"; ValueType: string; ValueData: "multiOTPCredentialProvider"; Flags: uninsdeletekey
-Root: "HKLM"; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential Provider Filters\{{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}"; ValueType: string; ValueData: "multiOTPCredentialProvider"; Flags: uninsdeletekey
-Root: "HKCR"; Subkey: "CLSID\{{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}\InprocServer32"; ValueType: string; ValueData: "multiOTPCredentialProvider.dll"; Flags: uninsdeletekey
-Root: "HKCR"; Subkey: "CLSID\{{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}\InprocServer32"; ValueType: string; ValueName: "ThreadingModel"; ValueData: "Apartment"; Flags: uninsdeletekey
-Root: "HKCR"; Subkey: "CLSID\{{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}"; ValueType: string; ValueData: "multiOTPCredentialProvider"; Flags: uninsdeletekey
-Root: "HKCR"; Subkey: "CLSID\{{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}"; ValueType: string; ValueName: "multiOTPPath"; ValueData: "{app}\"; Flags: uninsdeletekey
+Root: "HKLM"; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential Providers\{{#MyAppId}"; ValueType: string; ValueData: "multiOTPCredentialProvider"; Flags: uninsdeletekey
+Root: "HKLM"; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential Provider Filters\{{#MyAppId}"; ValueType: string; ValueData: "multiOTPCredentialProvider"; Flags: uninsdeletekey
+Root: "HKCR"; Subkey: "CLSID\{{#MyAppId}\InprocServer32"; ValueType: string; ValueData: "multiOTPCredentialProvider.dll"; Flags: uninsdeletekey
+Root: "HKCR"; Subkey: "CLSID\{{#MyAppId}\InprocServer32"; ValueType: string; ValueName: "ThreadingModel"; ValueData: "Apartment"; Flags: uninsdeletekey
+Root: "HKCR"; Subkey: "CLSID\{{#MyAppId}"; ValueType: string; ValueData: "multiOTPCredentialProvider"; Flags: uninsdeletekey
+Root: "HKCR"; Subkey: "CLSID\{{#MyAppId}"; ValueType: string; ValueName: "multiOTPPath"; ValueData: "{app}\"; Flags: uninsdeletekey
 
 [CustomMessages]
 ProgramOnTheWeb=%1 on the Web
@@ -201,8 +205,8 @@ WindowsServicePack=Windows %1 Service Pack %2
 #ifdef use_msiproduct
 #include "scripts\products\msiproduct.iss"
 #endif
-#ifdef use_vc2017
-#include "scripts\products\vcredist2017.iss"
+#ifdef use_vc2015_2019
+#include "scripts\products\vcredist2015_2019.iss"
 #endif
 
 
@@ -301,8 +305,8 @@ begin
 	// initialize windows version
 	initwinversion();
 
-#ifdef use_vc2017
-	vcredist2017('14'); // min allowed version is 14.0
+#ifdef use_vc2015_2019
+	vcredist2015_2019('14.20'); // min allowed version is 14.2 for VC 2019, Check https://en.wikipedia.org/wiki/Microsoft_Visual_C%2B%2B for detail
 #endif
 	Result := true;
 end;
@@ -715,6 +719,92 @@ begin
 end;
 
 
+procedure ReadMultiotpInteractiveValue;
+begin
+  multiOTPDefaultPrefix := multiOTPDefaultPrefixEdit.Text;
+  multiOTPLoginTitle := multiOTPLoginTitleEdit.Text;
+  multiOTPServers := multiOTPServersEdit.Text;
+  multiOTPServerTimeout := StrToIntDef(multiOTPServerTimeoutEdit.Text, multiOTPServerTimeout);
+  multiOTPSharedSecret := multiOTPSharedSecretEdit.Text;
+
+  if (cbChecked = multiOTPCacheEnabledCheckBox.State) then begin
+    multiOTPCacheEnabled := 1;
+  end else begin
+    multiOTPCacheEnabled := 0;
+  end;
+
+  if (cbChecked = multiOTPRDPOnlyCheckBox.State) then begin
+    multiOTPRDPOnly := 1;
+  end else begin
+    multiOTPRDPOnly := 0;
+  end;
+  
+  if (cbChecked = multiOTPDisableAutoReconnectCheckBox.State) then begin
+    multiotpDisableAutoReconnect := 1;
+  end else begin
+    multiotpDisableAutoReconnect := 0;
+  end;
+
+  multiOTPTimeout := StrToIntDef(multiOTPTimeoutEdit.Text, multiOTPTimeout);
+
+  if (cbChecked = multiOTPPrefixPassCheckBox.State) then begin
+    multiOTPPrefixPass := 1;
+  end else begin
+    multiOTPPrefixPass := 0;
+  end;
+
+  if (cbChecked = multiOTPDisplaySmsLinkCheckBox.State) then begin
+    multiOTPDisplaySmsLink := 1;
+  end else begin
+    multiOTPDisplaySmsLink := 0;
+  end;
+
+  if (cbChecked = multiOTPUPNFormatCheckBox.State) then begin
+    multiOTPUPNFormat := 1;
+  end else begin
+    multiOTPUPNFormat := 0;
+  end;
+end;
+
+
+procedure WriteMultiotpRegValue;
+var
+  ResultCode: Integer;
+  ResultBoolean : Boolean;
+  
+begin
+  RegWriteStringValue(HKEY_CLASSES_ROOT, 'CLSID\{#MyAppId}','multiOTPDefaultPrefix', multiOTPDefaultPrefix);
+  RegWriteStringValue(HKEY_CLASSES_ROOT, 'CLSID\{#MyAppId}','multiOTPLoginTitle', multiOTPLoginTitle);
+  RegWriteStringValue(HKEY_CLASSES_ROOT, 'CLSID\{#MyAppId}','multiOTPServers', multiOTPServers);
+  RegWriteDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{#MyAppId}','multiOTPServerTimeout', multiOTPServerTimeout);
+  RegWriteStringValue(HKEY_CLASSES_ROOT, 'CLSID\{#MyAppId}','multiOTPSharedSecret', multiOTPSharedSecret);
+  RegWriteDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{#MyAppId}','multiOTPCacheEnabled', multiOTPCacheEnabled);
+  RegWriteDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{#MyAppId}','multiOTPRDPOnly', multiOTPRDPOnly);
+  RegWriteDWordValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services','fDisableAutoReconnect', multiotpDisableAutoReconnect);
+  RegWriteDWordValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services','fDisableAutoReconnect', multiotpDisableAutoReconnect);
+  RegWriteDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{#MyAppId}','multiOTPPrefixPass', multiOTPPrefixPass);
+  RegWriteDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{#MyAppId}','multiOTPDisplaySmsLink', multiOTPDisplaySmsLink);
+  RegWriteDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{#MyAppId}','multiOTPUPNFormat', multiOTPUPNFormat);
+  
+  ResultBoolean := Exec(ExpandConstant('{app}\tools\SetACL.exe'), '-on "HKEY_CLASSES_ROOT\CLSID\{#MyAppId}" -ot reg -actn setprot -op "dacl:p_c"', ExpandConstant('{app}'), SW_HIDE, ewNoWait, ResultCode);
+  ResultBoolean := Exec(ExpandConstant('{app}\tools\SetACL.exe'), '-on "HKEY_CLASSES_ROOT\CLSID\{#MyAppId}" -ot reg -actn ace -ace "n:S-1-5-32-545;m:revoke;p:read"', ExpandConstant('{app}'), SW_HIDE, ewNoWait, ResultCode);
+end;
+
+
+procedure ActivateMultiotpCredentialProvider;
+begin
+    RegWriteStringValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential Providers\{#MyAppId}','', 'multiOTPCredentialProvider');
+    RegWriteStringValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential Provider Filters\{#MyAppId}','', 'multiOTPCredentialProvider');
+end;
+
+
+procedure DeActivateMultiotpCredentialProvider;
+begin
+    RegDeleteKeyIncludingSubkeys(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential Providers\{#MyAppId}');
+    RegDeleteKeyIncludingSubkeys(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential Provider Filters\{#MyAppId}');
+end;
+
+
 procedure TestButtonClick(Sender: TObject);
 var
   ResultCode: Integer;
@@ -730,74 +820,18 @@ var
   ExecStdout: AnsiString;
 
 begin
-
-  multiOTPDefaultPrefix := multiOTPDefaultPrefixEdit.Text;
-  RegWriteStringValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPDefaultPrefix', multiOTPDefaultPrefix);
-
-  multiOTPLoginTitle := multiOTPLoginTitleEdit.Text;
-  RegWriteStringValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPLoginTitle', multiOTPLoginTitle);
-
-  multiOTPServers := multiOTPServersEdit.Text;
-  RegWriteStringValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPServers', multiOTPServers);
-
-  multiOTPServerTimeout := StrToIntDef(multiOTPServerTimeoutEdit.Text, multiOTPServerTimeout);
-  RegWriteDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPServerTimeout', multiOTPServerTimeout);
-
-  multiOTPSharedSecret := multiOTPSharedSecretEdit.Text;
-  RegWriteStringValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPSharedSecret', multiOTPSharedSecret);
-
-  if (cbChecked = multiOTPCacheEnabledCheckBox.State) then begin
-    multiOTPCacheEnabled := 1;
-  end else begin
-    multiOTPCacheEnabled := 0;
-  end;
-  RegWriteDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPCacheEnabled', multiOTPCacheEnabled);
-
-  if (cbChecked = multiOTPRDPOnlyCheckBox.State) then begin
-    multiOTPRDPOnly := 1;
-  end else begin
-    multiOTPRDPOnly := 0;
-  end;
-  RegWriteDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPRDPOnly', multiOTPRDPOnly);
   
-  if (cbChecked = multiOTPDisableAutoReconnectCheckBox.State) then begin
-    multiotpDisableAutoReconnect := 1;
-  end else begin
-    multiotpDisableAutoReconnect := 0;
-  end;
-  RegWriteDWordValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services','fDisableAutoReconnect', multiotpDisableAutoReconnect);
+  ReadMultiotpInteractiveValue;
+  WriteMultiotpRegValue;
 
-  multiOTPTimeout := StrToIntDef(multiOTPTimeoutEdit.Text, multiOTPTimeout);
-  RegWriteDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPTimeout', multiOTPTimeout);
-
-  if (cbChecked = multiOTPPrefixPassCheckBox.State) then begin
-    multiOTPPrefixPass := 1;
-  end else begin
-    multiOTPPrefixPass := 0;
-  end;
-  RegWriteDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPPrefixPass', multiOTPPrefixPass);
-
-  if (cbChecked = multiOTPDisplaySmsLinkCheckBox.State) then begin
-    multiOTPDisplaySmsLink := 1;
-  end else begin
-    multiOTPDisplaySmsLink := 0;
-  end;
-  RegWriteDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPDisplaySmsLink', multiOTPDisplaySmsLink);
-
-  if (cbChecked = multiOTPUPNFormatCheckBox.State) then begin
-    multiOTPUPNFormat := 1;
-  end else begin
-    multiOTPUPNFormat := 0;
-  end;
-  RegWriteDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPUPNFormat', multiOTPUPNFormat);
-  
   // multiOTP configuration
   if Not Exec(ExpandConstant('{app}\multiotp.exe'), '-cp -config server-secret='+multiOTPSharedSecret+' server-cache-level='+IntToStr(multiOTPCacheEnabled)+' server-timeout='+IntToStr(multiOTPServerTimeout)+' server-url='+multiOTPServers+'', ExpandConstant('{app}'), SW_HIDE, ewWaitUntilTerminated, ResultCode) then begin
     MsgBox(ExpandConstant('{cm:multiOTPErrorConfiguration}'), mbCriticalError, MB_OK);
     // MsgBox(SysErrorMessage(ResultCode), mbInformation, MB_OK);
     ResultCode := 99;
   end;
-  
+
+ 
   // Get multiOTP version
   TmpFileName := ExpandConstant('{tmp}\multiotp_version.txt');
   Exec('>', 'cmd.exe /C multiotp.exe -cp -version > "' + TmpFileName + '"', ExpandConstant('{app}'), SW_HIDE, ewWaitUntilTerminated, ResultCode);
@@ -865,12 +899,10 @@ begin
 
   if (testSuccess) then begin
     // testButton.Enabled := false;
-    RegWriteStringValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential Providers\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','', 'multiOTPCredentialProvider');
-    RegWriteStringValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential Provider Filters\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','', 'multiOTPCredentialProvider');
+    ActivateMultiotpCredentialProvider;
     credentialProviderState.Caption := ExpandConstant('{cm:multiOTPInstalledAndActivated}');
   end else begin
-    RegDeleteKeyIncludingSubkeys(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential Providers\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}');
-    RegDeleteKeyIncludingSubkeys(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential Provider Filters\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}');
+    DeActivateMultiotpCredentialProvider;
     credentialProviderState.Caption := ExpandConstant('{cm:multiOTPNotActivated}');
   end;
 end;
@@ -1067,44 +1099,51 @@ begin
   multiOTPUPNFormat := 0;
 
   // Read registry values if they exists
-  RegQueryStringValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPDefaultPrefix', multiOTPDefaultPrefix);
-  RegQueryStringValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPLoginTitle', multiOTPLoginTitle);
-  RegQueryStringValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPServers', multiOTPServers);
-  RegQueryDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPServerTimeout', multiOTPServerTimeout);
-  RegQueryStringValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPSharedSecret', multiOTPSharedSecret);
-  RegQueryDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPCacheEnabled', multiOTPCacheEnabled);
+  RegQueryStringValue(HKEY_CLASSES_ROOT, 'CLSID\{#MyAppId}','multiOTPDefaultPrefix', multiOTPDefaultPrefix);
+  RegQueryStringValue(HKEY_CLASSES_ROOT, 'CLSID\{#MyAppId}','multiOTPLoginTitle', multiOTPLoginTitle);
+  RegQueryStringValue(HKEY_CLASSES_ROOT, 'CLSID\{#MyAppId}','multiOTPServers', multiOTPServers);
+  RegQueryDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{#MyAppId}','multiOTPServerTimeout', multiOTPServerTimeout);
+  RegQueryStringValue(HKEY_CLASSES_ROOT, 'CLSID\{#MyAppId}','multiOTPSharedSecret', multiOTPSharedSecret);
+  RegQueryDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{#MyAppId}','multiOTPCacheEnabled', multiOTPCacheEnabled);
   RegQueryDWordValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services','fDisableAutoReconnect', multiotpDisableAutoReconnect);
-  RegQueryDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPRDPOnly', multiOTPRDPOnly);
-  RegQueryDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPTimeout', multiOTPTimeout);
-  RegQueryDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPPrefixPass', multiOTPPrefixPass);
-  RegQueryDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPDisplaySmsLink', multiOTPDisplaySmsLink);
-  RegQueryDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','multiOTPUPNFormat', multiOTPUPNFormat);
+  RegQueryDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{#MyAppId}','multiOTPRDPOnly', multiOTPRDPOnly);
+  RegQueryDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{#MyAppId}','multiOTPTimeout', multiOTPTimeout);
+  RegQueryDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{#MyAppId}','multiOTPPrefixPass', multiOTPPrefixPass);
+  RegQueryDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{#MyAppId}','multiOTPDisplaySmsLink', multiOTPDisplaySmsLink);
+  RegQueryDWordValue(HKEY_CLASSES_ROOT, 'CLSID\{#MyAppId}','multiOTPUPNFormat', multiOTPUPNFormat);
 
-  // credentialProviderInstalled := RegQueryStringValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential Providers\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}','', stringValue);
-  credentialProviderInstalled := false;
+  if WizardSilent() then begin
+    WriteMultiotpRegValue;
+    ActivateMultiotpCredentialProvider;
+  end else begin
+    // credentialProviderInstalled := RegQueryStringValue(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential Providers\{#MyAppId}','', stringValue);
+    credentialProviderInstalled := false;
 
-  // Create two custom pages
-  CreateSetupPage2of2; // Create first the second page (after wpSelectTasks)
-  CreateSetupPage1of2; // Create the first page (which is now just after wpSelectTasks)
-  CreateTestPage; // This page is after wpInstalling
+    // Create two custom pages
+    CreateSetupPage2of2; // Create first the second page (after wpSelectTasks)
+    CreateSetupPage1of2; // Create the first page (which is now just after wpSelectTasks)
 
-  // Test variables initialization
-  testDone := false;
-  testSuccess := false;
+    CreateTestPage; // This page is after wpInstalling
+
+    // Test variables initialization
+    testDone := false;
+    testSuccess := false;
+  end;
 end;
 
 
 procedure CurPageChanged(CurPageID: Integer);
 begin
-  if CurPageID = TestPage.ID then
-    begin
+  if (Not WizardSilent()) then begin
+    if CurPageID = TestPage.ID then begin
       if (credentialProviderInstalled) then begin
         credentialProviderState.Caption := ExpandConstant('{cm:multiOTPInstalledAndActivated}');
       end else begin
         credentialProviderState.Caption := ExpandConstant('{cm:multiOTPNotActivated}');
-        RegDeleteKeyIncludingSubkeys(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential Providers\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}');
-        RegDeleteKeyIncludingSubkeys(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential Provider Filters\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}');
+        RegDeleteKeyIncludingSubkeys(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential Providers\{#MyAppId}');
+        RegDeleteKeyIncludingSubkeys(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential Provider Filters\{#MyAppId}');
       end;
       WizardForm.NextButton.Enabled := testDone;
     end;
+  end;
 end;

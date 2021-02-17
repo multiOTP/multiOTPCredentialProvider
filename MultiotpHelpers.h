@@ -1,28 +1,25 @@
 /**
- * BASE CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
- * ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO
- * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
- * PARTICULAR PURPOSE.
- *
- * Copyright (c) Microsoft Corporation. All rights reserved.
- *
- * Helper functions for copying parameters and packaging the buffer
- * for GetSerialization.
+ * multiOTP Credential Provider
  *
  * Extra code provided "as is" for the multiOTP open source project
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.6.1.5
- * @date      2019-10-23
+ * @version   5.8.1.0
+ * @date      2021-02-12
  * @since     2013
- * @copyright (c) 2016-2019 SysCo systemes de communication sa
+ * @copyright (c) 2016-2021 SysCo systemes de communication sa
  * @copyright (c) 2015-2016 ArcadeJust ("RDP only" enhancement)
- * @copyright (c) 2013-2015 Last Squirrel IT 
+ * @copyright (c) 2013-2015 Last Squirrel IT
+ * @copyright (c) 2012 Dominik Pretzsch
+ * @copyright (c) Microsoft Corporation. All rights reserved.
  * @copyright Apache License, Version 2.0
  *
  *
  * Change Log
  *
+ *   2020-08-31 5.8.0.0 SysCo/al ENH: Retarget to the last SDK 10.0.19041.1
+ *   2019-12-20 5.6.2.0 SysCo/al ENH: Files reorganization.
+ *                               ENH: "Change password on login" support
  *   2019-10-23 5.6.1.5 SysCo/al FIX: Prefix password parameter was buggy (better handling of parameters in debug mode)
  *                               FIX: swprintf_s problem with special chars (thanks to anekix)
  *   2019-01-25 5.4.1.6 SysCo/al FIX: Username with space are now supported
@@ -38,7 +35,31 @@
  *
  *********************************************************************/
  
+#ifndef _MULTIOTP_HELPERS_H
+#define _MULTIOTP_HELPERS_H
+
 #pragma once
+
+#define MULTIOTP_SUCCESS ((HRESULT)0)
+#define MULTIOTP_UNKNOWN_ERROR ((HRESULT)99)
+#define MULTIOTP_CHECK "multiOTP Credential Provider mode" // Special string to check that multiOTP is correctly running
+#define MULTIOTP_DEBUG_LOGFILE_NAME "C:\\multiotp-credential-provider-debug.log"
+#define MULTIOTP_RELEASE_LOGFILE_NAME "C:\\multiotp-credential-provider-release.log"
+#define DEBUG_BOX(message) DebugBox(__FUNCTION__, __LINE__, message)
+
+#if _DEBUG
+#define DEBUG_MODE TRUE
+#define DISPLAY_DEBUG_BOX TRUE
+#define DEVELOP_MODE TRUE // For compatibiliy
+#define SKIP_OTP_CHECK FALSE // Available in development only, ignore the OTP code check
+#define LOGFILE_NAME MULTIOTP_DEBUG_LOGFILE_NAME
+#else
+#define DEBUG_MODE TRUE
+#define DISPLAY_DEBUG_BOX TRUE
+#define DEVELOP_MODE TRUE // For compatibiliy
+#define SKIP_OTP_CHECK FALSE
+#define LOGFILE_NAME MULTIOTP_RELEASE_LOGFILE_NAME
+#endif
 
 #pragma warning(push)
 #pragma warning(disable: 28251)
@@ -64,21 +85,16 @@
 #pragma warning(pop)
 
 // Begin extra code (debug tools)
-#define MULTIOTP_SUCCESS ((HRESULT)0)
-#define MULTIOTP_UNKNOWN_ERROR ((HRESULT)99)
-#define MULTIOTP_CHECK "multiOTP Credential Provider mode" // Special string to check that multiOTP is correctly running
-
-#if _DEBUG
-	#define DEVELOP_MODE TRUE
-	#define SKIP_OTP_CHECK FALSE // Available in development only, ignore the OTP code check
-	#define LOGFILE_NAME "C:\\multiotp-credential-provider.log"
-#else
-	#define DEVELOP_MODE FALSE
-	#define SKIP_OTP_CHECK FALSE
-	#define LOGFILE_NAME ""
-#endif
 
 #define MAX_TIME_SIZE 250
+
+#define MAX_ULONG  ((ULONG)(-1))
+
+#define NOT_EMPTY(NAME) \
+	(NAME != NULL && NAME[0] != NULL)
+
+#define EMPTY(NAME) \
+	(NAME == NULL || NAME[0] == NULL)
 
 #define ZERO(NAME) \
 	ZeroMemory(NAME, sizeof(NAME))
@@ -91,6 +107,9 @@
 	char NAME[SIZE]; \
 	ZERO(NAME) 
 
+void DebugBox(const char* title, int line, const wchar_t* message);
+void DebugBox(const char* title, int line, const char* message);
+void PrintLn(const wchar_t* message, const wchar_t* message2, const wchar_t* message3, const wchar_t* message4, const wchar_t* message5);
 void PrintLn(const wchar_t *message, const wchar_t *message2, const wchar_t *message3, const wchar_t *message4);
 void PrintLn(const wchar_t *message, const wchar_t *message2, const wchar_t *message3);
 void PrintLn(const wchar_t *message, const wchar_t *message2);
@@ -146,6 +165,13 @@ HRESULT KerbInteractiveUnlockLogonPack(
     _Outptr_result_bytebuffer_(*pcb) BYTE **prgb,
     _Out_ DWORD *pcb
     );
+
+//packages the credentials into the buffer that the system expects
+HRESULT KerbChangePasswordPack(
+    __in const KERB_CHANGEPASSWORD_REQUEST& rkcrIn,
+    __deref_out_bcount(*pcb) BYTE** prgb,
+    __out DWORD* pcb
+);
 
 //get the authentication package that will be used for our logon attempt
 HRESULT RetrieveNegotiateAuthPackage(
@@ -206,3 +232,25 @@ HRESULT multiotp_request(_In_ PCWSTR username,
 // Begin extra code (ErrorInfo)
 void ErrorInfo(LPTSTR lpszFunction);
 // End extra code (ErrorInfo)
+
+void SeparateUserAndDomainName(
+    __in wchar_t* domain_slash_username,
+    __out wchar_t* username,
+    __in int sizeUsername,
+    __out_opt wchar_t* domain,
+    __in_opt int sizeDomain
+);
+
+void WideCharToChar(
+    __in PWSTR data,
+    __in int buffSize,
+    __out char* pc
+);
+
+void CharToWideChar(
+    __in char* data,
+    __in int buffSize,
+    __out PWSTR pc
+);
+
+#endif

@@ -2,15 +2,15 @@ multiOTPCredentialProvider
 ==========================
 multiOTP Credential Provider for multiOTP is a free and open source implementation of a V2 Credential Provider for the multiOTP strong two-factor authentication solution (Apache License, Version 2.0)
 
-(c) 2016-2019 SysCo systemes de communication sa (enhancements since 2016 and simple installer with configuration options)  
+(c) 2016-2021 SysCo systemes de communication sa (enhancements since 2016 and simple installer with configuration options)  
 (c) 2015-2016 ArcadeJust ("RDP only" enhancement)  
 (c) 2013-2015 Last Squirrel IT  
 
-Current build: 5.6.1.5 (2019-10-23)
+Current build: 5.8.1.0 (2021-02-12)
 
-Binary download: https://download.multiotp.net/credential-provider/
+The binary download page is available here : https://download.multiotp.net/credential-provider/ (download link are at the bottom of the page)
 
-Please note that the multiOTPCredentialProvider-files-only-A.B.C.D.zip zipped file contains only the DLL in both x64 and i386 format, and a special all-in-one-file multiotp.exe executable created using Enigma Virtual Box (https://enigmaprotector.com/en/downloads.html).
+Please note that the multiOTPCredentialProvider-files-only-A.B.C.D.zip zipped file contains only the DLL in both x64 and i386 format.
 
 [![Donate via PayPal](https://img.shields.io/badge/donate-paypal-87ceeb.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&currency_code=USD&business=paypal@sysco.ch&item_name=Donation%20for%20multiOTP%20project)
 *Please consider supporting this project by making a donation via [PayPal](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&currency_code=USD&business=paypal@sysco.ch&item_name=Donation%20for%20multiOTP%20project)*
@@ -18,7 +18,7 @@ Please note that the multiOTPCredentialProvider-files-only-A.B.C.D.zip zipped fi
 Visit http://forum.multiotp.net/ for additional support.
 
 
-multiOTP Credential Provider for multiOTP supporting Windows 7/8/8.1/10/2012(R2)/2016.
+multiOTP Credential Provider for multiOTP supporting Windows 7/8/8.1/10/2012(R2)/2016/2019
 - supports both local and domain users
 - forced OTP check for RDP
 - forced or disabled check of OTP for local logons
@@ -44,7 +44,7 @@ PREREQUISITES
 
 INSTALLATION
 ============
-- Launch the installer (in the installer directory) and configure the various parameters during the detup. You must have administrator access to successfully install the multiOTP Credential Provider.
+- Launch the installer (in the installer directory) and configure the various parameters during the setup. You must have administrator access to successfully install the multiOTP Credential Provider.
 
 
 LOCAL ONLY STRONG AUTHENTICATION INSTALLATION
@@ -122,6 +122,10 @@ Report if you have any problems or questions regarding this app.
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
+2020-09-26 5.8.0.3 FIX: vcruntime140.dll has been removed from PHP subfolder
+2020-08-31 5.8.0.0 ENH: Integration of last multiOTP.exe
+                   FIX: Registry entries are read protected against regular users
+2019-11-26 5.6.1.6 ENH: Silent install supported (WARNING! No test will be done, be sure the regitry parameters are correct !)
 2019-10-23 5.6.1.5 FIX: Better handling of parameters in debug mode
                    FIX: swprintf_s problem with special chars (thanks to anekix)
                    ENH: Optional manual default computer/domain setup

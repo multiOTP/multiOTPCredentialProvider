@@ -9,10 +9,10 @@
  * Extra code provided "as is" for the multiOTP open source project
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.6.1.5
- * @date      2019-10-23
+ * @version   5.8.1.0
+ * @date      2021-02-12
  * @since     2013
- * @copyright (c) 2016-2019 SysCo systemes de communication sa
+ * @copyright (c) 2016-2021 SysCo systemes de communication sa
  * @copyright (c) 2015-2016 ArcadeJust ("RDP only" enhancement)
  * @copyright (c) 2013-2015 Last Squirrel IT
  * @copyright Apache License, Version 2.0
@@ -20,6 +20,7 @@
  *
  * Change Log
  *
+ *   2020-08-31 5.8.0.0 SysCo/al ENH: Retarget to the last SDK 10.0.19041.1
  *   2019-10-23 5.6.1.5 SysCo/al FIX: Prefix password parameter was buggy (better handling of parameters in debug mode)
  *                               FIX: swprintf_s problem with special chars (thanks to anekix)
  *   2019-01-25 5.4.1.6 SysCo/al FIX: Username with space are now supported
