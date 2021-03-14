@@ -6,7 +6,7 @@ multiOTP Credential Provider for multiOTP is a free and open source implementati
 (c) 2015-2016 ArcadeJust ("RDP only" enhancement)  
 (c) 2013-2015 Last Squirrel IT  
 
-Current build: 5.8.1.0 (2021-02-12)
+Current build: 5.8.1.1 (2021-03-14)
 
 The binary download page is available here : https://download.multiotp.net/credential-provider/ (download link are at the bottom of the page)
 
@@ -122,6 +122,7 @@ Report if you have any problems or questions regarding this app.
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
+2021-03-14 5.8.1.1 FIX: In some cases, the HOTP/TOTP was not well computed (in the multiOTP.exe companion)
 2020-09-26 5.8.0.3 FIX: vcruntime140.dll has been removed from PHP subfolder
 2020-08-31 5.8.0.0 ENH: Integration of last multiOTP.exe
                    FIX: Registry entries are read protected against regular users

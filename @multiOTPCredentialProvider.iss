@@ -1,5 +1,5 @@
 #define MyAppName "multiOTP Credential Provider"
-#define MyAppVersion "5.8.1.0"
+#define MyAppVersion "5.8.1.1"
 #define MyAppShortName "multiOTP"
 #define MyAppPublisher "SysCo systemes de communication sa"
 #define MyAppURL "https://github.com/multiOTP/multiOTPCredentialProvider"
@@ -31,7 +31,7 @@ DefaultGroupName={#MyAppName}
 UninstallDisplayIcon={app}\multiotp.exe
 DisableProgramGroupPage=yes
 OutputDir=installer
-OutputBaseFilename=multiOTPCredentialProvider-5.8.1.0
+OutputBaseFilename=multiOTPCredentialProvider-5.8.1.1
 SetupIconFile=ico\multiOTP.ico
 WizardImageFile=bmp\multiOTP-wizard-164x314.bmp
 WizardSmallImageFile=bmp\multiOTP-wizard-55x58.bmp
