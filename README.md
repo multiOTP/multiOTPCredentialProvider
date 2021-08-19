@@ -3,14 +3,15 @@ multiOTPCredentialProvider
 multiOTP Credential Provider for multiOTP is a free and open source implementation of a V2 Credential Provider for the multiOTP strong two-factor authentication solution (Apache License, Version 2.0)
 
 (c) 2016-2021 SysCo systemes de communication sa (enhancements since 2016 and simple installer with configuration options)  
+(c) 2017-2021 NetKnights GmbH
 (c) 2015-2016 ArcadeJust ("RDP only" enhancement)  
 (c) 2013-2015 Last Squirrel IT  
 
-Current build: 5.8.1.1 (2021-03-14)
+Current build: 5.8.2.9 (2021-08-19)
 
 The binary download page is available here : https://download.multiotp.net/credential-provider/ (download link are at the bottom of the page)
 
-Please note that the multiOTPCredentialProvider-files-only-A.B.C.D.zip zipped file contains only the DLL in both x64 and i386 format.
+Please note that the multiOTPCredentialProvider-files-only-A.B.C.D.zip zipped file contains only the DLL in x64 format.
 
 [![Donate via PayPal](https://img.shields.io/badge/donate-paypal-87ceeb.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&currency_code=USD&business=paypal@sysco.ch&item_name=Donation%20for%20multiOTP%20project)
 *Please consider supporting this project by making a donation via [PayPal](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&currency_code=USD&business=paypal@sysco.ch&item_name=Donation%20for%20multiOTP%20project)*
@@ -19,68 +20,88 @@ Visit http://forum.multiotp.net/ for additional support.
 
 
 multiOTP Credential Provider for multiOTP supporting Windows 7/8/8.1/10/2012(R2)/2016/2019
+- support MSI deployement with MST transform file
 - supports both local and domain users
 - forced OTP check for RDP
 - forced or disabled check of OTP for local logons
 - client executable of multiOTP is automatically installed and configured
-- multiOTP Credential Provider is only activated if the authentication test is passed successfully
 - DLL and EXE files are digitally signed
 - the first strong two factor authentication solution that have cache support in order to work also offline!
-
-![multiOTPCredentialProvider setup1](https://raw.githubusercontent.com/multiOTP/multiOTPCredentialProvider/master/screenshots/multiOTPCredentialProvider-setup1.png)
-
-![multiOTPCredentialProvider setup2](https://raw.githubusercontent.com/multiOTP/multiOTPCredentialProvider/master/screenshots/multiOTPCredentialProvider-setup2.png)
-
-![multiOTPCredentialProvider test](https://raw.githubusercontent.com/multiOTP/multiOTPCredentialProvider/master/screenshots/multiOTPCredentialProvider-test.png)
-
-![multiOTPCredentialProvider login](https://raw.githubusercontent.com/multiOTP/multiOTPCredentialProvider/master/screenshots/multiOTPCredentialProvider-login.png)
 
 
 PREREQUISITES
 =============
+- last x86 AND x64 MSVC++ redistribuable installed (Microsoft Visual C++ Redistributable for Visual Studio 2015, 2017 and 2019)
+  https://aka.ms/vs/16/release/vc_redist.x86.exe and https://aka.ms/vs/16/release/vc_redist.x64.exe
 - installed multiOTP server(s)
 - configured multiOTP user (multiOTP username = [domain user name] or [windows local account name] or [microsoft account name])
 
 
-INSTALLATION
-============
-- Launch the installer (in the installer directory) and configure the various parameters during the setup. You must have administrator access to successfully install the multiOTP Credential Provider.
+MANUAL INSTALLATION
+===================
+Launch the installer (in the installer directory) and configure the various parameters during the setup. You must have administrator access to successfully install the multiOTP Credential Provider.
+
+
+MSI DEPLOYMENT
+==============
+Be sure that last x86 AND x64 MSVC++ redistribuable are installed.
+If it's not the case, you can deploy them automatically using the four MSI provided in the vc_redist_MSI.zip file
+
+Using Orca, you can create Transform files in order to set the settings of the credential provider.
+The following properties can be set :
+    MULTIOTP_TIMEOUT        Number of seconds to wait for the multiOTP server response. Default value 5.
+    MULTIOTP_CACHE          0|1 1 to enable local cache.
+    MULTIOTP_CPUSCREDUI     run as admin mode (0 or 1 or 2 + e or d for example 1e)
+    MULTIOTP_TIMEOUTCP      Number of seconds to wait for the credentail provider to respond. Default value 60.
+    MULTIOTP_TWO_STEP_HIDE_OTP 0|1 1 to force the credential to request an OTP password in a second step.
+    MULTIOTP_TWO_STEP_SEND_PASSWORD 0|1 1 to enable the credential to request an OTP password by SMS.    
+    MULTIOTP_CPUSLOGON      logon mode (0 or 1 or 2 + e or d for example 1e)
+    MULTIOTP_CPUSUNLOCK     unlock mode (0 or 1 or 2 + e or d for example 1e)
+    MULTIOTP_DISPLAYSMSLINK 0|1 1 to enable the sms link on the OTP authentication page.
+    MULTIOTP_LOGINTEXT      text displayed underneath the credential logo.
+    MULTIOTP_BITMAP_PATH    The complete path and filename of the bmp image. Size must be 128x128 pixels.
+    MULTIOTP_URL            FQDN of the multiOTP server for example https://192.168.1.188
+    MULTIOTP_SECRET         Secret shared with the smultiOTP server.
+    MULTIOTP_OTP_TEXT       Text displayed in the OTP field.
+    MULTIOTP_OTP_HINT_TEXT  Text displayed when prompted to enter the OTP in the second step.
+    MULTIOTP_OTP_FAIL_TEXT  Text displayed when OTP code is not valid.
+    MULTIOTP_EXCLUDED_ACCOUNT Specify an account that should be excluded from 2FA. For example contoso\backdoor
+
+Copy the MSI and MST files to a share which is accessible in Read-Execute for every computers
+
+Create a GPO that applies to the selected computers, adding the following settings:
+  Computer Settings > Administrative Templates > System > Logon
+    Always wait for the network at computer startup and logon - Enabled
+
+Create a second GPO that applies to the selected computers, adding the following settings:
+  Computer Configuration > Policies > Administrative Templates > System > Group Policy
+    Enable the Specify startup policy processing wait time. Set Amount of time to wait (in seconds): = 120
+
+If x86 AND x64 MSVC++ redistributable are not already installed on those computers,
+create a GPO to deploy the 4 x86 AND x64 MSVC++ redistribuable files.
+
+Finaly, create a GPO that applies to the selected computers to deploy the MSI with its MST file
+
+To force to apply the GPO on the selected computers:
+gpupdate /force /boot on each computer, using administrator privilege
 
 
 LOCAL ONLY STRONG AUTHENTICATION INSTALLATION
 =============================================
 1) Install the multiOTP Credential Provider, which contains also multiOTP inside.
-2) During the installation, specify the folder on the client where the
-   multiotp.exe file and folders must be installed and configured.
-3) In the wizard, leave the URL of the multiOTP server(s) empty.
-4) You can also choose to require a strong authentication only for RDP.
-5) When you are on the test page, open a command prompt in the folder where
-   multiOTP is now installed and create a new local user. Example:
-   1) *multiotp -fastcreatenopin my_user*
-   2) *multiotp -qrcode my_user my_qrcode.png)*
-6) If the test is successful, the Credential Provider is installed.
-7) To disable the Credential Provider, uninstall it from Windows,
+2) Using the wizard, answer to the different questions
+3) To disable the Credential Provider, uninstall it from Windows,
    or execute multiOTPCredentialProvider-unregister.reg
 
 
 CENTRALIZED STRONG AUTHENTICATION INSTALLATION (with cache support)
 ===================================================================
 1) First, install a multiOTP server (commercial or open source edition).
-   (https://www.multiotp.com or https://www.multiotp.net)
+   (https://www\.multiOTP.com or https://www\.multiOTP.net)
 2) On each client, install the multiOTP Credential Provider.
-3) During the installation, specify the folder on the client where the
-   multiotp.exe file and folders must be installed and configured.
-4) In the wizard, type the URL of the multiOTP server(s).
-5) You can also choose to require a strong authentication only for RDP.
-6) On the test page, test your account to be sure that everything works.
-7) If the test is successful, the Credential Provider is installed.
-8) To disable the Credential Provider, uninstall it from Windows,
+3) Using the wizard, type the URL of the multiOTP server(s).
+4) To disable the Credential Provider, uninstall it from Windows,
    or execute multiOTPCredentialProvider-unregister.reg
-
-
-UNATTENDED INSTALLATION
-=======================
-An MSI file will be available soon to mass deploy the multiOTP Credential Provider.
 
 
 UNINSTALLATION
@@ -93,24 +114,12 @@ TECHNICAL DETAILS
 - the credential provider DLL (multiOTPCredentialProvider.dll) is installed in the system folder \Windows\System32
 - the credential provider options are stored in the following registry key
   (registry entries have priority over multiotp.ini file entries): HKEY_CLASSES_ROOT\CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}
-  - multiOTPCacheEnabled : [1|0], used directly by multiOTP
-  - multiOTPDefaultPrefix : [Default computer/domain, default is '']. multiOTP use automatically the domain name as default, or computer
-                            name if the computer is not in a domain. You can set here a manual default computer/domain, like for example '.'
-  - multiOTPDisplaySmsLink : [0|1]
-  - multiOTPLoginTitle : [Login title, default is '', which displays 'multiOTP Login']
-  - multiOTPPath : [X:\Path\to\multiotp\folder]
-  - multiOTPPrefixPass : [0|1]
-  - multiOTPRDPOnly : [0|1]
-  - multiOTPServers : [multiOTP server(s) to contact, default is 'https://192.168.1.88'], used directly by multiOTP
-  - multiOTPServerTimeout : [timeout in seconds before switching to the next server, default is 5], used directly by multiOTP
-  - multiOTPSharedSecret : [secret to connect this client to the server, default is 'ClientServerSecret'], used directly by multiOTP
-  - multiOTPTimeout : [timeout in seconds, default is 60]
-  - multiOTPUPNFormat : [0|1]
-- if the tile file [multiOTPPath]\multiotp.bmp exists, it will replace the default 128x128 tile image
+  - the previous registry keys (up to 5.8.1.x) are converted to the new values
 
 
 THANKS TO
 =========
+- NetKnights GmbH
 - ArcadeJust ("RDP only" enhancement)
 - LastSquirrelIT (initial implementation)
 - All contributors with bugs annoucements and improvements requests
@@ -122,6 +131,9 @@ Report if you have any problems or questions regarding this app.
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
+2021-08-19 5.8.2.9 ENH: MSI deployment supported
+                   ENH: password expiration is now managed
+                   ENH: password must not be typed twice anymore
 2021-03-14 5.8.1.1 FIX: In some cases, the HOTP/TOTP was not well computed (in the multiOTP.exe companion)
 2020-09-26 5.8.0.3 FIX: vcruntime140.dll has been removed from PHP subfolder
 2020-08-31 5.8.0.0 ENH: Integration of last multiOTP.exe
