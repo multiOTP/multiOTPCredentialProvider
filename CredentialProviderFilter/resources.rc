@@ -71,12 +71,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "SysCo systemes de communication sa"
             VALUE "FileDescription", "CredentialProviderFilter for the multiOTP CredentialProvider for Windows logon"
-            VALUE "FileVersion", "5.8.2.9"
+            VALUE "FileVersion", "5.8.3.0"
             VALUE "InternalName", "multiOTPCredentialProviderFilter.dll"
             VALUE "LegalCopyright", "Copyright (c) 2021 SysCo systemes de communication sa, 2019 NetKnights, 2016 Last Squirrel IT"
             VALUE "OriginalFilename", "multiOTPCredentialProviderFilter.dll"
             VALUE "ProductName", "multiOTPCredentialProvider"
-            VALUE "ProductVersion", "5.8.2.9"
+            VALUE "ProductVersion", "5.8.3.0"
         END
     END
     BLOCK "VarFileInfo"

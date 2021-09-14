@@ -376,7 +376,7 @@ HRESULT Utilities::SetScenario(
 
 		// Large text
 		wstring text = _config->credential.username + L"@" + _config->credential.domain;
-		if (hideDomain)
+		if (hideDomain || (_config->credential.username.find(L"@") != std::string::npos))  // multiOTP/yj
 		{
 			text = _config->credential.username;
 		}

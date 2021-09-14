@@ -4,8 +4,8 @@
  * Extra code provided "as is" for the multiOTP open source project
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.8.2.9
- * @date      2021-08-19
+ * @version   5.8.3.0
+ * @date      2021-09-14
  * @since     2013
  * @copyright (c) 2016-2021 SysCo systemes de communication sa
  * @copyright (c) 2015-2016 ArcadeJust ("RDP only" enhancement)
@@ -1148,7 +1148,6 @@ HRESULT multiotp_request(_In_ std::wstring username,
     _In_ SecureWString OTP
 )
 {
-    if (DEVELOP_MODE) PrintLn("multiotp_request");
     HRESULT hr = E_NOTIMPL;
     STARTUPINFO si;
     PROCESS_INFORMATION pi;

@@ -36,7 +36,8 @@
 #include <thread>
 #include <future>
 #include <sstream>
-#include "MultiotpHelpers.h"
+#include "MultiotpHelpers.h" // multiOTP/yj
+#include "MultiotpRegistry.h" // multiOTP/yj
 
 using namespace std;
 
@@ -312,13 +313,11 @@ HRESULT CCredential::GetBitmapValue(
 		HBITMAP hbmp = nullptr;
 		LPCSTR lpszBitmapPath = PrivacyIDEA::ws2s(_config->bitmapPath).c_str();
 		DebugPrint(lpszBitmapPath);
-
 		if (NOT_EMPTY(lpszBitmapPath))
 		{
 			DWORD const dwAttrib = GetFileAttributesA(lpszBitmapPath);
 
 			DebugPrint(dwAttrib);
-
 			if (dwAttrib != INVALID_FILE_ATTRIBUTES
 				&& !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY))
 			{
@@ -330,10 +329,31 @@ HRESULT CCredential::GetBitmapValue(
 				}
 			}
 		}
-
 		if (hbmp == nullptr)
 		{
-			hbmp = LoadBitmap(HINST_THISDLL, MAKEINTRESOURCE(IDB_TILE_IMAGE));
+			// multiOTP/yj
+			PWSTR path;
+			// If multiotp.bmp exists, use this file
+			if (readRegistryValueString(CONF_PATH, &path, L"c:\\multiotp\\") > 1) {
+				wchar_t bitmap_path[1024];
+				wcscpy_s(bitmap_path, 1024, path);
+				size_t npath = wcslen(bitmap_path);
+				if (bitmap_path[npath - 1] != '\\' && bitmap_path[npath - 1] != '/') {
+					bitmap_path[npath] = '\\';
+					bitmap_path[npath + 1] = '\0';
+				}
+				wcscat_s(bitmap_path, 1024, L"multiotp.bmp");
+				if (PathFileExists(bitmap_path)) {
+					hbmp = (HBITMAP)LoadImage(HINST_THISDLL, bitmap_path, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
+				}
+				else {
+					hbmp = LoadBitmap(HINST_THISDLL, MAKEINTRESOURCE(IDB_TILE_IMAGE));
+				}
+			}
+			else {
+				hbmp = LoadBitmap(HINST_THISDLL, MAKEINTRESOURCE(IDB_TILE_IMAGE));
+			}
+			// multiOTP/yj
 		}
 
 		if (hbmp != nullptr)

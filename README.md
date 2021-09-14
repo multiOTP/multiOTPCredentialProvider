@@ -7,7 +7,7 @@ multiOTP Credential Provider for multiOTP is a free and open source implementati
 (c) 2015-2016 ArcadeJust ("RDP only" enhancement)  
 (c) 2013-2015 Last Squirrel IT  
 
-Current build: 5.8.2.9 (2021-08-19)
+Current build: 5.8.3.0 (2021-09-14)
 
 The binary download page is available here : https://download.multiotp.net/credential-provider/ (download link are at the bottom of the page)
 
@@ -97,7 +97,7 @@ LOCAL ONLY STRONG AUTHENTICATION INSTALLATION
 CENTRALIZED STRONG AUTHENTICATION INSTALLATION (with cache support)
 ===================================================================
 1) First, install a multiOTP server (commercial or open source edition).
-   (https://www\.multiOTP.com or https://www\.multiOTP.net)
+   (https://www.multiOTP.com or https://www.multiOTP.net)
 2) On each client, install the multiOTP Credential Provider.
 3) Using the wizard, type the URL of the multiOTP server(s).
 4) To disable the Credential Provider, uninstall it from Windows,
@@ -114,7 +114,39 @@ TECHNICAL DETAILS
 - the credential provider DLL (multiOTPCredentialProvider.dll) is installed in the system folder \Windows\System32
 - the credential provider options are stored in the following registry key
   (registry entries have priority over multiotp.ini file entries): HKEY_CLASSES_ROOT\CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}
-  - the previous registry keys (up to 5.8.1.x) are converted to the new values
+- the previous registry keys (up to 5.8.1.x) are converted to the new values
+- the available registry keys are
+   cpus_logon                    Logon authentication type [0|1|2|3][e|d]
+                                 0: relevant for remote (RDP) and local operation
+                                 1: relevant for remote operation
+                                 2: relevant for local operation
+                                 3: relevent for remote and local operation - but multiOTP Credential Provider is completely disabled.
+                                 “e”: Only the multiOTP Credential Provider is available. All other credential providers are not available.
+                                 “d”: In addition all other credential providers are available.
+                                 Example: cpus_logon = 0e: Only the multiOTP Credential Provider is available for Logon via remote and locally.                                 
+                                 
+   cpus_unlock                   Unlock authentication type [0|1|2|3][e|d]
+   cpus_credui                   Authentication in Windows authentication type [0|1|2|3][e|d]
+   excluded_account              Specify an account that should be excluded from 2FA. The format is required to be domainusername or computernameusername.
+   login_text                    Specify the text that is displayed underneath the Credential Provider logo and on the right side where available credentials arelisted.
+   multiOTPCacheEnabled          [1|0], used directly by multiOTP
+   multiOTPDefaultPrefix         [Default computer/domain, default is '']. multiOTP use automatically the domain name as default, or computer
+                                 name if the computer is not in a domain. You can set here a manual default computer/domain, like for example '.'
+   multiOTPDisplaySmsLink        [0|1]
+   multiOTPServers               [multiOTP server(s) to contact, default is 'https://192.168.1.88'], used directly by multiOTP
+   multiOTPServerTimeout         [timeout in seconds before switching to the next server, default is 5], used directly by multiOTP
+   multiOTPSharedSecret          [secret to connect this client to the server, default is 'ClientServerSecret'], used directly by multiOTP
+   multiOTPTimeout               [timeout in seconds, default is 60]
+   two_step_hide_otp             [0|1] Set to 1 if the Credential Provider should ask for the user’s OTP in a second step. In the first step the
+                                 user will only be asked for the password.
+   two_step_send_password        [0|1] Set to 1 if the Credential Provider should send the user’s password to the multiOTP server
+   two_step_send_empty_password  [0|1] Set to 1 if the Credential Provider should send an empty password to the multiOTP server
+   otp_text                      Speficy the text that is displayed in the OTP input field. Usually this is “One-Time Password”, but you can change it
+                                 to any other value you like.
+   otp_hint_text                 Speficy the text that is displayed when prompted to enter the OTP in the second step.
+   otp_fail_text                 Specify a custom text that is shown when the OTP verification failed.
+   v1_bitmap_path                The complete path and filename of a bitmap image. This is a customized login image. The image must be a version 3
+                                 Windows BMP file with a resolution of 128x128 pixels.
 
 
 THANKS TO
@@ -131,6 +163,8 @@ Report if you have any problems or questions regarding this app.
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
+2021-09-14 5.8.3.0 ENH: Allow again a tile image in the same folder of the DLL
+                   ENH: Remote server is not optional again
 2021-08-19 5.8.2.9 ENH: MSI deployment supported
                    ENH: password expiration is now managed
                    ENH: password must not be typed twice anymore
