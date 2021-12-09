@@ -19,6 +19,9 @@
 **    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 **    See the License for the specific language governing permissions and
 **    limitations under the License.
+* 
+* Change Log
+    2021-11-18 5.8.3.2 SysCo/YJ ENH: Take into account login with user@domain in the excluded account
 **
 ** * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -38,6 +41,8 @@
 #include <sstream>
 #include "MultiotpHelpers.h" // multiOTP/yj
 #include "MultiotpRegistry.h" // multiOTP/yj
+#include "DsGetDC.h" // multiOTP/yj
+#include "Lm.h" // multiOTP/yj
 
 using namespace std;
 
@@ -757,7 +762,6 @@ HRESULT CCredential::Connect(__in IQueryContinueWithStatus* pqcws)
 	_config->provider.field_strings = _rgFieldStrings;
 	_util.ReadFieldValues();
 
-
 	// Check if the user is the excluded account
 	if (!_config->excludedAccount.empty())
 	{
@@ -766,14 +770,94 @@ HRESULT CCredential::Connect(__in IQueryContinueWithStatus* pqcws)
 			toCompare.append(_config->credential.domain).append(L"\\");
 		}
 		toCompare.append(_config->credential.username);
+
 		if (PrivacyIDEA::toUpperCase(toCompare) == PrivacyIDEA::toUpperCase(_config->excludedAccount)) {
 			DebugPrint("Login data matches excluded account, skipping 2FA...");
 			// Simulate 2FA success so the logic in GetSerialization can stay the same
 			_piStatus = PI_AUTH_SUCCESS;
 			return S_OK;
 		}
-	}
 
+		// the buffer is allocated by the system
+		LPWSTR	lpNameBuffer;
+
+		NET_API_STATUS nas;
+		NETSETUP_JOIN_STATUS BufferType;
+
+		// get info
+		nas = NetGetJoinInformation(NULL, &lpNameBuffer, &BufferType);
+
+		if (nas != NERR_Success)
+		{
+			// op failed :(
+			PrintLn(L"Failed");
+		}
+		else {
+			switch (BufferType) // Source : https://forums.codeguru.com/showthread.php?401584-Which-API-can-retrieve-workgroup-name
+			{
+				case NetSetupDomainName:
+					// Verify with the non UPN domain name
+					if (!_config->credential.domain.empty()) {
+						PWSTR strNetBiosDomainName = L"";
+						PWSTR pszDomain;
+						PWSTR pszUsername;
+						PWSTR pszQualifiedUserName = const_cast<wchar_t*>(toCompare.c_str());
+						DOMAIN_CONTROLLER_INFO* pDCI;
+						HRESULT hr_sfi = S_OK;
+						hr_sfi = SplitDomainAndUsername(pszQualifiedUserName, &pszDomain, &pszUsername); // contoso\admin@contoso.com => [contoso,admin];  admin@contoso.com => [contoso.com,admin]
+						if (SUCCEEDED(hr_sfi)) {
+							if (DsGetDcNameW(NULL, pszDomain, NULL, NULL, DS_IS_DNS_NAME | DS_RETURN_FLAT_NAME, &pDCI) == ERROR_SUCCESS) {
+								strNetBiosDomainName = pDCI->DomainName;
+								toCompare = strNetBiosDomainName;
+								toCompare = toCompare.append(L"\\").append(pszUsername);
+								if (PrivacyIDEA::toUpperCase(toCompare) == PrivacyIDEA::toUpperCase(_config->excludedAccount)) {
+									DebugPrint("Login data matches excluded account, skipping 2FA...");
+									// Simulate 2FA success so the logic in GetSerialization can stay the same
+									_piStatus = PI_AUTH_SUCCESS;
+									// clean up
+									NetApiBufferFree(lpNameBuffer);
+									return S_OK;
+								}
+							}
+							else {
+								// In case SplitDomainAndUsername returns netbios domain name
+								toCompare = pszDomain;
+								toCompare = toCompare.append(L"\\").append(pszUsername);
+								if (PrivacyIDEA::toUpperCase(toCompare) == PrivacyIDEA::toUpperCase(_config->excludedAccount)) {
+									DebugPrint("Login data matches excluded account, skipping 2FA...");
+									// Simulate 2FA success so the logic in GetSerialization can stay the same
+									_piStatus = PI_AUTH_SUCCESS;
+									// clean up
+									NetApiBufferFree(lpNameBuffer);
+									return S_OK;
+								}
+							}
+						}
+					}
+					break;
+
+				default:
+					TCHAR  infoBuf[32767];
+					DWORD  bufCharCount = 32767;
+					GetComputerName(infoBuf, &bufCharCount);
+					toCompare = infoBuf;												
+					toCompare = toCompare.append(L"\\").append(_config->credential.username);
+					if (PrivacyIDEA::toUpperCase(toCompare) == PrivacyIDEA::toUpperCase(_config->excludedAccount)) {
+						DebugPrint("Login data matches excluded account, skipping 2FA...");
+						// Simulate 2FA success so the logic in GetSerialization can stay the same
+						_piStatus = PI_AUTH_SUCCESS;
+						// clean up
+						NetApiBufferFree(lpNameBuffer);
+						return S_OK;
+					}
+					break;
+			}
+		}
+
+		// clean up
+		NetApiBufferFree(lpNameBuffer);
+		
+	}
 	if (_config->bypassPrivacyIDEA)
 	{
 		DebugPrint("Bypassing privacyIDEA...");

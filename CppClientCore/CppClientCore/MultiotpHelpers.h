@@ -4,8 +4,8 @@
  * Extra code provided "as is" for the multiOTP open source project
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.8.3.0
- * @date      2021-09-14
+ * @version   5.8.4.0
+ * @date      2021-11-18
  * @since     2013
  * @copyright (c) 2016-2021 SysCo systemes de communication sa
  * @copyright (c) 2015-2016 ArcadeJust ("RDP only" enhancement)

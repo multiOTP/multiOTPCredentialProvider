@@ -7,7 +7,7 @@ multiOTP Credential Provider for multiOTP is a free and open source implementati
 (c) 2015-2016 ArcadeJust ("RDP only" enhancement)  
 (c) 2013-2015 Last Squirrel IT  
 
-Current build: 5.8.3.0 (2021-09-14)
+Current build: 5.8.4.0 (2021-11-18)
 
 The binary download page is available here : https://download.multiotp.net/credential-provider/ (download link are at the bottom of the page)
 
@@ -121,8 +121,8 @@ TECHNICAL DETAILS
                                  1: relevant for remote operation
                                  2: relevant for local operation
                                  3: relevent for remote and local operation - but multiOTP Credential Provider is completely disabled.
-                                 ‚Äúe‚Äù: Only the multiOTP Credential Provider is available. All other credential providers are not available.
-                                 ‚Äúd‚Äù: In addition all other credential providers are available.
+                                 ìeî: Only the multiOTP Credential Provider is available. All other credential providers are not available.
+                                 ìdî: In addition all other credential providers are available.
                                  Example: cpus_logon = 0e: Only the multiOTP Credential Provider is available for Logon via remote and locally.                                 
                                  
    cpus_unlock                   Unlock authentication type [0|1|2|3][e|d]
@@ -137,11 +137,11 @@ TECHNICAL DETAILS
    multiOTPServerTimeout         [timeout in seconds before switching to the next server, default is 5], used directly by multiOTP
    multiOTPSharedSecret          [secret to connect this client to the server, default is 'ClientServerSecret'], used directly by multiOTP
    multiOTPTimeout               [timeout in seconds, default is 60]
-   two_step_hide_otp             [0|1] Set to 1 if the Credential Provider should ask for the user‚Äôs OTP in a second step. In the first step the
+   two_step_hide_otp             [0|1] Set to 1 if the Credential Provider should ask for the userís OTP in a second step. In the first step the
                                  user will only be asked for the password.
-   two_step_send_password        [0|1] Set to 1 if the Credential Provider should send the user‚Äôs password to the multiOTP server
+   two_step_send_password        [0|1] Set to 1 if the Credential Provider should send the userís password to the multiOTP server
    two_step_send_empty_password  [0|1] Set to 1 if the Credential Provider should send an empty password to the multiOTP server
-   otp_text                      Speficy the text that is displayed in the OTP input field. Usually this is ‚ÄúOne-Time Password‚Äù, but you can change it
+   otp_text                      Speficy the text that is displayed in the OTP input field. Usually this is ìOne-Time Passwordî, but you can change it
                                  to any other value you like.
    otp_hint_text                 Speficy the text that is displayed when prompted to enter the OTP in the second step.
    otp_fail_text                 Specify a custom text that is shown when the OTP verification failed.
@@ -163,6 +163,8 @@ Report if you have any problems or questions regarding this app.
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
+2021-09-14 5.8.4.0 FIX: multiOTPServerTimeout in now saved in a DWORD
+                   FIX: Upgrade from a previous MSI installation without uninstall and reinstall
 2021-09-14 5.8.3.0 ENH: Allow again a tile image in the same folder of the DLL
                    ENH: Remote server is optional again
 2021-08-19 5.8.2.9 ENH: MSI deployment supported

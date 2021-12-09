@@ -4,8 +4,8 @@
  * Extra code provided "as is" for the multiOTP open source project
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.8.3.0
- * @date      2021-09-14
+ * @version   5.8.4.0
+ * @date      2021-11-18
  * @since     2013
  * @copyright (c) 2016-2021 SysCo systemes de communication sa
  * @copyright (c) 2015-2016 ArcadeJust ("RDP only" enhancement)
@@ -938,12 +938,57 @@ HRESULT SplitDomainAndUsername(_In_ PCWSTR pszQualifiedUserName, _Outptr_result_
     PWSTR pszUsername;
     const wchar_t* pchWhack = wcschr(pszQualifiedUserName, L'\\');
     const wchar_t* pchEnd = pszQualifiedUserName + wcslen(pszQualifiedUserName) - 1;
-
+    
     // Begin extra code (UPN support)
     const wchar_t* pchWhatSign = wcschr(pszQualifiedUserName, L'@');
     // End extra code (UPN support)
 
-    if (pchWhack != nullptr)
+    if (pchWhack != nullptr && pchWhatSign != nullptr) // for example login with RDP like abc@domain.ch => domain.ch\abcd@domain.ch
+    {
+        const wchar_t* pchUsernameBegin = pchWhack+1;
+        const wchar_t* pchUsernameEnd = pchWhatSign - 1;
+        const wchar_t* pchDomainBegin = pszQualifiedUserName;
+        const wchar_t* pchDomainEnd = pchWhack-1;
+
+        size_t lenDomain = pchDomainEnd - pchDomainBegin + 1; // number of actual chars, NOT INCLUDING null terminated string
+        pszDomain = static_cast<PWSTR>(CoTaskMemAlloc(sizeof(wchar_t) * (lenDomain + 1)));
+        if (pszDomain != nullptr)
+        {
+            hr = StringCchCopyN(pszDomain, lenDomain + 1, pchDomainBegin, lenDomain);
+            if (SUCCEEDED(hr))
+            {
+                size_t lenUsername = pchUsernameEnd - pchUsernameBegin + 1; // number of actual chars, NOT INCLUDING null terminated string
+                pszUsername = static_cast<PWSTR>(CoTaskMemAlloc(sizeof(wchar_t) * (lenUsername + 1)));
+                if (pszUsername != nullptr)
+                {
+                    hr = StringCchCopyN(pszUsername, lenUsername + 1, pchUsernameBegin, lenUsername);
+                    if (SUCCEEDED(hr))
+                    {
+                        *ppszDomain = pszDomain;
+                        *ppszUsername = pszUsername;
+                    }
+                    else
+                    {
+                        CoTaskMemFree(pszUsername);
+                    }
+                }
+                else
+                {
+                    hr = E_OUTOFMEMORY;
+                }
+            }
+
+            if (FAILED(hr))
+            {
+                CoTaskMemFree(pszDomain);
+            }
+        }
+        else
+        {
+            hr = E_OUTOFMEMORY;
+        }
+    }
+    else if (pchWhack != nullptr)
     {
         const wchar_t* pchDomainBegin = pszQualifiedUserName;
         const wchar_t* pchDomainEnd = pchWhack - 1;
@@ -1283,9 +1328,6 @@ HRESULT multiotp_request(_In_ std::wstring username,
         wcscat_s(appname, 2048, L"\"");
         wcscat_s(appname, 2048, L" ");
         wcscat_s(appname, 2048, options);
-
-        // ReleaseDebugPrint("options");
-        // ReleaseDebugPrint(options);
 
         if (DEVELOP_MODE) PrintLn(L"Calling ", appname);
         if (DEVELOP_MODE) PrintLn(L"with options ", options);
