@@ -1,7 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * *
 **
 ** Copyright 2012 Dominik Pretzsch
-**           2020-2021 SysCo systemes de communication sa
+**           2020-2022 SysCo systemes de communication sa
 ** 
 **    Licensed under the Apache License, Version 2.0 (the "License");
 **    you may not use this file except in compliance with the License.

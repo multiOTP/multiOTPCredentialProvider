@@ -4,10 +4,10 @@
  * Extra code provided "as is" for the multiOTP open source project
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.8.4.0
- * @date      2021-11-18
+ * @version   5.8.7.0
+ * @date      2022-04-28
  * @since     2013
- * @copyright (c) 2016-2021 SysCo systemes de communication sa
+ * @copyright (c) 2016-2022 SysCo systemes de communication sa
  * @copyright (c) 2015-2016 ArcadeJust ("RDP only" enhancement)
  * @copyright (c) 2013-2015 Last Squirrel IT
  * @copyright (c) 2012 Dominik Pretzsch
@@ -47,6 +47,11 @@
 #include "MultiotpRegistry.h"
 #include "SecureString.h"
 #include "Logger.h"
+
+// To use the TranslateNameW function
+#include "Security.h"
+// DsGetDcNameW
+#include "DsGetDC.h"
 
 // Begin extra code (debug tools)
 
@@ -1489,4 +1494,98 @@ void CharToWideChar(
         -1,
         pc,
         buffSize);
+}
+
+std::wstring getCleanUsername(const std::wstring username, const std::wstring domain)
+{
+    HRESULT hr = E_UNEXPECTED;
+
+    wchar_t fullname[1024];
+    wchar_t uname[1024];
+    wchar_t upn_name[1024];
+    wchar_t otp_name[1024];
+
+    PWSTR pszDefaultPrefix = L"";
+    PWSTR pszDomain = L"";
+    DWORD dwDefaultPrefixSize = 0;
+    DWORD dwDomainSize = 0;
+
+    PWSTR strNetBiosDomainName = L"";
+
+    BOOLEAN rc;
+
+    dwDefaultPrefixSize = readRegistryValueString(CONF_DEFAULT_PREFIX, &pszDefaultPrefix, L"");
+    dwDomainSize = readRegistryValueString(CONF_DOMAIN_NAME, &pszDomain, L"");
+
+    const wchar_t* pchWhack = wcschr(username.c_str(), L'\\');
+    const wchar_t* pchWatSign = wcschr(username.c_str(), L'@');
+
+    // S'il y a un domain prefix stock? dans la registry et qu'il ne contient pas de \\ ni de @
+    if ((dwDefaultPrefixSize > 1) && (pchWatSign == nullptr) && (pchWhack == nullptr)) {
+        wcscpy_s(fullname, 1024, pszDefaultPrefix); // Mettre le prefix dans la variable fullname
+        wcscat_s(fullname, 1024, L"\\"); // Ajouter un backslash
+        wcscat_s(fullname, 1024, username.c_str()); // Ajouter le nom d'utilisateur
+        // hr = SHStrDupW(fullname, &_pszQualifiedUserName);
+        pchWhack = wcschr(fullname, L'\\'); // Chercher s'il y a un backslash
+    }
+
+    // Est-ce que le domain est renseign? dans la base de registre tcpip de Windows (l'ordinateur est en domain)?
+    if (dwDomainSize > 1) {
+        DOMAIN_CONTROLLER_INFO* pDCI;
+        if (DsGetDcNameW(NULL, pszDomain, NULL, NULL, DS_IS_DNS_NAME | DS_RETURN_FLAT_NAME, &pDCI) == ERROR_SUCCESS) { // Est-ce possible de r?cup?rer le domaine ?
+            strNetBiosDomainName = pDCI->DomainName;
+            // Write flat domain name in the internal multiOTP Credential registry cache
+            writeRegistryValueString(CONF_FLAT_DOMAIN, strNetBiosDomainName);
+        }
+        else {
+            // Read flat domain name from the internal multiOTP Credential registry cache
+            readRegistryValueString(CONF_FLAT_DOMAIN, &strNetBiosDomainName, L"");
+        }
+    }
+    if ((dwDomainSize > 1) && (pchWatSign == nullptr) && (pchWhack == nullptr)) {
+        wcscpy_s(fullname, 1024, strNetBiosDomainName);
+        wcscat_s(fullname, 1024, L"\\");
+        wcscat_s(fullname, 1024, username.c_str());
+        pchWhack = wcschr(fullname, L'\\');
+    }
+
+    if (pchWatSign != nullptr) {
+        ULONG size = 1024;
+        wchar_t buffer[1024];
+        wcscpy_s(fullname, 1024, username.c_str());
+        wcscpy_s(upn_name, 1024, fullname);
+        rc = TranslateNameW(fullname, NameUserPrincipal, NameSamCompatible, buffer, &size); // NameDnsDomain should also work instead of NameSamCompatible (Engineering\JSmith)
+        if (rc) {
+            pchWhack = wcschr(buffer, L'\\');
+        }
+    }
+    else {
+        ULONG size = 1024;
+        wchar_t buffer[1024];
+        rc = TranslateNameW(fullname, NameSamCompatible, NameUserPrincipal, buffer, &size); // NameDnsDomain should also work instead of NameSamCompatible
+        if (rc) {
+            wcscpy_s(upn_name, 1024, buffer);
+        }
+        else {
+            // the domain controller is not available then create upn_name with the registry
+            wcscpy_s(upn_name, 1024, username.c_str());
+            wcscat_s(upn_name, 1024, L"@");
+            wcscat_s(upn_name, 1024, pszDomain);
+        }
+    }
+
+    if (pchWhack != nullptr) {
+        const wchar_t* pchUsernameBegin = pchWhack + 1;
+        hr = wcscpy_s(uname, 1024, pchUsernameBegin);
+    }
+    else {
+        hr = wcscpy_s(uname, 1024, fullname);
+    }
+
+    if (readRegistryValueInteger(CONF_UPN_FORMAT, 0)) {
+        return upn_name;
+    }
+    else {
+        return uname;
+    }
 }

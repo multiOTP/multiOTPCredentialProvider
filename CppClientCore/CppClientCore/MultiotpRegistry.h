@@ -2,10 +2,10 @@
  * multiOTP Credential Provider
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.8.4.0
- * @date      2021-11-18
+ * @version   5.8.7.0
+ * @date      2022-04-28
  * @since     2013
- * @copyright (c) 2016-2021 SysCo systemes de communication sa
+ * @copyright (c) 2016-2022 SysCo systemes de communication sa
  * @copyright (c) 2015-2016 ArcadeJust ("RDP only" enhancement)
  * @copyright (c) 2013-2015 Last Squirrel IT
  * @copyright Apache License, Version 2.0
@@ -35,27 +35,28 @@
 #include <winreg.h>
 #include <stdio.h>
 
-#define MULTIOTP_SETTINGS         L"CLSID\\"
-#define MULTIOTP_PATH             L"multiOTPPath"
-#define MULTIOTP_TIMEOUT          L"multiOTPTimeout"
-#define MULTIOTP_RDPONLY          L"multiOTPRDPOnly"
-#define MULTIOTP_PREFIX_PASSWORD  L"multiOTPPrefixPass"  // No more used
-#define MULTIOTP_DISPLAY_SMS_LINK L"multiOTPDisplaySmsLink"
-#define MULTIOTP_UPN_FORMAT       L"multiOTPUPNFormat"
-#define MULTIOTP_LOGIN_TITLE      L"multiOTPLoginTitle"
-#define MULTIOTP_CACHE_ENABLED    L"multiOTPCacheEnabled"
-#define MULTIOTP_SERVERS          L"multiOTPServers"
-#define MULTIOTP_SERVER_TIMEOUT   L"multiOTPServerTimeout"
-#define MULTIOTP_SHARED_SECRET    L"multiOTPSharedSecret"
-#define MULTIOTP_FLAT_DOMAIN      L"multiOTPFlatDomain"
-#define MULTIOTP_DEFAULT_PREFIX   L"multiOTPDefaultPrefix"
+#define MULTIOTP_SETTINGS           L"CLSID\\"
+#define MULTIOTP_PATH               L"multiOTPPath"
+#define MULTIOTP_TIMEOUT            L"multiOTPTimeout"
+#define MULTIOTP_RDPONLY            L"multiOTPRDPOnly"
+#define MULTIOTP_PREFIX_PASSWORD    L"multiOTPPrefixPass"  // No more used
+#define MULTIOTP_DISPLAY_SMS_LINK   L"multiOTPDisplaySmsLink"
+#define MULTIOTP_DISPLAY_EMAIL_LINK L"multiOTPDisplayEmailLink"
+#define MULTIOTP_UPN_FORMAT         L"multiOTPUPNFormat"
+#define MULTIOTP_LOGIN_TITLE        L"multiOTPLoginTitle"
+#define MULTIOTP_CACHE_ENABLED      L"multiOTPCacheEnabled"
+#define MULTIOTP_SERVERS            L"multiOTPServers"
+#define MULTIOTP_SERVER_TIMEOUT     L"multiOTPServerTimeout"
+#define MULTIOTP_SHARED_SECRET      L"multiOTPSharedSecret"
+#define MULTIOTP_FLAT_DOMAIN        L"multiOTPFlatDomain"
+#define MULTIOTP_DEFAULT_PREFIX     L"multiOTPDefaultPrefix"
 
-#define RDP_SETTINGS              L"SYSTEM\\CurrentControlSet\\Control\\Terminal Server\\WinStations\\RDP-Tcp"
-#define RDP_PORT                  L"PortNumber"
+#define RDP_SETTINGS                L"SYSTEM\\CurrentControlSet\\Control\\Terminal Server\\WinStations\\RDP-Tcp"
+#define RDP_PORT                    L"PortNumber"
 
-#define TCPIP_SETTINGS            L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters"
-#define TCPIP_DOMAIN              L"Domain"
-#define TCPIP_HOSTNAME            L"Hostname"
+#define TCPIP_SETTINGS              L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters"
+#define TCPIP_DOMAIN                L"Domain"
+#define TCPIP_HOSTNAME              L"Hostname"
 
 struct REGISTRY_KEY
 {
@@ -85,7 +86,10 @@ enum CONF_VALUE
 	CONF_DOMAIN_NAME = 14,
 	CONF_HOST_NAME = 15,
 
-	CONF_NUM_VALUES = 16,
+	CONF_DISPLAY_EMAIL_LINK = 16,
+
+	CONF_NUM_VALUES = 17
+	
 };
 
 static const REGISTRY_KEY s_CONF_VALUES[] =
@@ -103,11 +107,10 @@ static const REGISTRY_KEY s_CONF_VALUES[] =
 	{ HKEY_CLASSES_ROOT, MULTIOTP_SETTINGS, MULTIOTP_SHARED_SECRET },
 	{ HKEY_CLASSES_ROOT, MULTIOTP_SETTINGS, MULTIOTP_FLAT_DOMAIN },
 	{ HKEY_CLASSES_ROOT, MULTIOTP_SETTINGS, MULTIOTP_DEFAULT_PREFIX },
-
 	{ HKEY_LOCAL_MACHINE, RDP_SETTINGS, RDP_PORT },
-
 	{ HKEY_LOCAL_MACHINE, TCPIP_SETTINGS, TCPIP_DOMAIN },
 	{ HKEY_LOCAL_MACHINE, TCPIP_SETTINGS, TCPIP_HOSTNAME },
+	{ HKEY_CLASSES_ROOT, MULTIOTP_SETTINGS, MULTIOTP_DISPLAY_EMAIL_LINK },
 };
 
 VOID writeRegistryValueString(_In_ CONF_VALUE conf_value, _In_ PWSTR writeValue);

@@ -1,7 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * *
 **
 ** Copyright 2019 NetKnights GmbH
-**           2020-2021 SysCo systemes de communication sa
+**           2020-2022 SysCo systemes de communication sa
 ** Author: Nils Behlen
 **         Yann Jeanrenaud, Andre Liechti
 **

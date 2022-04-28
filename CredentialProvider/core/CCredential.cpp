@@ -2,7 +2,7 @@
 **
 ** Copyright	2012 Dominik Pretzsch
 **				2017 NetKnights GmbH
-**				2020-2021 SysCo systemes de communication sa
+**				2020-2022 SysCo systemes de communication sa
 **
 ** Author		Dominik Pretzsch
 **				Nils Behlen
@@ -528,7 +528,12 @@ HRESULT CCredential::CommandLinkClicked(__in DWORD dwFieldID)
 	{
 	   case FID_REQUIRE_SMS:
 		   if(_pCredProvCredentialEvents) {
-			   return multiotp_request(_config->credential.username, L"", L"sms");
+			   return multiotp_request(getCleanUsername(_config->credential.username, _config->credential.domain), L"", L"sms");
+		   }
+		   break;
+	   case FID_REQUIRE_EMAIL:
+		   if (_pCredProvCredentialEvents) {
+			   return multiotp_request(getCleanUsername(_config->credential.username, _config->credential.domain), L"", L"email");
 		   }
 		   break;
 	   default:

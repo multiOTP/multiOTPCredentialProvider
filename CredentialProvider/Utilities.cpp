@@ -436,6 +436,14 @@ HRESULT Utilities::SetScenario(
 		pCPCE->SetFieldState(pCredential, FID_REQUIRE_SMS, CPFS_HIDDEN);
 	}
 
+	// Display or not the "Receive an OTP by EMAIL" link
+	if (readRegistryValueInteger(CONF_DISPLAY_EMAIL_LINK, 0)) {
+		pCPCE->SetFieldState(pCredential, FID_REQUIRE_EMAIL, CPFS_DISPLAY_IN_SELECTED_TILE);
+	}
+	else {
+		pCPCE->SetFieldState(pCredential, FID_REQUIRE_EMAIL, CPFS_HIDDEN);
+	}
+
 	return hr;
 }
 
@@ -608,6 +616,9 @@ HRESULT Utilities::InitializeField(
 		break;
 	case FID_REQUIRE_SMS:
 		hr = SHStrDupW(L"Receive an OTP by SMS", &rgFieldStrings[field_index]);
+		break;
+	case FID_REQUIRE_EMAIL:
+		hr = SHStrDupW(L"Receive an OTP by E-MAIL", &rgFieldStrings[field_index]);
 		break;
 	default:
 		hr = SHStrDupW(L"", &rgFieldStrings[field_index]);

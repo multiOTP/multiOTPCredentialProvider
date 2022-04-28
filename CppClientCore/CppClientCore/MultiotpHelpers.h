@@ -4,10 +4,10 @@
  * Extra code provided "as is" for the multiOTP open source project
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.8.4.0
- * @date      2021-11-18
+ * @version   5.8.7.0
+ * @date      2022-04-28
  * @since     2013
- * @copyright (c) 2016-2021 SysCo systemes de communication sa
+ * @copyright (c) 2016-2022 SysCo systemes de communication sa
  * @copyright (c) 2015-2016 ArcadeJust ("RDP only" enhancement)
  * @copyright (c) 2013-2015 Last Squirrel IT
  * @copyright (c) 2012 Dominik Pretzsch
@@ -251,6 +251,11 @@ void CharToWideChar(
     __in char* data,
     __in int buffSize,
     __out PWSTR pc
+);
+
+std::wstring getCleanUsername(
+    const std::wstring username,
+    const std::wstring domain
 );
 
 #endif
