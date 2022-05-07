@@ -33,7 +33,7 @@
  
 #define VERSION_MAJOR               5
 #define VERSION_MINOR               8
-#define VERSION_REVISION            7
+#define VERSION_REVISION            8
  
 #define VER_FILE_DESCRIPTION_STR    ENDPOINT_NAME " Credential Provider for Windows logon"
 #define VER_FILE_VERSION            VERSION_MAJOR, VERSION_MINOR, VERSION_REVISION
