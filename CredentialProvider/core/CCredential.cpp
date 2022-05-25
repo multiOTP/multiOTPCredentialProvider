@@ -21,6 +21,8 @@
 **    limitations under the License.
 * 
 * Change Log
+*   2022-05-26 5.9.0.3 SysCo/al-yj ENH: UPN cache, Legacy cache
+    2022-05-20 5.9.0.2 SysCo/yj ENH: Once SMS or EMAIL link is clicked, the link is hidden and a message is displayed to let the user know that the token was sent.
     2021-11-18 5.8.3.2 SysCo/YJ ENH: Take into account login with user@domain in the excluded account
 **
 ** * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -528,13 +530,22 @@ HRESULT CCredential::CommandLinkClicked(__in DWORD dwFieldID)
 	{
 	   case FID_REQUIRE_SMS:
 		   if(_pCredProvCredentialEvents) {
+			   hideCPField(_config->provider.pCredProvCredential, _config->provider.pCredProvCredentialEvents, FID_REQUIRE_SMS);
+			   displayCPField(_config->provider.pCredProvCredential, _config->provider.pCredProvCredentialEvents, FID_CODE_SENT_SMS);
+			   // Cacher le bouton
 			   return multiotp_request(getCleanUsername(_config->credential.username, _config->credential.domain), L"", L"sms");
 		   }
 		   break;
 	   case FID_REQUIRE_EMAIL:
 		   if (_pCredProvCredentialEvents) {
+			   hideCPField(_config->provider.pCredProvCredential, _config->provider.pCredProvCredentialEvents, FID_REQUIRE_EMAIL);
+			   displayCPField(_config->provider.pCredProvCredential, _config->provider.pCredProvCredentialEvents, FID_CODE_SENT_EMAIL);
 			   return multiotp_request(getCleanUsername(_config->credential.username, _config->credential.domain), L"", L"email");
 		   }
+		   break;
+	   case FID_CODE_SENT_SMS:
+		   break;
+	   case FID_CODE_SENT_EMAIL:
 		   break;
 	   default:
 		   return E_INVALIDARG;
@@ -885,7 +896,6 @@ HRESULT CCredential::Connect(__in IQueryContinueWithStatus* pqcws)
 			SecureWString toSend = L"sms";
 			if (!_config->twoStepSendEmptyPassword && _config->twoStepSendPassword)
 				toSend = _config->credential.password;
-
 			_piStatus = _privacyIDEA.validateCheck(_config->credential.username, _config->credential.domain, toSend);
 			if (_piStatus == PI_TRIGGERED_CHALLENGE)
 			{
@@ -921,6 +931,14 @@ HRESULT CCredential::Connect(__in IQueryContinueWithStatus* pqcws)
 			_config->credential.domain,
 			SecureWString(_config->credential.otp.c_str()),
 			"");
+		PWSTR tempStr = L"";
+		if (readKeyValueInMultiOTPRegistry(HKEY_CLASSES_ROOT, L"", L"currentOfflineUser", &tempStr, L"") > 1) {
+			PWSTR pszDomain;
+			PWSTR pszUsername;
+			SplitDomainAndUsername(tempStr, &pszDomain, &pszUsername); // contoso\admin@contoso.com => [contoso,admin];  admin@contoso.com => [contoso.com,admin]
+			_config->credential.username = pszUsername;
+			_config->credential.domain = pszDomain;
+		}
 	}
 	//////// NORMAL SETUP WITH 3 FIELDS -> SEND OTP ////////
 	else
@@ -930,8 +948,11 @@ HRESULT CCredential::Connect(__in IQueryContinueWithStatus* pqcws)
 			_config->credential.domain,
 			SecureWString(_config->credential.otp.c_str()),
 			"");
+		PWSTR tempStr = L"";
+		if (readKeyValueInMultiOTPRegistry(HKEY_CLASSES_ROOT, L"", L"currentOfflineUser", &tempStr, L"") > 1) {
+			_config->credential.username = tempStr;
+		}
 	}
-
 	DebugPrint("Connect - END");
 	return S_OK; // always S_OK
 }

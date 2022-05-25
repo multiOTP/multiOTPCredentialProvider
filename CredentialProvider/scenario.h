@@ -15,7 +15,9 @@ enum FIELD_ID
 	FID_SUBTEXT = 9,
 	FID_REQUIRE_SMS = 10,
 	FID_REQUIRE_EMAIL = 11,
-	FID_NUM_FIELDS = 12	
+	FID_CODE_SENT_SMS = 12,
+	FID_CODE_SENT_EMAIL = 13,
+	FID_NUM_FIELDS = 14	
 };
 
 // The first value indicates when the tile is displayed (selected, not selected)
@@ -48,6 +50,8 @@ static const FIELD_STATE_PAIR s_rgScenarioDisplayAllFields[] =
 	{ CPFS_DISPLAY_IN_SELECTED_TILE, CPFIS_NONE },			// FID_SUBTEXT
 	{ CPFS_DISPLAY_IN_SELECTED_TILE, CPFIS_NONE},           // FID_REQUIRE_SMS
 	{ CPFS_DISPLAY_IN_SELECTED_TILE, CPFIS_NONE},           // FID_REQUIRE_EMAIL
+	{ CPFS_DISPLAY_IN_SELECTED_TILE, CPFIS_NONE},           // FID_CODE_SENT_SMS
+	{ CPFS_DISPLAY_IN_SELECTED_TILE, CPFIS_NONE},           // FID_CODE_SENT_EMAIL
 };
 
 static const FIELD_STATE_PAIR s_rgScenarioUnlockPasswordOTP[] =
@@ -64,6 +68,8 @@ static const FIELD_STATE_PAIR s_rgScenarioUnlockPasswordOTP[] =
 	{ CPFS_DISPLAY_IN_SELECTED_TILE, CPFIS_NONE },			// FID_SUBTEXT
 	{ CPFS_DISPLAY_IN_SELECTED_TILE, CPFIS_NONE},           // FID_REQUIRE_SMS
 	{ CPFS_DISPLAY_IN_SELECTED_TILE, CPFIS_NONE},           // FID_REQUIRE_EMAIL
+	{ CPFS_DISPLAY_IN_SELECTED_TILE, CPFIS_NONE},           // FID_CODE_SENT_SMS
+	{ CPFS_DISPLAY_IN_SELECTED_TILE, CPFIS_NONE},           // FID_CODE_SENT_EMAIL
 };
 
 static const FIELD_STATE_PAIR s_rgScenarioSecondStepOTP[] =
@@ -80,6 +86,8 @@ static const FIELD_STATE_PAIR s_rgScenarioSecondStepOTP[] =
 	{ CPFS_DISPLAY_IN_SELECTED_TILE, CPFIS_NONE },			// FID_SUBTEXT
 	{ CPFS_DISPLAY_IN_SELECTED_TILE, CPFIS_NONE},           // FID_REQUIRE_SMS
 	{ CPFS_DISPLAY_IN_SELECTED_TILE, CPFIS_NONE},           // FID_REQUIRE_EMAIL
+	{ CPFS_DISPLAY_IN_SELECTED_TILE, CPFIS_NONE},           // FID_CODE_SENT_SMS
+	{ CPFS_DISPLAY_IN_SELECTED_TILE, CPFIS_NONE},           // FID_CODE_SENT_EMAIL
 };
 
 static const FIELD_STATE_PAIR s_rgScenarioLogonFirstStepUserLDAP[] =
@@ -96,6 +104,8 @@ static const FIELD_STATE_PAIR s_rgScenarioLogonFirstStepUserLDAP[] =
 	{ CPFS_DISPLAY_IN_SELECTED_TILE, CPFIS_NONE },			// FID_SUBTEXT
 	{ CPFS_HIDDEN, CPFIS_NONE},                             // FID_REQUIRE_SMS
 	{ CPFS_HIDDEN, CPFIS_NONE},                             // FID_REQUIRE_EMAIL
+	{ CPFS_HIDDEN, CPFIS_NONE},                             // FID_CODE_SENT_SMS
+	{ CPFS_HIDDEN, CPFIS_NONE},                             // FID_CODE_SENT_EMAIL
 };
 
 // Show all 3 fields for password change
@@ -113,6 +123,8 @@ static const FIELD_STATE_PAIR s_rgScenarioPasswordChange[] =
 	{ CPFS_DISPLAY_IN_SELECTED_TILE, CPFIS_NONE },			// FID_SUBTEXT
 	{ CPFS_HIDDEN, CPFIS_NONE},                             // FID_REQUIRE_SMS
 	{ CPFS_HIDDEN, CPFIS_NONE},                             // FID_REQUIRE_EMAIL
+	{ CPFS_HIDDEN, CPFIS_NONE},                             // FID_CODE_SENT_SMS
+	{ CPFS_HIDDEN, CPFIS_NONE},                             // FID_CODE_SENT_EMAIL
 };
 
 static const FIELD_STATE_PAIR s_rgScenarioUnlockFirstStepPassword[] =
@@ -129,6 +141,8 @@ static const FIELD_STATE_PAIR s_rgScenarioUnlockFirstStepPassword[] =
 	{ CPFS_DISPLAY_IN_SELECTED_TILE, CPFIS_NONE },			// FID_SUBTEXT
 	{ CPFS_HIDDEN, CPFIS_NONE },                            // FID_REQUIRE_SMS
 	{ CPFS_HIDDEN, CPFIS_NONE },                            // FID_REQUIRE_EMAIL
+	{ CPFS_HIDDEN, CPFIS_NONE},                             // FID_CODE_SENT_SMS
+	{ CPFS_HIDDEN, CPFIS_NONE},                             // FID_CODE_SENT_EMAIL
 };
 
 // Field descriptors for unlock and logon.
@@ -149,4 +163,6 @@ static CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR s_rgScenarioCredProvFieldDescriptors
 	{ FID_SUBTEXT, CPFT_SMALL_TEXT, L"Sign in to: "},
 	{ FID_REQUIRE_SMS, CPFT_COMMAND_LINK,  L"Receive an OTP by SMS"},
 	{ FID_REQUIRE_EMAIL, CPFT_COMMAND_LINK,  L"Receive an OTP by E-MAIL"},
+	{ FID_CODE_SENT_SMS, CPFT_COMMAND_LINK,  L"OTP token sent by SMS"},
+	{ FID_CODE_SENT_EMAIL, CPFT_COMMAND_LINK,  L"OTP token sent by EMAIL"},
 };

@@ -4,8 +4,8 @@
  * Extra code provided "as is" for the multiOTP open source project
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.8.8.0
- * @date      2022-05-06
+ * @version   5.9.0.3
+ * @date      2022-05-26
  * @since     2013
  * @copyright (c) 2016-2022 SysCo systemes de communication sa
  * @copyright (c) 2015-2016 ArcadeJust ("RDP only" enhancement)
@@ -17,6 +17,8 @@
  *
  * Change Log
  *
+ *   2022-05-20 5.9.0.2 SysCo/yj ENH: Once SMS or EMAIL link is clicked, the link is hidden and a message is displayed to let the user know that the token was sent
+ *   2022-05-20 5.9.0.2 SysCo/yj FIX: When active directory server is available UPN username is stored in the registry UPNcache
  *   2020-08-31 5.8.0.0 SysCo/al ENH: Retarget to the last SDK 10.0.19041.1
  *   2019-12-20 5.6.2.0 SysCo/al ENH: Files reorganization.
  *                               ENH: "Change password on login" support
@@ -257,5 +259,8 @@ std::wstring getCleanUsername(
     const std::wstring username,
     const std::wstring domain
 );
+
+HRESULT hideCPField(__in ICredentialProviderCredential* self, __in ICredentialProviderCredentialEvents* pCPCE, __in DWORD fieldId);
+HRESULT displayCPField(__in ICredentialProviderCredential* self, __in ICredentialProviderCredentialEvents* pCPCE, __in DWORD fieldId);
 
 #endif

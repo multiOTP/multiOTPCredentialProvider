@@ -4,8 +4,8 @@
  * Extra code provided "as is" for the multiOTP open source project
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.8.8.0
- * @date      2022-05-06
+ * @version   5.9.0.3
+ * @date      2022-05-26
  * @since     2013
  * @copyright (c) 2016-2022 SysCo systemes de communication sa
  * @copyright (c) 2015-2016 ArcadeJust ("RDP only" enhancement)
@@ -17,6 +17,8 @@
  *
  * Change Log
  *
+ *   2022-05-20 5.9.0.2 SysCo/yj ENH: Once SMS or EMAIL link is clicked, the link is hidden and a message is displayed to let the user know that the token was sent.
+ *   2022-05-20 5.9.0.2 SysCo/yj FIX: When active directory server is available UPN username is stored in the registry UPNcache
  *   2020-08-31 5.8.0.0 SysCo/al ENH: Retarget to the last SDK 10.0.19041.1
  *   2019-12-20 5.6.2.0 SysCo/al ENH: Files reorganization.
  *                               ENH: "Change password on login" support
@@ -1502,6 +1504,7 @@ std::wstring getCleanUsername(const std::wstring username, const std::wstring do
 
     wchar_t fullname[1024];
     wchar_t uname[1024];
+    wchar_t legacyname[1024];
     wchar_t upn_name[1024];
     wchar_t otp_name[1024];
 
@@ -1517,16 +1520,18 @@ std::wstring getCleanUsername(const std::wstring username, const std::wstring do
     dwDefaultPrefixSize = readRegistryValueString(CONF_DEFAULT_PREFIX, &pszDefaultPrefix, L"");
     dwDomainSize = readRegistryValueString(CONF_DOMAIN_NAME, &pszDomain, L"");
 
-    const wchar_t* pchWhack = wcschr(username.c_str(), L'\\');
-    const wchar_t* pchWatSign = wcschr(username.c_str(), L'@');
+    const wchar_t* pchWhack = wcschr(username.c_str(), L'\\'); // retourne un pointeur vers la premi?re occurence du backslahs Recherche s'il y a un backslahs
+    const wchar_t* pchWatSign = wcschr(username.c_str(), L'@'); // retourne un pointeur vers la premi?re occurence du @ Recherche s'il y a un @
 
-    // S'il y a un domain prefix stock? dans la registry et qu'il ne contient pas de \\ ni de @
+    // S'il y a un domain prefix stock? dans la registry et le nom d'utilisateur ne contient pas de \\ ni de @ (Pour forcer le login en local ou dans un domaine particulier)
     if ((dwDefaultPrefixSize > 1) && (pchWatSign == nullptr) && (pchWhack == nullptr)) {
         wcscpy_s(fullname, 1024, pszDefaultPrefix); // Mettre le prefix dans la variable fullname
         wcscat_s(fullname, 1024, L"\\"); // Ajouter un backslash
         wcscat_s(fullname, 1024, username.c_str()); // Ajouter le nom d'utilisateur
-        // hr = SHStrDupW(fullname, &_pszQualifiedUserName);
         pchWhack = wcschr(fullname, L'\\'); // Chercher s'il y a un backslash
+    }
+    else {
+        wcscpy_s(fullname, 1024, username.c_str()); // Mettre le prefix dans la variable fullname
     }
 
     // Est-ce que le domain est renseign? dans la base de registre tcpip de Windows (l'ordinateur est en domain)?
@@ -1542,36 +1547,102 @@ std::wstring getCleanUsername(const std::wstring username, const std::wstring do
             readRegistryValueString(CONF_FLAT_DOMAIN, &strNetBiosDomainName, L"");
         }
     }
+    else {
+        // DO Nothing
+    }
+
     if ((dwDomainSize > 1) && (pchWatSign == nullptr) && (pchWhack == nullptr)) {
         wcscpy_s(fullname, 1024, strNetBiosDomainName);
         wcscat_s(fullname, 1024, L"\\");
         wcscat_s(fullname, 1024, username.c_str());
         pchWhack = wcschr(fullname, L'\\');
     }
+    else {
+        // Do nothing
+    }
+
+    writeKeyValueInMultiOTPRegistry(HKEY_CLASSES_ROOT, L"", L"currentOfflineUser", L"");
 
     if (pchWatSign != nullptr) {
         ULONG size = 1024;
         wchar_t buffer[1024];
         wcscpy_s(fullname, 1024, username.c_str());
         wcscpy_s(upn_name, 1024, fullname);
+
+        pchWhack = wcschr(fullname, L'\\');
+
         rc = TranslateNameW(fullname, NameUserPrincipal, NameSamCompatible, buffer, &size); // NameDnsDomain should also work instead of NameSamCompatible (Engineering\JSmith)
         if (rc) {
-            pchWhack = wcschr(buffer, L'\\');
+            // Store in the registry the Legacy returned by the AD server
+            writeKeyValueInMultiOTPRegistry(HKEY_CLASSES_ROOT, L"LEGACYcache", fullname, buffer);
+            if (readRegistryValueInteger(CONF_UPN_FORMAT, 0)) { // If we are in UPN mode we try to contact the AD server to check what is the UPN name
+                ULONG sizeTemp = 1024;
+                wchar_t bufferTemp[1024];
+                rc = TranslateNameW(buffer, NameSamCompatible, NameUserPrincipal, bufferTemp, &sizeTemp); // NameDnsDomain should also work instead of NameSamCompatible
+                if (rc) {
+                    wcscpy_s(upn_name, 1024, bufferTemp);
+                    // Store in the registry the UPN returned by the AD server
+                    writeKeyValueInMultiOTPRegistry(HKEY_CLASSES_ROOT, L"UPNcache", fullname, upn_name);
+                } else {
+                    // Do nothing
+                }
+            } else {
+                wcscpy_s(legacyname, 1024, buffer);
+                pchWhack = wcschr(legacyname, L'\\');
+            }
+        } else if(readRegistryValueInteger(CONF_UPN_FORMAT, 0))  { // If we are in UPN mode then search for the value in cache
+            // Search in registry UPNcache if there is a matching entry
+            PWSTR tempStr = L"";
+            if (readKeyValueInMultiOTPRegistry(HKEY_CLASSES_ROOT, L"UPNcache", fullname, &tempStr, L"") > 1) {
+                wcscpy_s(upn_name, 1024, tempStr);
+            }
+
+            if (readKeyValueInMultiOTPRegistry(HKEY_CLASSES_ROOT, L"LEGACYcache", fullname, &tempStr, L"") > 1) {
+                wcscpy_s(legacyname, 1024, tempStr);
+                pchWhack = wcschr(legacyname, L'\\');
+                writeKeyValueInMultiOTPRegistry(HKEY_CLASSES_ROOT, L"", L"currentOfflineUser", legacyname);
+            }
+        } else {
+            PWSTR tempStr = L"";
+            if (readKeyValueInMultiOTPRegistry(HKEY_CLASSES_ROOT, L"LEGACYcache", fullname, &tempStr, L"") >1) {
+                wcscpy_s(legacyname, 1024, tempStr);
+                pchWhack = wcschr(legacyname, L'\\');
+                writeKeyValueInMultiOTPRegistry(HKEY_CLASSES_ROOT, L"", L"currentOfflineUser", legacyname);
+            }
         }
-    }
-    else {
+    } else {
         ULONG size = 1024;
         wchar_t buffer[1024];
         rc = TranslateNameW(fullname, NameSamCompatible, NameUserPrincipal, buffer, &size); // NameDnsDomain should also work instead of NameSamCompatible
         if (rc) {
             wcscpy_s(upn_name, 1024, buffer);
+            // Store in the registry the UPN returned by the AD server
+            if (readRegistryValueInteger(CONF_UPN_FORMAT, 0)) {
+                writeKeyValueInMultiOTPRegistry(HKEY_CLASSES_ROOT, L"UPNcache", fullname, upn_name);
+            }
+            else {
+                // Do Nothing
+            }
         }
         else {
-            // the domain controller is not available then create upn_name with the registry
-            wcscpy_s(upn_name, 1024, username.c_str());
-            wcscat_s(upn_name, 1024, L"@");
-            wcscat_s(upn_name, 1024, pszDomain);
-            wcscpy_s(fullname, 1024, username.c_str());
+            // Search in registry UPNcache if there is a matching entry
+            if (readRegistryValueInteger(CONF_UPN_FORMAT, 0)) {
+                PWSTR temp = L"";
+                if (readKeyValueInMultiOTPRegistry(HKEY_CLASSES_ROOT, L"UPNcache", fullname, &temp, L"") > 1) {
+                    // The domain controller is not available but there is a entry in the UPN cache then create upn_name with this cache
+                    wcscpy_s(upn_name, 1024, temp);
+                } else {
+                    wcscpy_s(upn_name, 1024, username.c_str());
+                    wcscat_s(upn_name, 1024, L"@");
+                    wcscat_s(upn_name, 1024, pszDomain);
+                }
+                wcscpy_s(fullname, 1024, username.c_str());
+            } else {
+                // The domain controller is not available then create upn_name with the registry
+                wcscpy_s(uname, 1024, username.c_str());
+                wcscat_s(uname, 1024, L"@");
+                wcscat_s(uname, 1024, pszDomain);
+            }
         }
     }
 
@@ -1589,4 +1660,45 @@ std::wstring getCleanUsername(const std::wstring username, const std::wstring do
     else {
         return uname;
     }
+}
+
+
+HRESULT hideCPField(__in ICredentialProviderCredential* self, __in ICredentialProviderCredentialEvents* pCPCE, __in DWORD fieldId)
+{
+
+    HRESULT hr = S_OK;
+
+    if (!pCPCE || !self)
+    {
+        return E_INVALIDARG;
+    }
+
+    hr = pCPCE->SetFieldState(self, fieldId, CREDENTIAL_PROVIDER_FIELD_STATE::CPFS_HIDDEN);
+
+    if (SUCCEEDED(hr))
+    {
+        hr = pCPCE->SetFieldInteractiveState(self, fieldId, CREDENTIAL_PROVIDER_FIELD_INTERACTIVE_STATE::CPFIS_DISABLED);
+    }
+
+    return hr;
+}
+
+HRESULT displayCPField(__in ICredentialProviderCredential* self, __in ICredentialProviderCredentialEvents* pCPCE, __in DWORD fieldId)
+{
+
+    HRESULT hr = S_OK;
+
+    if (!pCPCE || !self)
+    {
+        return E_INVALIDARG;
+    }
+
+    hr = pCPCE->SetFieldState(self, fieldId, CREDENTIAL_PROVIDER_FIELD_STATE::CPFS_DISPLAY_IN_SELECTED_TILE);
+
+    if (SUCCEEDED(hr))
+    {
+        hr = pCPCE->SetFieldInteractiveState(self, fieldId, CREDENTIAL_PROVIDER_FIELD_INTERACTIVE_STATE::CPFIS_DISABLED);
+    }
+
+    return hr;
 }

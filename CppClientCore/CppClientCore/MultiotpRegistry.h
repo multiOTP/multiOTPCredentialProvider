@@ -2,8 +2,8 @@
  * multiOTP Credential Provider
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.8.8.0
- * @date      2022-05-06
+ * @version   5.9.0.3
+ * @date      2022-05-26
  * @since     2013
  * @copyright (c) 2016-2022 SysCo systemes de communication sa
  * @copyright (c) 2015-2016 ArcadeJust ("RDP only" enhancement)
@@ -13,6 +13,7 @@
  *
  * Change Log
  *
+ *   2022-05-20 5.9.0.2 SysCo/yj ENH: Added two method to be able to read and write in a subkey of the multiOTP Settings. When active directory server is available UPN username is stored in the sub-key UPNcache
  *   2020-08-31 5.8.0.0 SysCo/al ENH: Retarget to the last SDK 10.0.19041.1
  *   2019-10-23 5.6.1.5 SysCo/al FIX: Prefix password parameter was buggy (better handling of parameters in debug mode)
  *                               FIX: swprintf_s problem with special chars (thanks to anekix)
@@ -112,7 +113,8 @@ static const REGISTRY_KEY s_CONF_VALUES[] =
 	{ HKEY_LOCAL_MACHINE, TCPIP_SETTINGS, TCPIP_HOSTNAME },
 	{ HKEY_CLASSES_ROOT, MULTIOTP_SETTINGS, MULTIOTP_DISPLAY_EMAIL_LINK },
 };
-
+VOID writeKeyValueInMultiOTPRegistry(_In_ HKEY rootKeyValue, _In_ PWSTR keyName, _In_ PWSTR valueName, _In_ PWSTR writeValue);
 VOID writeRegistryValueString(_In_ CONF_VALUE conf_value, _In_ PWSTR writeValue);
 DWORD readRegistryValueString(_In_ CONF_VALUE conf_value, _Outptr_result_nullonfailure_ PWSTR* data, _In_ PWSTR defaultValue);
 DWORD readRegistryValueInteger(_In_ CONF_VALUE conf_value, _In_ DWORD defaultValue);
+DWORD readKeyValueInMultiOTPRegistry(_In_ HKEY rootKeyValue, _In_ PWSTR keyName, _In_ PWSTR valueName, _Outptr_result_nullonfailure_ PWSTR* data, _In_ PWSTR defaultValue);

@@ -444,6 +444,12 @@ HRESULT Utilities::SetScenario(
 		pCPCE->SetFieldState(pCredential, FID_REQUIRE_EMAIL, CPFS_HIDDEN);
 	}
 
+	// Display or not the "OTP sent by SMS"
+	pCPCE->SetFieldState(pCredential, FID_CODE_SENT_SMS, CPFS_HIDDEN);
+	// Display or not the "OTP sent by Email"
+	pCPCE->SetFieldState(pCredential, FID_CODE_SENT_EMAIL, CPFS_HIDDEN);
+	
+
 	return hr;
 }
 
@@ -619,6 +625,12 @@ HRESULT Utilities::InitializeField(
 		break;
 	case FID_REQUIRE_EMAIL:
 		hr = SHStrDupW(L"Receive an OTP by E-MAIL", &rgFieldStrings[field_index]);
+		break;
+	case FID_CODE_SENT_SMS:
+		hr = SHStrDupW(L"OTP token sent by SMS", &rgFieldStrings[field_index]);
+		break;
+	case FID_CODE_SENT_EMAIL:
+		hr = SHStrDupW(L"OTP token sent by EMAIL", &rgFieldStrings[field_index]);
 		break;
 	default:
 		hr = SHStrDupW(L"", &rgFieldStrings[field_index]);

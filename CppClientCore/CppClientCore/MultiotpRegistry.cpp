@@ -2,8 +2,8 @@
  * multiOTP Credential Provider
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.8.8.0
- * @date      2022-05-06
+ * @version   5.9.0.3
+ * @date      2022-05-26
  * @since     2013
  * @copyright (c) 2016-2022 SysCo systemes de communication sa
  * @copyright (c) 2015-2016 ArcadeJust ("RDP only" enhancement)
@@ -13,6 +13,7 @@
  *
  * Change Log
  *
+ *   2022-05-20 5.9.0.2 SysCo/yj ENH: Added two method to be able to read and write in a subkey of the multiOTP Settings. When active directory server is available UPN username is stored in the sub-key UPNcache
  *   2020-08-31 5.8.0.0 SysCo/al ENH: Retarget to the last SDK 10.0.19041.1
  *   2019-10-23 5.6.1.5 SysCo/al FIX: Prefix password parameter was buggy (better handling of parameters in debug mode)
  *                               FIX: swprintf_s problem with special chars (thanks to anekix)
@@ -32,6 +33,45 @@
 #include "MultiotpRegistry.h"
 #include "guid.h"
 #include "MultiotpHelpers.h"
+
+VOID writeKeyValueInMultiOTPRegistry(_In_ HKEY rootKeyValue, _In_ PWSTR keyName, _In_ PWSTR valueName, _In_ PWSTR writeValue) {
+	HKEY regKey;
+	//	size_t len;
+	wchar_t confKeyNameCLSID[1024];
+	HRESULT hr;
+	PWSTR clsid;
+	hr = StringFromCLSID(CLSID_Multiotp, &clsid);
+	
+
+	if (hr == S_OK) {
+		if (DEVELOP_MODE) PrintLn(L"hr is OK");
+		wcscpy_s(confKeyNameCLSID, 1024, L"CLSID\\");
+		wcscat_s(confKeyNameCLSID, 1024, clsid);
+		if (keyName != L"") {
+			wcscat_s(confKeyNameCLSID, 1024, L"\\");
+			wcscat_s(confKeyNameCLSID, 1024, keyName);
+		}
+		if (DEVELOP_MODE) PrintLn(L"confKeyNameCLSID is ", confKeyNameCLSID);
+		CoTaskMemFree(clsid); //not needed
+		if (DEVELOP_MODE) PrintLn(L"Writing REGISTRY Key: ", confKeyNameCLSID, L"\\", valueName);
+
+		// Check if the registry key confKeyNameCLSID exists otherwise create it
+		LONG result = ::RegCreateKeyExW(rootKeyValue, confKeyNameCLSID, 0, L"REG_SZ", REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE | KEY_SET_VALUE, NULL, &regKey, NULL);
+
+		if (result == ERROR_SUCCESS) {
+			result = ::RegSetValueEx(
+				regKey,
+				valueName,
+				0,
+				REG_SZ,
+				(const BYTE*)writeValue,
+				sizeof(wchar_t) * (1 + (DWORD)wcslen(writeValue)));
+		}
+	}
+	else {
+		if (DEVELOP_MODE) PrintLn(L"hr is KO");
+	}
+}
 
 VOID writeRegistryValueString(_In_ CONF_VALUE conf_value, _In_ PWSTR writeValue) {
 	HKEY regKey;
@@ -68,6 +108,73 @@ VOID writeRegistryValueString(_In_ CONF_VALUE conf_value, _In_ PWSTR writeValue)
 	}
 }
 
+DWORD readKeyValueInMultiOTPRegistry(_In_ HKEY rootKeyValue, _In_ PWSTR keyName, _In_ PWSTR valueName, _Outptr_result_nullonfailure_ PWSTR* data, _In_ PWSTR defaultValue) {
+	DWORD dwSize = 0;
+	//	size_t len;
+	wchar_t confKeyNameCLSID[1024];
+	HRESULT hr;
+	PWSTR clsid;
+
+	*data = nullptr;
+
+	hr = StringFromCLSID(CLSID_Multiotp, &clsid);
+
+	if (hr == S_OK) {
+		wcscpy_s(confKeyNameCLSID, 1024, L"CLSID\\");
+		wcscat_s(confKeyNameCLSID, 1024, clsid);
+		if (keyName != L"") {
+			wcscat_s(confKeyNameCLSID, 1024, L"\\");
+			wcscat_s(confKeyNameCLSID, 1024, keyName);
+		}
+
+		CoTaskMemFree(clsid);//not needed
+
+		if (DEVELOP_MODE) PrintLn(L"Reading REGISTRY Key: ", confKeyNameCLSID, L"\\", valueName);
+
+		DWORD keyType = 0;
+		DWORD dataSize = 0;
+		const DWORD flags = RRF_RT_REG_SZ; // Only read strings (REG_SZ)
+		LONG result = ::RegGetValue(
+			rootKeyValue,
+			confKeyNameCLSID,
+			valueName,
+			flags,
+			&keyType,
+			nullptr,    // pvData == nullptr --> Request buffer size for string
+			&dataSize);
+		if ((result == ERROR_SUCCESS) && (keyType == REG_SZ)) {
+			//reserve read return
+			*data = (PWSTR)CoTaskMemAlloc(dataSize);
+			result = ::RegGetValue(
+				rootKeyValue,
+				confKeyNameCLSID,
+				valueName,
+				flags,
+				nullptr,
+				*data, // Write string in this destination buffer
+				&dataSize);
+			if (result == ERROR_SUCCESS) {
+				dwSize = dataSize / sizeof(WCHAR);
+				if (DEVELOP_MODE) PrintLn("Len %d", dataSize);
+				return dwSize;
+			}
+			else {
+				CoTaskMemFree(*data);
+				*data = nullptr;
+				dwSize = 0;
+			}
+		}
+		else {
+			/* https://msdn.microsoft.com/en-us/library/windows/desktop/ms681381(v=vs.85).aspx */
+			if (DEVELOP_MODE) PrintLn("ReadRegistryValue: System Error Code ( %d )", result);
+		}
+	}
+
+	dwSize = DWORD(wcslen(defaultValue));
+	*data = (PWSTR)CoTaskMemAlloc(sizeof(wchar_t) * (dwSize + 1));
+	wcscpy_s(*data, 1024, defaultValue);
+	return dwSize;
+}
 
 DWORD readRegistryValueString(_In_ CONF_VALUE conf_value, _Outptr_result_nullonfailure_ PWSTR* data, _In_ PWSTR defaultValue) {
 	HKEY rootKeyValue = s_CONF_VALUES[conf_value].ROOT_KEY;
