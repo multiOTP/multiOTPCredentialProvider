@@ -7,7 +7,7 @@ multiOTP Credential Provider for multiOTP is a free and open source implementati
 (c) 2015-2016 ArcadeJust ("RDP only" enhancement)  
 (c) 2013-2015 Last Squirrel IT  
 
-Current build: 5.9.0.3 (2022-05-26)  
+Current build: 5.9.1.0 (2022-06-17)  
 
 The binary download page is available here : https://download.multiotp.net/credential-provider/ (download link are at the bottom of the page)
 
@@ -172,6 +172,9 @@ Report if you have any problems or questions regarding this app.
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
+
+2022-06-17 5.9.1.0 ENH: Added FastUserSwitching inactivation during wizard (to fix unlock issue)
+                   ENH: Last connected user available
 2022-05-26 5.9.0.3 ENH: UPN and Lecagy cache handling when the domain controller is not reachable
                    ENH: Better UPN account handling when the domain controller is not reachable
                    ENH: Once SMS or EMAIL link is clicked, the link is hidden and a message
