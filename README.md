@@ -174,7 +174,6 @@ CHANGE LOG OF RELEASED VERSIONS
 ```
 
 2022-06-17 5.9.1.0 ENH: Added FastUserSwitching inactivation during wizard (to fix unlock issue)
-                   ENH: Last connected user available
 2022-05-26 5.9.0.3 ENH: UPN and Lecagy cache handling when the domain controller is not reachable
                    ENH: Better UPN account handling when the domain controller is not reachable
                    ENH: Once SMS or EMAIL link is clicked, the link is hidden and a message
