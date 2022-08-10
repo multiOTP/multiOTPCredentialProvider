@@ -4,8 +4,8 @@
  * Extra code provided "as is" for the multiOTP open source project
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.1.0
- * @date      2022-06-17
+ * @version   5.9.2.1
+ * @date      2022-08-10
  * @since     2013
  * @copyright (c) 2016-2022 SysCo systemes de communication sa
  * @copyright (c) 2015-2016 ArcadeJust ("RDP only" enhancement)
@@ -1700,5 +1700,167 @@ HRESULT displayCPField(__in ICredentialProviderCredential* self, __in ICredentia
         hr = pCPCE->SetFieldInteractiveState(self, fieldId, CREDENTIAL_PROVIDER_FIELD_INTERACTIVE_STATE::CPFIS_DISABLED);
     }
 
+    return hr;
+}
+
+
+int minutesSinceEpoch() {
+    std::time_t seconds = std::time(nullptr);
+    return seconds/60;
+}
+
+HRESULT multiotp_request_command(_In_ std::wstring command, _In_ std::wstring params)
+{
+    HRESULT hr = E_NOTIMPL;
+    STARTUPINFO si;
+    PROCESS_INFORMATION pi;
+    BOOL bSuccess = FALSE;
+    // Create a pipe for the redirection of the STDOUT 
+    // of a child process. 
+    HANDLE g_hChildStd_OUT_Rd = NULL;
+    HANDLE g_hChildStd_OUT_Wr = NULL;
+    SECURITY_ATTRIBUTES saAttr;
+
+    DWORD exitCode;
+    wchar_t cmd[2048];
+    wchar_t options[2048];
+    size_t len;
+    PWSTR path;
+    
+    // Set the params
+    wcscpy_s(cmd, 2048, params.c_str());
+    wcscat_s(cmd, 2048, L" ");
+
+    // Credential provider mode
+    wcscat_s(cmd, 2048, L"-cp");
+    wcscat_s(cmd, 2048, L" ");
+
+    if (DEVELOP_MODE) {
+        wcscat_s(cmd, 2048, L"-debug");
+        wcscat_s(cmd, 2048, L" ");
+    }
+    len = wcslen(cmd);
+
+    if (DEVELOP_MODE) PrintLn("command len:%d", int(len));
+    if (DEVELOP_MODE) PrintLn(cmd);
+    
+    saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
+    saAttr.bInheritHandle = TRUE;
+    saAttr.lpSecurityDescriptor = NULL;
+    bSuccess = CreatePipe(&g_hChildStd_OUT_Rd, &g_hChildStd_OUT_Wr, &saAttr, 0);
+    if (bSuccess) {
+        bSuccess = SetHandleInformation(g_hChildStd_OUT_Rd, HANDLE_FLAG_INHERIT, 0);
+    }
+
+    SecureZeroMemory(&si, sizeof(si));
+    SecureZeroMemory(&pi, sizeof(pi));
+
+    si.cb = sizeof(si);
+
+    si.hStdError = g_hChildStd_OUT_Wr;
+    si.hStdOutput = g_hChildStd_OUT_Wr;
+    si.dwFlags |= STARTF_USESTDHANDLES;
+
+    hr = MULTIOTP_UNKNOWN_ERROR;
+
+
+    if (readRegistryValueString(CONF_PATH, &path, L"c:\\multiotp\\") > 1) {
+        DWORD timeout = 60;
+
+        timeout = readRegistryValueInteger(CONF_TIMEOUT, timeout);
+
+        DWORD server_timeout = 5;
+        DWORD server_cache_level = 1;
+        PWSTR shared_secret;
+        PWSTR servers;
+
+        server_timeout = readRegistryValueInteger(CONF_SERVER_TIMEOUT, server_timeout);
+        wchar_t server_timeout_string[1024];
+        _ultow_s(server_timeout, server_timeout_string, 10);
+        wcscpy_s(options, 2048, L"-server-timeout=");
+        wcscat_s(options, 2048, server_timeout_string);
+        wcscat_s(options, 2048, L" ");
+
+        server_cache_level = readRegistryValueInteger(CONF_CACHE_ENABLED, server_cache_level);
+        wchar_t server_cache_level_string[1024];
+        _ultow_s(server_cache_level, server_cache_level_string, 10);
+        wcscat_s(options, 2048, L"-server-cache-level=");
+        wcscat_s(options, 2048, server_cache_level_string);
+        wcscat_s(options, 2048, L" ");
+
+        if (readRegistryValueString(CONF_SERVERS, &servers, L"") > 1) {
+            wcscat_s(options, 2048, L"-server-url=");
+            wcscat_s(options, 2048, servers);
+            wcscat_s(options, 2048, L" ");
+        }
+
+        if (readRegistryValueString(CONF_SHARED_SECRET, &shared_secret, L"ClientServerSecret") > 1) {
+            wcscat_s(options, 2048, L"-server-secret=");
+            wcscat_s(options, 2048, shared_secret);
+            wcscat_s(options, 2048, L" ");
+        }
+
+        wcscat_s(options, 2048, cmd);
+
+        wchar_t appname[2048];
+
+        wcscpy_s(appname, 2048, L"\"");
+        wcscat_s(appname, 2048, path);
+        size_t npath = wcslen(appname);
+        if (appname[npath - 1] != '\\' && appname[npath - 1] != '/') {
+            appname[npath] = '\\';
+            appname[npath + 1] = '\0';
+        }
+        wcscat_s(appname, 2048, L"multiotp.exe");
+        wcscat_s(appname, 2048, L"\"");
+        wcscat_s(appname, 2048, L" ");
+        wcscat_s(appname, 2048, command.c_str());
+        wcscat_s(appname, 2048, L" ");
+        wcscat_s(appname, 2048, options);
+
+        if (DEVELOP_MODE) PrintLn(L"Calling ", appname);
+        if (DEVELOP_MODE) PrintLn(L"with options ", options);
+        // As argc 0 is the full filename itself, we use the lpCommandLine only 
+        if (::CreateProcessW(NULL, appname, NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, path, &si, &pi)) {
+
+            DWORD result = WaitForSingleObject(pi.hProcess, (timeout * 1000));
+
+            if (DEVELOP_MODE) PrintLn("WaitForSingleObject result: %d", result);
+
+            if (result == WAIT_OBJECT_0) {
+                GetExitCodeProcess(pi.hProcess, &exitCode);
+
+                if (DEVELOP_MODE) PrintLn("multiotp.exe Exit Code: %d", exitCode);
+
+                CloseHandle(pi.hProcess);
+                CloseHandle(pi.hThread);
+
+                // Read the data written to the pipe
+                DWORD bytesInPipe = 0;
+                bSuccess = TRUE;
+                while (bSuccess && (bytesInPipe == 0)) {
+                    bSuccess = PeekNamedPipe(g_hChildStd_OUT_Rd, NULL, 0, NULL, &bytesInPipe, NULL);
+                }
+                if (bytesInPipe != 0) {
+                    DWORD dwRead;
+                    CHAR* pipeContents = new CHAR[bytesInPipe];
+                    bSuccess = ReadFile(g_hChildStd_OUT_Rd, pipeContents, bytesInPipe, &dwRead, NULL);
+                    if (!(!bSuccess || dwRead == 0)) {
+                        std::stringstream stream(pipeContents);
+                        std::string str;
+                        while (getline(stream, str))
+                        {
+                            if (DEVELOP_MODE) PrintLn(CStringW(str.c_str()));
+                            if (str.find(MULTIOTP_CHECK) != std::string::npos) {
+                                if (DEVELOP_MODE) PrintLn("Executable string info detected!");
+                                hr = exitCode;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        CoTaskMemFree(path);
+    }
     return hr;
 }

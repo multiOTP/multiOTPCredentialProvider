@@ -1,3 +1,29 @@
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+**
+** Copyright	2012 Dominik Pretzsch
+**				2017 NetKnights GmbH
+**				2020-2022 SysCo systemes de communication sa
+**
+** Author		Dominik Pretzsch
+**				Nils Behlen
+**				Yann Jeanrenaud, Andre Liechti
+**
+**    Licensed under the Apache License, Version 2.0 (the "License");
+**    you may not use this file except in compliance with the License.
+**    You may obtain a copy of the License at
+**
+**        http://www.apache.org/licenses/LICENSE-2.0
+**
+**    Unless required by applicable law or agreed to in writing, software
+**    distributed under the License is distributed on an "AS IS" BASIS,
+**    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+**    See the License for the specific language governing permissions and
+**    limitations under the License.
+*
+* Change Log
+*   2022-08-10 5.9.2.1 SysCo/yj ENH: Do not display SMS/Email link on the first step in case of wrong password
+**
+** * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 #include "Utilities.h"
 #include "helpers.h"
 #include "SecureString.h"
@@ -5,10 +31,11 @@
 #include "guid.h"
 #include <Shlwapi.h>
 #include "MultiotpRegistry.h"
+#include "MultiotpHelpers.h"
 
 using namespace std;
 
-Utilities::Utilities(std::shared_ptr<Configuration> c) noexcept
+Utilities::Utilities(std::shared_ptr<MultiOTPConfiguration> c) noexcept
 {
 	_config = c;
 }
@@ -319,7 +346,7 @@ HRESULT Utilities::SetScenario(
 {
 	//DebugPrint(__FUNCTION__);
 	HRESULT hr = S_OK;
-
+	
 	switch (scenario)
 	{
 	case SCENARIO::LOGON_BASE:
@@ -429,7 +456,7 @@ HRESULT Utilities::SetScenario(
 	}
 
 	// Display or not the "Receive an OTP by SMS" link
-	if (readRegistryValueInteger(CONF_DISPLAY_SMS_LINK, 0)) {
+	if (scenario == SCENARIO::SECOND_STEP && readRegistryValueInteger(CONF_DISPLAY_SMS_LINK, 0)) {
 		pCPCE->SetFieldState(pCredential, FID_REQUIRE_SMS, CPFS_DISPLAY_IN_SELECTED_TILE);
 	}
 	else {
@@ -437,7 +464,7 @@ HRESULT Utilities::SetScenario(
 	}
 
 	// Display or not the "Receive an OTP by EMAIL" link
-	if (readRegistryValueInteger(CONF_DISPLAY_EMAIL_LINK, 0)) {
+	if (scenario == SCENARIO::SECOND_STEP && readRegistryValueInteger(CONF_DISPLAY_EMAIL_LINK, 0)) {
 		pCPCE->SetFieldState(pCredential, FID_REQUIRE_EMAIL, CPFS_DISPLAY_IN_SELECTED_TILE);
 	}
 	else {
@@ -449,6 +476,23 @@ HRESULT Utilities::SetScenario(
 	// Display or not the "OTP sent by Email"
 	pCPCE->SetFieldState(pCredential, FID_CODE_SENT_EMAIL, CPFS_HIDDEN);
 	
+	
+
+	PWSTR lastUsername;
+	if (_config->multiOTPDisplayLastUser && readRegistryValueString(LAST_USER_AUTHENTICATED, &lastUsername, L"")) // Manage display when password is wrong
+	{
+		if (wstring(lastUsername) != L"") {
+			wstring prompt = wstring(lastUsername) + L" (Click to select)";
+			pCPCE->SetFieldString(pCredential, FID_LASTUSER_LOGGED, prompt.c_str());
+		}
+		else {
+			pCPCE->SetFieldState(pCredential, FID_LASTUSER_LOGGED, CPFS_HIDDEN);
+		}
+	}
+	else {
+		pCPCE->SetFieldState(pCredential, FID_LASTUSER_LOGGED, CPFS_HIDDEN);
+	}
+
 
 	return hr;
 }
@@ -516,7 +560,6 @@ HRESULT Utilities::SetFieldStatePairBatch(
 	for (unsigned int i = 0; i < FID_NUM_FIELDS && SUCCEEDED(hr); i++)
 	{
 		hr = pCPCE->SetFieldState(self, i, pFSP[i].cpfs);
-
 		if (SUCCEEDED(hr))
 		{
 			hr = pCPCE->SetFieldInteractiveState(self, i, pFSP[i].cpfis);
@@ -632,11 +675,22 @@ HRESULT Utilities::InitializeField(
 	case FID_CODE_SENT_EMAIL:
 		hr = SHStrDupW(L"OTP token sent by EMAIL", &rgFieldStrings[field_index]);
 		break;
+	case FID_LASTUSER_LOGGED:
+		// set display according to scenario
+		PWSTR lastUsername;
+		if (_config->multiOTPDisplayLastUser && readRegistryValueString(LAST_USER_AUTHENTICATED, &lastUsername, L"") > 2) // Null terminator sur 2 bit
+		{
+			wstring prompt = wstring(lastUsername) + L" (Click to select)";
+			hr = SHStrDupW(prompt.c_str(), &rgFieldStrings[field_index]);
+		}
+		else {
+			hr = SHStrDupW(L"", &rgFieldStrings[field_index]);
+		}
+		break;
 	default:
 		hr = SHStrDupW(L"", &rgFieldStrings[field_index]);
 		break;
 	}
-	//DebugPrintLn(rgFieldStrings[field_index]);
 	return hr;
 }
 

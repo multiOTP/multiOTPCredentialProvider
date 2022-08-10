@@ -1,5 +1,5 @@
 #pragma once
-#include "Configuration.h"
+#include "MultiOTPConfiguration.h"
 #include "Logger.h"
 #include <scenario.h>
 #include <memory>
@@ -28,7 +28,7 @@ enum class SCENARIO
 class Utilities
 {
 public:
-	Utilities(std::shared_ptr<Configuration> c) noexcept;
+	Utilities(std::shared_ptr<MultiOTPConfiguration> c) noexcept;
 
 	// Returns the text for the id in english or german, depending on GetUserDefaultUILanguage
 	static std::wstring GetTranslatedText(int id);
@@ -93,7 +93,7 @@ public:
 	HRESULT ResetScenario(ICredentialProviderCredential* pSelf, ICredentialProviderCredentialEvents* pCredProvCredentialEvents);
 
 private:
-	std::shared_ptr<Configuration> _config;
+	std::shared_ptr<MultiOTPConfiguration> _config;
 
 	HRESULT ReadUserField();
 

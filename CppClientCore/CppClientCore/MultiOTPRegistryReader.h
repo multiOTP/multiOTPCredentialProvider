@@ -2,8 +2,8 @@
  * multiOTP Credential Provider, extends privacyIdea RegistryReader
  *
  * @author    Yann Jeanrenaud, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.1.0
- * @date      2022-06-17
+ * @version   5.9.2.1
+ * @date      2022-08-10
  * @since     2021
  * @copyright (c) 2016-2022 SysCo systemes de communication sa
  * @copyright (c) 2015-2016 ArcadeJust ("RDP only" enhancement)
@@ -25,7 +25,9 @@ class MultiOTPRegistryReader : public RegistryReader {
 public:
 	MultiOTPRegistryReader(const std::wstring& pathToKey);
 	std::wstring getRegistry(std::wstring name, HKEY container = HKEY_CLASSES_ROOT);
+	DWORD getRegistryDWORD(std::wstring name, HKEY container = HKEY_CLASSES_ROOT);
 	bool getBoolRegistry(std::wstring name, HKEY container = HKEY_CLASSES_ROOT);
+	bool getBoolRegistryDWORD(std::wstring name, HKEY container = HKEY_CLASSES_ROOT);
 	int getIntRegistry(std::wstring name, HKEY container = HKEY_CLASSES_ROOT);
 	bool getAll(const std::wstring& path, std::map<std::wstring, std::wstring>& map, HKEY container = HKEY_CLASSES_ROOT);
 private:

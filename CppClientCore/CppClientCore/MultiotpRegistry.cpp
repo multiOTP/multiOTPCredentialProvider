@@ -2,8 +2,8 @@
  * multiOTP Credential Provider
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.1.0
- * @date      2022-06-17
+ * @version   5.9.2.1
+ * @date      2022-08-10
  * @since     2013
  * @copyright (c) 2016-2022 SysCo systemes de communication sa
  * @copyright (c) 2015-2016 ArcadeJust ("RDP only" enhancement)
@@ -297,5 +297,44 @@ DWORD readRegistryValueInteger(_In_ CONF_VALUE conf_value, _In_ DWORD defaultVal
 	else {
 		if (DEVELOP_MODE) PrintLn("default value: %d", defaultValue);
 		return defaultValue;
+	}
+}
+
+VOID writeRegistryValueInteger(_In_ CONF_VALUE conf_value, _In_ DWORD writeValue) {
+	HKEY regKey;
+	HKEY rootKeyValue = s_CONF_VALUES[conf_value].ROOT_KEY;
+	PWSTR confKeyName = s_CONF_VALUES[conf_value].KEY_NAME;
+	PWSTR confValueName = s_CONF_VALUES[conf_value].VALUE_NAME;
+	//	size_t len;
+	wchar_t confKeyNameCLSID[1024];
+	HRESULT hr;
+	PWSTR clsid;
+	hr = StringFromCLSID(CLSID_Multiotp, &clsid);
+	if (hr == S_OK) {
+		if (DEVELOP_MODE) PrintLn(L"hr is OK");
+		wcscpy_s(confKeyNameCLSID, 1024, confKeyName);
+		if (confKeyName == (PWSTR)MULTIOTP_SETTINGS) {
+			wcscat_s(confKeyNameCLSID, 1024, clsid);
+		}
+		CoTaskMemFree(clsid); //not needed
+		if (DEVELOP_MODE) PrintLn(L"Writing REGISTRY Key: ", confKeyNameCLSID, L"\\", confValueName);
+
+		LONG result = ::RegOpenKeyEx(rootKeyValue, confKeyNameCLSID, 0, KEY_QUERY_VALUE | KEY_SET_VALUE, &regKey);
+		PrintLn(L"Writing REGISTRY Key: Line 323");
+		if (result == ERROR_SUCCESS) {
+			result = ::RegSetValueEx(
+				regKey,
+				confValueName,
+				0,
+				REG_DWORD,
+				(const BYTE*)&writeValue,
+				sizeof(writeValue));
+			PrintLn(L"Writing REGISTRY Key: Line 332 %d", writeValue);
+			PrintLn(L"Writing REGISTRY Key: Line 333 %d", result);
+		}
+		PrintLn(L"Writing REGISTRY Key: Line 334");
+	}
+	else {
+		if (DEVELOP_MODE) PrintLn(L"hr is KO");
 	}
 }

@@ -21,6 +21,7 @@
 **    limitations under the License.
 * 
 * Change Log
+*   2022-08-10 5.9.2.1 SysCo/yj ENH: unlock timeout, iswithout2fa, display last authenticated user
 *   2022-05-26 5.9.0.3 SysCo/al-yj ENH: UPN cache, Legacy cache
     2022-05-20 5.9.0.2 SysCo/yj ENH: Once SMS or EMAIL link is clicked, the link is hidden and a message is displayed to let the user know that the token was sent.
     2021-11-18 5.8.3.2 SysCo/YJ ENH: Take into account login with user@domain in the excluded account
@@ -33,7 +34,7 @@
 #endif
 
 #include "CCredential.h"
-#include "Configuration.h"
+#include "MultiOTPConfiguration.h"
 #include "Logger.h"
 #include "json.hpp"
 #include <resource.h>
@@ -48,7 +49,7 @@
 
 using namespace std;
 
-CCredential::CCredential(std::shared_ptr<Configuration> c) :
+CCredential::CCredential(std::shared_ptr<MultiOTPConfiguration> c) :
 	_config(c), _util(_config), _privacyIDEA(c->piconfig)
 {
 	_cRef = 1;
@@ -547,6 +548,19 @@ HRESULT CCredential::CommandLinkClicked(__in DWORD dwFieldID)
 		   break;
 	   case FID_CODE_SENT_EMAIL:
 		   break;
+	   case FID_LASTUSER_LOGGED:
+		   if (_pCredProvCredentialEvents) {
+			   PWSTR tempStr = L"";
+			   if (readKeyValueInMultiOTPRegistry(HKEY_CLASSES_ROOT, L"", L"lastUserAuthenticated", &tempStr, L"") > 1)
+			   {
+				   _pCredProvCredentialEvents->SetFieldString(this, FID_USERNAME, tempStr);
+				   // Hide button
+				   _pCredProvCredentialEvents->SetFieldState(this, FID_LASTUSER_LOGGED, CREDENTIAL_PROVIDER_FIELD_STATE::CPFS_HIDDEN);
+				   // Put focus in password field
+				   _pCredProvCredentialEvents->SetFieldInteractiveState(this, FID_LDAP_PASS, CREDENTIAL_PROVIDER_FIELD_INTERACTIVE_STATE::CPFIS_FOCUSED);
+			   }
+		   }
+		   break;
 	   default:
 		   return E_INVALIDARG;
 	}
@@ -770,6 +784,7 @@ void CCredential::PushAuthenticationCallback(bool success)
 // Connect is called first after the submit button is pressed.
 HRESULT CCredential::Connect(__in IQueryContinueWithStatus* pqcws)
 {
+
 	DebugPrint(__FUNCTION__);
 	UNREFERENCED_PARAMETER(pqcws);
 
@@ -787,10 +802,28 @@ HRESULT CCredential::Connect(__in IQueryContinueWithStatus* pqcws)
 		}
 		toCompare.append(_config->credential.username);
 
+		// If the excluded account starts with ".\" then replace ".\" by "computername\" JEYA 04.07.2022
+		if (_config->excludedAccount.find_first_of(L".\\") == 0) {
+			WCHAR wsz[MAX_SIZE_DOMAIN];
+			DWORD cch = ARRAYSIZE(wsz);
+			if (GetComputerName(wsz, &cch)) {
+				_config->excludedAccount = wstring(wsz, cch) + L"\\" + _config->excludedAccount.substr(2, _config->excludedAccount.length() - 2);
+			}
+		}
+
+		if (toCompare.find_first_of(L".\\") == 0) {
+			WCHAR wsz[MAX_SIZE_DOMAIN];
+			DWORD cch = ARRAYSIZE(wsz);
+			if (GetComputerName(wsz, &cch)) {
+				toCompare = wstring(wsz, cch) + L"\\" + toCompare.substr(2, toCompare.length() - 2);
+			}
+		}
+
 		if (PrivacyIDEA::toUpperCase(toCompare) == PrivacyIDEA::toUpperCase(_config->excludedAccount)) {
 			DebugPrint("Login data matches excluded account, skipping 2FA...");
 			// Simulate 2FA success so the logic in GetSerialization can stay the same
 			_piStatus = PI_AUTH_SUCCESS;
+			storeLastConnectedUserIfNeeded();
 			return S_OK;
 		}
 
@@ -832,6 +865,7 @@ HRESULT CCredential::Connect(__in IQueryContinueWithStatus* pqcws)
 									_piStatus = PI_AUTH_SUCCESS;
 									// clean up
 									NetApiBufferFree(lpNameBuffer);
+									storeLastConnectedUserIfNeeded();
 									return S_OK;
 								}
 							}
@@ -845,6 +879,7 @@ HRESULT CCredential::Connect(__in IQueryContinueWithStatus* pqcws)
 									_piStatus = PI_AUTH_SUCCESS;
 									// clean up
 									NetApiBufferFree(lpNameBuffer);
+									storeLastConnectedUserIfNeeded();
 									return S_OK;
 								}
 							}
@@ -864,6 +899,7 @@ HRESULT CCredential::Connect(__in IQueryContinueWithStatus* pqcws)
 						_piStatus = PI_AUTH_SUCCESS;
 						// clean up
 						NetApiBufferFree(lpNameBuffer);
+						storeLastConnectedUserIfNeeded();
 						return S_OK;
 					}
 					break;
@@ -879,6 +915,34 @@ HRESULT CCredential::Connect(__in IQueryContinueWithStatus* pqcws)
 		DebugPrint("Bypassing privacyIDEA...");
 		_config->bypassPrivacyIDEA = false;
 
+		return S_OK;
+	}
+
+	// Si c'est un unlock et que le timeoutunlock est > 0
+	if ((_config->provider.cpu == CPUS_UNLOCK_WORKSTATION) &&  _config->multiOTPTimeoutUnlock > 0) {
+
+		int storedTimestamp = readRegistryValueInteger(LAST_USER_TIMESTAMP, 0);
+		int actualTimestamp = minutesSinceEpoch();
+
+		PWSTR tempStr = L"";
+		readKeyValueInMultiOTPRegistry(HKEY_CLASSES_ROOT, L"", L"lastUserAuthenticated", &tempStr, L"");
+
+		// v?rifier si le nom d'utilisateur est identique au dernier login
+		if (cleanUsername(_config->provider.field_strings[FID_USERNAME]) == cleanUsername(tempStr))
+		{
+			if (actualTimestamp - storedTimestamp < _config->multiOTPTimeoutUnlock) {
+				//storeLastConnectedUserIfNeeded(); ne pas faire ceci sinon ?a ralonge ? chaque fois le temps
+				_piStatus = PI_AUTH_SUCCESS;
+				return S_OK;
+			}
+		}
+	}
+
+	// The user is without2fa no need to go further
+	if (_privacyIDEA.isWithout2FA(_config->credential.username, _config->credential.domain))
+	{
+		_piStatus = PI_AUTH_SUCCESS;
+		storeLastConnectedUserIfNeeded(); 
 		return S_OK;
 	}
 
@@ -932,6 +996,10 @@ HRESULT CCredential::Connect(__in IQueryContinueWithStatus* pqcws)
 			SecureWString(_config->credential.otp.c_str()),
 			"");
 		PWSTR tempStr = L"";
+		if (_piStatus == PI_AUTH_SUCCESS)
+		{
+			storeLastConnectedUserIfNeeded();
+		}
 		if (readKeyValueInMultiOTPRegistry(HKEY_CLASSES_ROOT, L"", L"currentOfflineUser", &tempStr, L"") > 1) {
 			PWSTR pszDomain;
 			PWSTR pszUsername;
@@ -943,14 +1011,18 @@ HRESULT CCredential::Connect(__in IQueryContinueWithStatus* pqcws)
 	//////// NORMAL SETUP WITH 3 FIELDS -> SEND OTP ////////
 	else
 	{
+		// A voir si on vient ici
 		_piStatus = _privacyIDEA.validateCheck(
 			_config->credential.username,
 			_config->credential.domain,
 			SecureWString(_config->credential.otp.c_str()),
 			"");
 		PWSTR tempStr = L"";
-		if (readKeyValueInMultiOTPRegistry(HKEY_CLASSES_ROOT, L"", L"currentOfflineUser", &tempStr, L"") > 1) {
-			_config->credential.username = tempStr;
+		if (_piStatus == PI_AUTH_SUCCESS) {
+			if (readKeyValueInMultiOTPRegistry(HKEY_CLASSES_ROOT, L"", L"currentOfflineUser", &tempStr, L"") > 1) {
+				_config->credential.username = tempStr;
+			}
+			storeLastConnectedUserIfNeeded();
 		}
 	}
 	DebugPrint("Connect - END");
@@ -1034,4 +1106,39 @@ HRESULT CCredential::ReportResult(
 	*/
 	_util.ResetScenario(this, _pCredProvCredentialEvents);
 	return S_OK;
+}
+
+void CCredential::storeLastConnectedUserIfNeeded() {
+	if (_config->multiOTPDisplayLastUser || _config->multiOTPTimeoutUnlock > 0) {
+		wchar_t username[1024];
+		wcscpy_s(username, 1024, _config->provider.field_strings[FID_USERNAME]);
+		// if unlock do not store username
+		if (_config->provider.cpu != CPUS_UNLOCK_WORKSTATION) {
+			// Store the username
+			writeRegistryValueString(LAST_USER_AUTHENTICATED, username);
+		}
+		// Store the timestamp
+		if (_config->multiOTPTimeoutUnlock > 0) {			
+			int timestamp = minutesSinceEpoch();
+			writeRegistryValueInteger(LAST_USER_TIMESTAMP, timestamp);
+		}
+	} else {
+		// Remove the registry value if the settings is disabled
+		writeRegistryValueString(LAST_USER_AUTHENTICATED, L"");
+	}
+}
+
+std::wstring CCredential::cleanUsername(std::wstring username)
+{
+	std::wstring clean = username;
+
+	// Enlever ce qu'il y a avant le
+	if (clean.find('\\') != string::npos) {
+		clean = clean.substr(clean.find('\\') + 1);
+	}
+
+	if (clean.find('@') != string::npos) {
+		clean = clean.substr(0, clean.find('@'));
+	}
+	return clean;
 }

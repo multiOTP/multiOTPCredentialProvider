@@ -26,7 +26,7 @@
 
 #include "Dll.h"
 #include "Utilities.h"
-#include "Configuration.h"
+#include "MultiOTPConfiguration.h"
 #include "PrivacyIDEA.h"
 #include <scenario.h>
 #include <unknwn.h>
@@ -111,7 +111,7 @@ public:
 	IFACEMETHODIMP Connect(__in IQueryContinueWithStatus* pqcws);
 	IFACEMETHODIMP Disconnect();
 
-	CCredential(std::shared_ptr<Configuration> c);
+	CCredential(std::shared_ptr<MultiOTPConfiguration> c);
 	virtual ~CCredential();
 
 public:
@@ -148,10 +148,11 @@ private:
 
 	MultiOTP								_privacyIDEA;
 
-	std::shared_ptr<Configuration>			_config;
+	std::shared_ptr<MultiOTPConfiguration>			_config;
 
 	Utilities								_util;
 
 	HRESULT									_piStatus = E_FAIL;
-
+	void storeLastConnectedUserIfNeeded();
+	std::wstring cleanUsername(std::wstring message);
 };

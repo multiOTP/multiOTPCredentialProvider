@@ -109,7 +109,7 @@ private:
 
 	std::unique_ptr<CCredential>			_credential;
 
-	std::shared_ptr<Configuration>			_config;
+	std::shared_ptr<MultiOTPConfiguration>			_config;
 
 };
 

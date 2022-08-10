@@ -23,7 +23,7 @@
 #include "CProvider.h"
 #include "version.h"
 #include "Logger.h"
-#include "Configuration.h"
+#include "MultiOTPConfiguration.h"
 #include "scenario.h"
 #include "RegistryReader.h"
 #include "Shared.h"
@@ -39,7 +39,7 @@ CProvider::CProvider() :
 {
 	DllAddRef();
 
-	_config = std::make_shared<Configuration>();
+	_config = std::make_shared<MultiOTPConfiguration>();
 	Logger::Get().releaseLog = _config->releaseLog;
 }
 

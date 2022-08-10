@@ -7,7 +7,7 @@ multiOTP Credential Provider for multiOTP is a free and open source implementati
 (c) 2015-2016 ArcadeJust ("RDP only" enhancement)  
 (c) 2013-2015 Last Squirrel IT  
 
-Current build: 5.9.1.0 (2022-06-17)  
+Current build: 5.9.2.1 (2022-08-10)  
 
 The binary download page is available here : https://download.multiotp.net/credential-provider/ (download link are at the bottom of the page)
 
@@ -72,7 +72,9 @@ The following properties can be set :
 * MULTIOTP_OTP_FAIL_TEXT     Text displayed when OTP code is not valid.
 * MULTIOTP_EXCLUDED_ACCOUNT  Specify an account that should be excluded from 2FA. For example contoso\backdoor
 * MULTIOTP_UPNFORMAT         0|1 1 to use UPN format (kevin@test.com instead of kevin) for the username when credential provider calls multiOTP.
-	
+* MULTIOTP_DISPLAYLASTUSER   0|1 1 to display a button in order to autocomplete the username with the last username authenticated
+* MULTIOTP_TIMEOUTUNLOCK     Timeout (in minutes) before asking 2FA again on unlock (0 means always ask)
+* MULTIOTP_WITHOUT2FA	     0|1 1 to disable 2FA prompt for multiTOP without2FA users
 
 Copy the MSI and MST files to a share which is accessible in Read-Execute for every computers
 
@@ -145,7 +147,7 @@ TECHNICAL DETAILS
    * multiOTPServerTimeout         [timeout in seconds before switching to the next server, default is 5], used directly by multiOTP
    * multiOTPSharedSecret          [secret to connect this client to the server, default is 'ClientServerSecret'], used directly by multiOTP
    * multiOTPTimeout               [timeout in seconds, default is 60]
-   * multiOTPUPNFormat			 [0|1] Set to 1 to use UPN username (kevin@test.com) instead of username (kevin)
+   * multiOTPUPNFormat			   [0|1] Set to 1 to use UPN username (kevin@test.com) instead of username (kevin)
    * two_step_hide_otp             [0|1] Set to 1 if the Credential Provider should ask for the user's OTP in a second step. In the first step the
                                    user will only be asked for the password.
    * two_step_send_password        [0|1] Set to 1 if the Credential Provider should send the user's password to the multiOTP server
@@ -156,7 +158,9 @@ TECHNICAL DETAILS
    * otp_fail_text                 Specify a custom text that is shown when the OTP verification failed.
    * v1_bitmap_path                The complete path and filename of a bitmap image. This is a customized login image. The image must be a version 3
                                    Windows BMP file with a resolution of 128x128 pixels.
-
+   * multiOTPTimeoutUnlock		   [0|1] Set to 1 to display a button in order to autocomplete the username with the last username authenticated
+   * multiOTPDisplayLastUser       Timeout (in minutes) before asking 2FA again on unlock (0 means always ask)
+   * multiOTPWithout2FA            [0|1] Set to 1 to disable 2FA prompt for multiTOP without2FA users
 
 THANKS TO
 =========
@@ -173,7 +177,9 @@ CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
 
+2022-08-09 5.9.2.1 ENH: Support without2FA user, unlock timeout without 2FA, autocomplete username with last connected 
 2022-06-17 5.9.1.0 ENH: Added FastUserSwitching inactivation during wizard (to fix unlock issue)
+                   ENH: Last connected user available
 2022-05-26 5.9.0.3 ENH: UPN and Lecagy cache handling when the domain controller is not reachable
                    ENH: Better UPN account handling when the domain controller is not reachable
                    ENH: Once SMS or EMAIL link is clicked, the link is hidden and a message

@@ -2,8 +2,8 @@
  * multiOTP Credential Provider, extends privacyIdea
  *
  * @author    Yann Jeanrenaud, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.1.0
- * @date      2022-06-17
+ * @version   5.9.2.1
+ * @date      2022-08-10
  * @since     2021
  * @copyright (c) 2016-2022 SysCo systemes de communication sa
  * @copyright (c) 2015-2016 ArcadeJust ("RDP only" enhancement)
@@ -53,4 +53,18 @@ HRESULT MultiOTP::validateCheck(const std::wstring& username, const std::wstring
 		if (DEVELOP_MODE) PrintLn("MultiotpCredential::multiOTP Error, value ", hr);//OTP ok
 		return PI_AUTH_FAILURE;
 	}
+}
+
+bool MultiOTP::isWithout2FA(const std::wstring& username, const std::wstring& domain)
+{
+	HRESULT hr = E_UNEXPECTED;
+	hr = multiotp_request_command(L"-iswithout2fa", L"\""+getCleanUsername(username, domain)+ L"\"");
+	if ((hr == MULTIOTP_IS_WITHOUT2FA)) {
+		if (DEVELOP_MODE) PrintLn("MultiotpCredential::multiOTP user is without2FA", hr);
+		return true;
+	}
+	else {
+		if (DEVELOP_MODE) PrintLn("MultiotpCredential::multiOTP user is not without2fa ", hr);
+	}
+	return false;
 }
