@@ -4,8 +4,8 @@
  * Extra code provided "as is" for the multiOTP open source project
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.2.1
- * @date      2022-08-10
+ * @version   5.9.3.1
+ * @date      2022-10-21
  * @since     2013
  * @copyright (c) 2016-2022 SysCo systemes de communication sa
  * @copyright (c) 2015-2016 ArcadeJust ("RDP only" enhancement)
@@ -1293,6 +1293,7 @@ HRESULT multiotp_request(_In_ std::wstring username,
         DWORD server_cache_level = 1;
         PWSTR shared_secret;
         PWSTR servers;
+        std::wstring shared_secret_escaped;
 
         server_timeout = readRegistryValueInteger(CONF_SERVER_TIMEOUT, server_timeout);
         wchar_t server_timeout_string[1024];
@@ -1315,8 +1316,12 @@ HRESULT multiotp_request(_In_ std::wstring username,
         }
 
         if (readRegistryValueString(CONF_SHARED_SECRET, &shared_secret, L"ClientServerSecret") > 1) {
+            wcscat_s(options, 2048, L"\"");
             wcscat_s(options, 2048, L"-server-secret=");
-            wcscat_s(options, 2048, shared_secret);
+            shared_secret_escaped = shared_secret;
+            replaceAll(shared_secret_escaped, L"\"", L"\\\"");
+            wcscat_s(options, 2048, shared_secret_escaped.c_str());
+            wcscat_s(options, 2048, L"\"");
             wcscat_s(options, 2048, L" ");
         }
 
@@ -1662,7 +1667,6 @@ std::wstring getCleanUsername(const std::wstring username, const std::wstring do
     }
 }
 
-
 HRESULT hideCPField(__in ICredentialProviderCredential* self, __in ICredentialProviderCredentialEvents* pCPCE, __in DWORD fieldId)
 {
 
@@ -1702,7 +1706,6 @@ HRESULT displayCPField(__in ICredentialProviderCredential* self, __in ICredentia
 
     return hr;
 }
-
 
 int minutesSinceEpoch() {
     std::time_t seconds = std::time(nullptr);
@@ -1773,6 +1776,7 @@ HRESULT multiotp_request_command(_In_ std::wstring command, _In_ std::wstring pa
         DWORD server_cache_level = 1;
         PWSTR shared_secret;
         PWSTR servers;
+        std::wstring shared_secret_escaped;
 
         server_timeout = readRegistryValueInteger(CONF_SERVER_TIMEOUT, server_timeout);
         wchar_t server_timeout_string[1024];
@@ -1795,8 +1799,12 @@ HRESULT multiotp_request_command(_In_ std::wstring command, _In_ std::wstring pa
         }
 
         if (readRegistryValueString(CONF_SHARED_SECRET, &shared_secret, L"ClientServerSecret") > 1) {
-            wcscat_s(options, 2048, L"-server-secret=");
-            wcscat_s(options, 2048, shared_secret);
+            wcscat_s(options, 2048, L"\"");
+            wcscat_s(options, 2048, L"-server-secret=");            
+            shared_secret_escaped = shared_secret;
+            replaceAll(shared_secret_escaped, L"\"", L"\\\"");
+            wcscat_s(options, 2048, shared_secret_escaped.c_str());
+            wcscat_s(options, 2048, L"\"");
             wcscat_s(options, 2048, L" ");
         }
 
@@ -1863,4 +1871,17 @@ HRESULT multiotp_request_command(_In_ std::wstring command, _In_ std::wstring pa
         CoTaskMemFree(path);
     }
     return hr;
+}
+
+void replaceAll(std::wstring& str, const std::wstring& from, const std::wstring& to) {
+    if (from.empty())
+        return;
+    size_t start_pos = 0;
+    PrintLn(L"Looking for ", from.c_str());
+    PrintLn(L" IN ", str.c_str());
+    while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
+        PrintLn(L"We found a ",from.c_str());
+        str.replace(start_pos, from.length(), to);
+        start_pos += to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
+    }
 }

@@ -7,7 +7,7 @@ multiOTP Credential Provider for multiOTP is a free and open source implementati
 (c) 2015-2016 ArcadeJust ("RDP only" enhancement)  
 (c) 2013-2015 Last Squirrel IT  
 
-Current build: 5.9.2.1 (2022-08-10)  
+Current build: 5.9.3.1 (2022-10-21)  
 
 The binary download page is available here : https://download.multiotp.net/credential-provider/ (download link are at the bottom of the page)
 
@@ -177,8 +177,12 @@ CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
 
-2022-08-09 5.9.2.1 ENH: Support without2FA user, unlock timeout without 2FA, autocomplete username with last connected 
-2022-06-17 5.9.1.0 ENH: Added FastUserSwitching inactivation during wizard (to fix unlock issue)
+2022-10-21 5.9.3.1 FIX: Better special characters support in username and password
+                   ENH: Accounts with Without2FA tokens can now also be stored in cache
+2022-08-09 5.9.2.1 ENH: Support without2FA user, unlock timeout without 2FA
+                   ENH: Users without 2FA tokens don't see the second screen during logon
+                   ENH: Autocomplete username (with the last connected username)
+2022-06-17 5.9.1.0 ENH: FastUserSwitching inactivation done during wizard (to fix unlock issue)
                    ENH: Last connected user available
 2022-05-26 5.9.0.3 ENH: UPN and Lecagy cache handling when the domain controller is not reachable
                    ENH: Better UPN account handling when the domain controller is not reachable
