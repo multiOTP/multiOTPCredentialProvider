@@ -228,6 +228,46 @@ HRESULT CCredential::SetSelected(__out BOOL* pbAutoLogon)
 		*pbAutoLogon = TRUE;
 	}
 
+	// Manage link display if it's in one step mode
+	if (_config->provider.cpu == CPUS_LOGON && !_config->credential.passwordMustChange)
+	{
+		if (!_config->twoStepHideOTP)
+		{
+			if (readRegistryValueInteger(CONF_DISPLAY_EMAIL_LINK, 0)) {
+				_pCredProvCredentialEvents->SetFieldState(this, FID_REQUIRE_EMAIL, CPFS_DISPLAY_IN_SELECTED_TILE);
+			}
+			else {
+				_pCredProvCredentialEvents->SetFieldState(this, FID_REQUIRE_EMAIL, CPFS_HIDDEN);
+			}
+			if (readRegistryValueInteger(CONF_DISPLAY_SMS_LINK, 0)) {
+				_pCredProvCredentialEvents->SetFieldState(this, FID_REQUIRE_SMS, CPFS_DISPLAY_IN_SELECTED_TILE);
+			}
+			else {
+				_pCredProvCredentialEvents->SetFieldState(this, FID_REQUIRE_SMS, CPFS_HIDDEN);
+			}
+		}
+	}
+
+	if (_config->provider.cpu == CPUS_UNLOCK_WORKSTATION && !_config->credential.passwordMustChange) {
+		if (!_config->twoStepHideOTP)
+		{
+			if (readRegistryValueInteger(CONF_DISPLAY_EMAIL_LINK, 0)) {
+				_pCredProvCredentialEvents->SetFieldState(this, FID_REQUIRE_EMAIL, CPFS_DISPLAY_IN_SELECTED_TILE);
+			}
+			else {
+				_pCredProvCredentialEvents->SetFieldState(this, FID_REQUIRE_EMAIL, CPFS_HIDDEN);
+			}
+			if (readRegistryValueInteger(CONF_DISPLAY_SMS_LINK, 0)) {
+				_pCredProvCredentialEvents->SetFieldState(this, FID_REQUIRE_SMS, CPFS_DISPLAY_IN_SELECTED_TILE);
+			}
+			else {
+				_pCredProvCredentialEvents->SetFieldState(this, FID_REQUIRE_SMS, CPFS_HIDDEN);
+			}
+		}
+	}
+
+
+
 	return hr;
 }
 
@@ -531,14 +571,24 @@ HRESULT CCredential::CommandLinkClicked(__in DWORD dwFieldID)
 	{
 	   case FID_REQUIRE_SMS:
 		   if(_pCredProvCredentialEvents) {
+				_config->provider.pCredProvCredential = this;
+				_config->provider.pCredProvCredentialEvents = _pCredProvCredentialEvents;
+				_config->provider.field_strings = _rgFieldStrings;
+				_util.ReadFieldValues();
+				
+			   // Cacher le bouton
 			   hideCPField(_config->provider.pCredProvCredential, _config->provider.pCredProvCredentialEvents, FID_REQUIRE_SMS);
 			   displayCPField(_config->provider.pCredProvCredential, _config->provider.pCredProvCredentialEvents, FID_CODE_SENT_SMS);
-			   // Cacher le bouton
 			   return multiotp_request(getCleanUsername(_config->credential.username, _config->credential.domain), L"", L"sms");
 		   }
 		   break;
 	   case FID_REQUIRE_EMAIL:
 		   if (_pCredProvCredentialEvents) {
+			   _config->provider.pCredProvCredential = this;
+			   _config->provider.pCredProvCredentialEvents = _pCredProvCredentialEvents;
+			   _config->provider.field_strings = _rgFieldStrings;
+			   _util.ReadFieldValues();
+
 			   hideCPField(_config->provider.pCredProvCredential, _config->provider.pCredProvCredentialEvents, FID_REQUIRE_EMAIL);
 			   displayCPField(_config->provider.pCredProvCredential, _config->provider.pCredProvCredentialEvents, FID_CODE_SENT_EMAIL);
 			   return multiotp_request(getCleanUsername(_config->credential.username, _config->credential.domain), L"", L"email");
@@ -580,7 +630,6 @@ HRESULT CCredential::GetSerialization(
 )
 {
 	DebugPrint(__FUNCTION__);
-
 	*pcpgsr = CPGSR_RETURN_NO_CREDENTIAL_FINISHED;
 
 	HRESULT hr = E_FAIL, retVal = S_OK;
@@ -1112,11 +1161,10 @@ void CCredential::storeLastConnectedUserIfNeeded() {
 	if (_config->multiOTPDisplayLastUser || _config->multiOTPTimeoutUnlock > 0) {
 		wchar_t username[1024];
 		wcscpy_s(username, 1024, _config->provider.field_strings[FID_USERNAME]);
-		// if unlock do not store username
-		if (_config->provider.cpu != CPUS_UNLOCK_WORKSTATION) {
-			// Store the username
-			writeRegistryValueString(LAST_USER_AUTHENTICATED, username);
-		}
+
+		// Store the username
+        writeRegistryValueString(LAST_USER_AUTHENTICATED, username);
+
 		// Store the timestamp
 		if (_config->multiOTPTimeoutUnlock > 0) {			
 			int timestamp = minutesSinceEpoch();

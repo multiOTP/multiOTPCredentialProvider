@@ -7,7 +7,7 @@ multiOTP Credential Provider for multiOTP is a free and open source implementati
 (c) 2015-2016 ArcadeJust ("RDP only" enhancement)  
 (c) 2013-2015 Last Squirrel IT  
 
-Current build: 5.9.3.1 (2022-10-21)  
+Current build: 5.9.4.0 (2022-11-04)  
 
 The binary download page is available here : https://download.multiotp.net/credential-provider/ (download link are at the bottom of the page)
 
@@ -177,6 +177,8 @@ CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
 
+2022-11-04 5.9.4.0 FIX: Last user account is now also stored when doing unlock, which will fix some unlock timeout issues
+                   FIX: One step 2FA hide unwanted link on the login form
 2022-10-21 5.9.3.1 FIX: Better special characters support in username and password
                    ENH: Accounts with Without2FA tokens can now also be stored in cache
 2022-08-09 5.9.2.1 ENH: Support without2FA user, unlock timeout without 2FA
