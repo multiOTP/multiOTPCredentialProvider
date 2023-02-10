@@ -29,18 +29,18 @@ using namespace std;
 
 void Logger::logS(const string& message, const char* file, int line, bool logInProduction)
 {
-#ifdef _DEBUG
-	UNREFERENCED_PARAMETER(logInProduction);
-#endif
-	// Check if it should be logged first and to which file
-	string outfilePath = logfilePathDebug;
-#ifndef _DEBUG
-	if (!logInProduction || !this->releaseLog)
-	{
-		return;
-	}
-	outfilePath = logfilePathProduction;
-#endif // !_DEBUG
+	#ifdef _DEBUG
+		UNREFERENCED_PARAMETER(logInProduction);
+	#endif
+		// Check if it should be logged first and to which file
+		string outfilePath = logfilePathDebug;
+	#ifndef _DEBUG
+		if (!logInProduction || !this->releaseLog)
+		{
+			return;
+		}
+		outfilePath = logfilePathProduction;
+	#endif // !_DEBUG
 
 	// Format: [Time] [file:line]  message
 	time_t rawtime = NULL;

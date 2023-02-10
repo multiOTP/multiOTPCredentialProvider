@@ -1,7 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * *
 **
 ** Copyright 2019 NetKnights GmbH
-**           2020-2022 SysCo systemes de communication sa
+**           2020-2023 SysCo systemes de communication sa
 ** Author: Nils Behlen
 **         Yann Jeanrenaud, Andre Liechti
 **
@@ -119,4 +119,5 @@ MultiOTPConfiguration::MultiOTPConfiguration() : Configuration()
 	multiOTPTimeoutUnlock = rr.getRegistryDWORD(L"multiOTPTimeoutUnlock");
 	multiOTPDisplayLastUser = rr.getBoolRegistryDWORD(L"multiOTPDisplayLastUser");
 	multiOTPWithout2FA = rr.getBoolRegistryDWORD(L"multiOTPWithout2FA");
+	numlockOn = rr.getBoolRegistryDWORD(L"numlockOn");
 }

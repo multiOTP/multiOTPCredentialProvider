@@ -2,7 +2,7 @@
 **
 ** Copyright	2012 Dominik Pretzsch
 **				2017 NetKnights GmbH
-**				2020-2022 SysCo systemes de communication sa
+**				2020-2023 SysCo systemes de communication sa
 **
 ** Author		Dominik Pretzsch
 **				Nils Behlen
@@ -34,6 +34,8 @@
 #include <string>
 #include <map>
 #include "MultiOTP.h"
+#include "mq.h" // multiOTP/yj
+#include "sddl.h" // multiOTP/yj
 
 #define NOT_EMPTY(NAME) \
 	(NAME != NULL && NAME[0] != NULL)
@@ -155,4 +157,7 @@ private:
 	HRESULT									_piStatus = E_FAIL;
 	void storeLastConnectedUserIfNeeded();
 	std::wstring cleanUsername(std::wstring message);
+	HRESULT getSid(LPCWSTR wszAccName, PSID* ppSid);
+	HRESULT storeSidAndTimeStamp(PSID ppsid);
+	bool CCredential::hasloggedInRecently(LPTSTR userId);
 };

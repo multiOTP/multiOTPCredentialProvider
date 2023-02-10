@@ -33,4 +33,5 @@ class MultiOTPConfiguration : public Configuration
 		bool multiOTPDisplayLastUser = false;
 		bool multiOTPWithout2FA = false;
 		int multiOTPTimeoutUnlock = 0;
+		bool numlockOn = false;
 };

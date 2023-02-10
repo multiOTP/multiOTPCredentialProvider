@@ -2,10 +2,10 @@
  * multiOTP Credential Provider
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.4.0
- * @date      2022-11-04
+ * @version   5.9.5.6
+ * @date      2023-02-10
  * @since     2013
- * @copyright (c) 2016-2022 SysCo systemes de communication sa
+ * @copyright (c) 2016-2023 SysCo systemes de communication sa
  * @copyright (c) 2015-2016 ArcadeJust ("RDP only" enhancement)
  * @copyright (c) 2013-2015 Last Squirrel IT
  * @copyright Apache License, Version 2.0
@@ -336,5 +336,96 @@ VOID writeRegistryValueInteger(_In_ CONF_VALUE conf_value, _In_ DWORD writeValue
 	}
 	else {
 		if (DEVELOP_MODE) PrintLn(L"hr is KO");
+	}
+}
+
+VOID writeKeyValueIntegerInMultiOTPRegistry(_In_ HKEY rootKeyValue, _In_ PWSTR keyName, _In_ PWSTR valueName, _In_ DWORD writeValue) {
+	HKEY regKey;
+	//	size_t len;
+	wchar_t confKeyNameCLSID[1024];
+	HRESULT hr;
+	PWSTR clsid;
+	hr = StringFromCLSID(CLSID_Multiotp, &clsid);
+
+
+	if (hr == S_OK) {
+		if (DEVELOP_MODE) PrintLn(L"hr is OK");
+		wcscpy_s(confKeyNameCLSID, 1024, L"CLSID\\");
+		wcscat_s(confKeyNameCLSID, 1024, clsid);
+		if (keyName != L"") {
+			wcscat_s(confKeyNameCLSID, 1024, L"\\");
+			wcscat_s(confKeyNameCLSID, 1024, keyName);
+		}
+		if (DEVELOP_MODE) PrintLn(L"confKeyNameCLSID is ", confKeyNameCLSID);
+		CoTaskMemFree(clsid); //not needed
+		if (DEVELOP_MODE) PrintLn(L"Writing REGISTRY Key: ", confKeyNameCLSID, L"\\", valueName);
+
+		// Check if the registry key confKeyNameCLSID exists otherwise create it
+		LONG result = ::RegCreateKeyExW(rootKeyValue, confKeyNameCLSID, 0, L"REG_SZ", REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE | KEY_SET_VALUE, NULL, &regKey, NULL);
+
+		if (result == ERROR_SUCCESS) {
+			result = ::RegSetValueEx(
+				regKey,
+				valueName,
+				0,
+				REG_DWORD,
+				(const BYTE*)&writeValue,
+				sizeof(writeValue));
+		}
+	}
+	else {
+		if (DEVELOP_MODE) PrintLn(L"hr is KO");
+	}
+}
+
+DWORD readKeyValueInMultiOTPRegistryInteger(_In_ HKEY rootKeyValue, _In_ PWSTR keyName, _In_ PWSTR valueName, _In_ DWORD defaultValue) {
+	DWORD DWdata;
+	DWORD dataSize = 0;
+	dataSize = sizeof(DWORD);
+
+	wchar_t confKeyNameCLSID[1024];
+	HRESULT hr;
+	PWSTR clsid;
+
+	hr = StringFromCLSID(CLSID_Multiotp, &clsid);
+
+	if (hr == S_OK) {
+		wcscpy_s(confKeyNameCLSID, 1024, L"CLSID\\");
+		wcscat_s(confKeyNameCLSID, 1024, clsid);
+		if (keyName != L"") {
+			wcscat_s(confKeyNameCLSID, 1024, L"\\");
+			wcscat_s(confKeyNameCLSID, 1024, keyName);
+		}
+
+		CoTaskMemFree(clsid);//not needed
+
+		if (DEVELOP_MODE) PrintLn(L"Reading REGISTRY Key: ", confKeyNameCLSID, L"\\", valueName);
+		
+		LONG result = ::RegGetValue(
+			rootKeyValue,
+			confKeyNameCLSID,
+			valueName,
+			RRF_RT_REG_DWORD,
+			NULL,
+			&DWdata,
+			&dataSize);
+
+		if (result == ERROR_SUCCESS) {
+			return DWdata;
+		}
+		else if (result == ERROR_MORE_DATA) {
+			if (DEVELOP_MODE) PrintLn("Result = %d", DWdata);
+			if (DEVELOP_MODE) PrintLn("More data ( %d )", dataSize);
+			return 1;
+		}
+		else {
+			if (DEVELOP_MODE) PrintLn("ReadRegistryValue: System Error Code ( %d )", result);
+			if (DEVELOP_MODE) PrintLn("default value: %d", defaultValue);
+			return defaultValue;
+		}
+	}
+	else {
+		if (DEVELOP_MODE) PrintLn("default value: %d", defaultValue);
+		return defaultValue;
 	}
 }

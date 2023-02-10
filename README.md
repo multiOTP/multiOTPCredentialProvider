@@ -2,12 +2,12 @@ multiOTPCredentialProvider
 ==========================
 multiOTP Credential Provider for multiOTP is a free and open source implementation of a V2 Credential Provider for the multiOTP strong two-factor authentication solution (Apache License, Version 2.0)
 
-(c) 2016-2022 SysCo systemes de communication sa (enhancements since 2016 and simple installer with configuration options)  
+(c) 2016-2023 SysCo systemes de communication sa (enhancements since 2016 and simple installer with configuration options)  
 (c) 2017-2021 NetKnights GmbH  
 (c) 2015-2016 ArcadeJust ("RDP only" enhancement)  
 (c) 2013-2015 Last Squirrel IT  
 
-Current build: 5.9.4.0 (2022-11-04)  
+Current build: 5.9.5.6 (2023-02-10)  
 
 The binary download page is available here : https://download.multiotp.net/credential-provider/ (download link are at the bottom of the page)
 
@@ -31,8 +31,8 @@ multiOTP Credential Provider for multiOTP supporting Windows 7/8/8.1/10/2012(R2)
 
 PREREQUISITES
 =============
-- last x86 AND x64 MSVC++ redistribuable installed (Microsoft Visual C++ Redistributable for Visual Studio 2015, 2017 and 2019)
-  https://aka.ms/vs/16/release/vc_redist.x86.exe and https://aka.ms/vs/16/release/vc_redist.x64.exe
+- last x86 AND x64 MSVC++ redistribuable installed (Microsoft Visual C++ Redistributable for Visual Studio 2015, 2017, 2019 and 2022)
+  https://aka.ms/vs/17/release/vc_redist.x86.exe and https://aka.ms/vs/17/release/vc_redist.x64.exe
 - installed multiOTP server(s)
 - configured multiOTP user (multiOTP username = [domain user name] or [windows local account name] or [microsoft account name])
 
@@ -75,6 +75,7 @@ The following properties can be set :
 * MULTIOTP_DISPLAYLASTUSER   0|1 1 to display a button in order to autocomplete the username with the last username authenticated
 * MULTIOTP_TIMEOUTUNLOCK     Timeout (in minutes) before asking 2FA again on unlock (0 means always ask)
 * MULTIOTP_WITHOUT2FA	     0|1 1 to disable 2FA prompt for multiTOP without2FA users
+* MULTIOTP_NUMLOCKON	     0|1 1 to enable NumLock during published apps authentication
 
 Copy the MSI and MST files to a share which is accessible in Read-Execute for every computers
 
@@ -147,7 +148,8 @@ TECHNICAL DETAILS
    * multiOTPServerTimeout         [timeout in seconds before switching to the next server, default is 5], used directly by multiOTP
    * multiOTPSharedSecret          [secret to connect this client to the server, default is 'ClientServerSecret'], used directly by multiOTP
    * multiOTPTimeout               [timeout in seconds, default is 60]
-   * multiOTPUPNFormat			   [0|1] Set to 1 to use UPN username (kevin@test.com) instead of username (kevin)
+   * multiOTPUPNFormat			       [0|1] Set to 1 to use UPN username (kevin@test.com) instead of username (kevin)
+   * numlockOn                     [0|1]Set to 1 to enable NumLock during published apps authentication
    * two_step_hide_otp             [0|1] Set to 1 if the Credential Provider should ask for the user's OTP in a second step. In the first step the
                                    user will only be asked for the password.
    * two_step_send_password        [0|1] Set to 1 if the Credential Provider should send the user's password to the multiOTP server
@@ -177,6 +179,8 @@ CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
 
+2023-02-10 5.9.5.6 ENH: New option to enable NumLock during published apps authentication
+                   ENH: Unlock timeout handling supported for multiple accounts, FastUserSwitching is available again
 2022-11-04 5.9.4.0 FIX: Last user account is now also stored when doing unlock, which will fix some unlock timeout issues
                    FIX: One step 2FA hide unwanted link on the login form
 2022-10-21 5.9.3.1 FIX: Better special characters support in username and password

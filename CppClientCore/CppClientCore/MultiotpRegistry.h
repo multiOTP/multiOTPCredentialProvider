@@ -2,10 +2,10 @@
  * multiOTP Credential Provider
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.4.0
- * @date      2022-11-04
+ * @version   5.9.5.6
+ * @date      2023-02-10
  * @since     2013
- * @copyright (c) 2016-2022 SysCo systemes de communication sa
+ * @copyright (c) 2016-2023 SysCo systemes de communication sa
  * @copyright (c) 2015-2016 ArcadeJust ("RDP only" enhancement)
  * @copyright (c) 2013-2015 Last Squirrel IT
  * @copyright Apache License, Version 2.0
@@ -54,6 +54,7 @@
 #define MULTIOTP_DISPLAY_LASTUSER   L"multiOTPDisplayLastUser"
 #define MULTIOTP_LAST_USER_AUTHENTICATED   L"lastUserAuthenticated"
 #define MULTIOTP_LAST_USER_TIMESTAMP   L"lastUserTimestamp"
+#define MULTIOTP_NUMLOCK_ON   L"numlockOn"
 
 
 #define RDP_SETTINGS                L"SYSTEM\\CurrentControlSet\\Control\\Terminal Server\\WinStations\\RDP-Tcp"
@@ -92,8 +93,8 @@ enum CONF_VALUE
 	CONF_DISPLAY_LAST_USER= 17,
 	LAST_USER_AUTHENTICATED = 18,
 	LAST_USER_TIMESTAMP = 19,
-	CONF_NUM_VALUES = 20
-	
+	CONF_NUMLOCK_ON = 20,
+	CONF_NUM_VALUES = 21	
 };
 
 static const REGISTRY_KEY s_CONF_VALUES[] =
@@ -118,6 +119,7 @@ static const REGISTRY_KEY s_CONF_VALUES[] =
     { HKEY_CLASSES_ROOT, MULTIOTP_SETTINGS, MULTIOTP_DISPLAY_LASTUSER},
 	{ HKEY_CLASSES_ROOT, MULTIOTP_SETTINGS, MULTIOTP_LAST_USER_AUTHENTICATED},
 	{ HKEY_CLASSES_ROOT, MULTIOTP_SETTINGS, MULTIOTP_LAST_USER_TIMESTAMP},
+	{ HKEY_CLASSES_ROOT, MULTIOTP_SETTINGS, MULTIOTP_NUMLOCK_ON},
 };
 VOID writeKeyValueInMultiOTPRegistry(_In_ HKEY rootKeyValue, _In_ PWSTR keyName, _In_ PWSTR valueName, _In_ PWSTR writeValue);
 VOID writeRegistryValueString(_In_ CONF_VALUE conf_value, _In_ PWSTR writeValue);
@@ -125,3 +127,5 @@ DWORD readRegistryValueString(_In_ CONF_VALUE conf_value, _Outptr_result_nullonf
 DWORD readRegistryValueInteger(_In_ CONF_VALUE conf_value, _In_ DWORD defaultValue);
 DWORD readKeyValueInMultiOTPRegistry(_In_ HKEY rootKeyValue, _In_ PWSTR keyName, _In_ PWSTR valueName, _Outptr_result_nullonfailure_ PWSTR* data, _In_ PWSTR defaultValue);
 VOID writeRegistryValueInteger(_In_ CONF_VALUE conf_value, _In_ DWORD writeValue);
+VOID writeKeyValueIntegerInMultiOTPRegistry(_In_ HKEY rootKeyValue, _In_ PWSTR keyName, _In_ PWSTR valueName, _In_ DWORD writeValue);
+DWORD readKeyValueInMultiOTPRegistryInteger(_In_ HKEY rootKeyValue, _In_ PWSTR keyName, _In_ PWSTR valueName, _In_ DWORD defaultValue);

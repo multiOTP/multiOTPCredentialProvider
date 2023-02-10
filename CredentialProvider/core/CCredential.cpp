@@ -2,7 +2,7 @@
 **
 ** Copyright	2012 Dominik Pretzsch
 **				2017 NetKnights GmbH
-**				2020-2022 SysCo systemes de communication sa
+**				2020-2023 SysCo systemes de communication sa
 **
 ** Author		Dominik Pretzsch
 **				Nils Behlen
@@ -21,6 +21,7 @@
 **    limitations under the License.
 * 
 * Change Log
+*   2023-01-27 5.9.2.2 SysCo/yj ENH: unlock timeout, activate numlock
 *   2022-08-10 5.9.2.1 SysCo/yj ENH: unlock timeout, iswithout2fa, display last authenticated user
 *   2022-05-26 5.9.0.3 SysCo/al-yj ENH: UPN cache, Legacy cache
     2022-05-20 5.9.0.2 SysCo/yj ENH: Once SMS or EMAIL link is clicked, the link is hidden and a message is displayed to let the user know that the token was sent.
@@ -46,6 +47,10 @@
 #include "MultiotpRegistry.h" // multiOTP/yj
 #include "DsGetDC.h" // multiOTP/yj
 #include "Lm.h" // multiOTP/yj
+#include "mq.h" // multiOTP/yj
+#include "sddl.h" // multiOTP/yj
+#include "credentialprovider.h" // multiOTP/yj
+#include "wtsapi32.h" // multiOTP/yj pour utiliser WTSEnumerateSessions
 
 using namespace std;
 
@@ -227,7 +232,6 @@ HRESULT CCredential::SetSelected(__out BOOL* pbAutoLogon)
 	{
 		*pbAutoLogon = TRUE;
 	}
-
 	// Manage link display if it's in one step mode
 	if (_config->provider.cpu == CPUS_LOGON && !_config->credential.passwordMustChange)
 	{
@@ -967,28 +971,84 @@ HRESULT CCredential::Connect(__in IQueryContinueWithStatus* pqcws)
 		return S_OK;
 	}
 
-	// Si c'est un unlock et que le timeoutunlock est > 0
-	if ((_config->provider.cpu == CPUS_UNLOCK_WORKSTATION) &&  _config->multiOTPTimeoutUnlock > 0) {
+	// Is multiOTP unlock timeout activated ?
+	if (_config->multiOTPTimeoutUnlock > 0) {
+		DebugPrint("multiOTP timeout Unlock is configured on : "+ std::to_string(_config->multiOTPTimeoutUnlock) + " minutes");
 
-		int storedTimestamp = readRegistryValueInteger(LAST_USER_TIMESTAMP, 0);
-		int actualTimestamp = minutesSinceEpoch();
-
-		PWSTR tempStr = L"";
-		readKeyValueInMultiOTPRegistry(HKEY_CLASSES_ROOT, L"", L"lastUserAuthenticated", &tempStr, L"");
-
-		// v?rifier si le nom d'utilisateur est identique au dernier login
-		if (cleanUsername(_config->provider.field_strings[FID_USERNAME]) == cleanUsername(tempStr))
+		// Let's search for the SID of the user that tries to log in
+		wchar_t username[1024];
+		std::wstring temp = cleanUsername(_config->provider.field_strings[FID_USERNAME]);
+		wcscpy_s(username, 1024, temp.c_str());
+		HRESULT hr = MQ_OK;
+		PSID authLoginUserSid = NULL;
+		hr = CCredential::getSid(username, &authLoginUserSid);
+		if (FAILED(hr))
 		{
-			if (actualTimestamp - storedTimestamp < _config->multiOTPTimeoutUnlock) {
-				//storeLastConnectedUserIfNeeded(); ne pas faire ceci sinon ?a ralonge ? chaque fois le temps
-				_piStatus = PI_AUTH_SUCCESS;
-				return S_OK;
+			// Write in the log that it has failed
+			DebugPrint(L"GetSid has failed with username: ");
+			DebugPrint(username);
+			DebugPrint(hr);
+			DebugPrint("****");
+		}
+		else {
+			// Convert SID to string
+			LPTSTR authLoginUserSidAsString = NULL;
+			ConvertSidToStringSid(authLoginUserSid, &authLoginUserSidAsString);
+			DebugPrint(L"The SID of the user trying to connect is: " + (std::wstring)authLoginUserSidAsString);
+
+			// Check the registry. Has this user logged in recently ?
+			if (hasloggedInRecently(authLoginUserSidAsString))
+			{
+				DebugPrint("The user has logged in recently");
+				WTS_SESSION_INFOW* pSessionInfo = NULL;
+				DWORD count;
+				// Look for the user in the current computer sessions
+				if (0 != WTSEnumerateSessions(WTS_CURRENT_SERVER_HANDLE, 0, 1, &pSessionInfo, &count))
+				{
+					DebugPrint("Number of active sessions:" + std::to_string(count));
+
+					// For each session
+					for (int index = 0; index < count; index++) {
+						DebugPrint("Session number:   " + std::to_string(index));
+						DebugPrint("        id:       " + std::to_string(pSessionInfo[index].SessionId));
+						DebugPrint("        state:    " + std::to_string(pSessionInfo[index].State));
+
+						LPWSTR name;
+						DWORD nameSize;
+						WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, pSessionInfo[index].SessionId, _WTS_INFO_CLASS::WTSUserName, &name, &nameSize);
+						DebugPrint(L"        username: " + (wstring)name);
+
+						PSID pSessionUserSid = NULL;
+						hr = CCredential::getSid(name, &pSessionUserSid);
+						if (FAILED(hr)) {
+							DebugPrint("FAILED to find the SID");
+						}
+						else {
+							LPTSTR sessionSidAsString = NULL;
+							ConvertSidToStringSid(pSessionUserSid, &sessionSidAsString);
+
+							DebugPrint(L"        sid:      " + (wstring)sessionSidAsString);
+							
+							// Is the session linked to the user trying to connect ?
+							if (pSessionInfo[index].State == WTS_CONNECTSTATE_CLASS::WTSActive && wcscmp(authLoginUserSidAsString,sessionSidAsString)==0) {
+								DebugPrint("Found a session for the user trying to connect");
+								_piStatus = PI_AUTH_SUCCESS; // Ne pas stocker l'heure de login sinon cela prolongerait le timeout
+								return S_OK;
+							}
+						}
+					}
+					DebugPrint("No session found");
+				}
+			}
+			else {
+				DebugPrint("The user has NOT logged in recently");
 			}
 		}
 	}
 
+	
 	// The user is without2fa no need to go further
-	if (_privacyIDEA.isWithout2FA(_config->credential.username, _config->credential.domain))
+	if (_config->multiOTPWithout2FA && _privacyIDEA.isWithout2FA(_config->credential.username, _config->credential.domain))
 	{
 		_piStatus = PI_AUTH_SUCCESS;
 		storeLastConnectedUserIfNeeded(); 
@@ -1001,7 +1061,14 @@ HRESULT CCredential::Connect(__in IQueryContinueWithStatus* pqcws)
 		{
 			// Delay for a short moment, otherwise logonui freezes (???)
 			this_thread::sleep_for(chrono::milliseconds(200));
+		
 			// Then skip to next step
+
+			// Activate the numlock			
+			if (_config->numlockOn && GetKeyState(VK_NUMLOCK) == 0 ) {
+				keybd_event(VK_NUMLOCK, 0x45, KEYEVENTF_EXTENDEDKEY | 0, 0);
+				keybd_event(VK_NUMLOCK, 0x45, KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP, 0);
+			}
 		}
 		else
 		{
@@ -1158,16 +1225,35 @@ HRESULT CCredential::ReportResult(
 }
 
 void CCredential::storeLastConnectedUserIfNeeded() {
+	PSID pTrustedUserSid = NULL;
+	HRESULT hr = MQ_OK;
+
 	if (_config->multiOTPDisplayLastUser || _config->multiOTPTimeoutUnlock > 0) {
 		wchar_t username[1024];
-		wcscpy_s(username, 1024, _config->provider.field_strings[FID_USERNAME]);
 
+		// R?cup?rer le SID
+		std::wstring temp = cleanUsername(_config->provider.field_strings[FID_USERNAME]);
+		wcscpy_s(username, 1024, temp.c_str());
+		hr = CCredential::getSid(username, &pTrustedUserSid);
+		if (FAILED(hr))
+		{
+			// Write in the log that it has failed
+			DebugPrint(L"GetSid has failed with username: ");
+			DebugPrint(username);
+			DebugPrint(hr);
+			DebugPrint("****");
+		}
+
+		// Store the SID and timestamp in order to check for locked users
+		CCredential::storeSidAndTimeStamp(pTrustedUserSid);
+
+		// A conserver pour proposer le dernier login
+		wcscpy_s(username, 1024, _config->provider.field_strings[FID_USERNAME]);
 		// Store the username
         writeRegistryValueString(LAST_USER_AUTHENTICATED, username);
-
 		// Store the timestamp
 		if (_config->multiOTPTimeoutUnlock > 0) {			
-			int timestamp = minutesSinceEpoch();
+			const int timestamp = minutesSinceEpoch();
 			writeRegistryValueInteger(LAST_USER_TIMESTAMP, timestamp);
 		}
 	} else {
@@ -1189,4 +1275,141 @@ std::wstring CCredential::cleanUsername(std::wstring username)
 		clean = clean.substr(0, clean.find('@'));
 	}
 	return clean;
+}
+
+/**
+Source : https://learn.microsoft.com/en-us/previous-versions/windows/desktop/legacy/ms707085(v=vs.85)?redirectedfrom=MSDN#Anchor_1
+**/
+HRESULT CCredential::getSid(LPCWSTR wszAccName, PSID* ppSid)
+{
+	// Validate the input parameters.  
+	if (wszAccName == NULL || ppSid == NULL)
+	{
+		return MQ_ERROR_INVALID_PARAMETER;
+	}
+
+	// Create buffers that may be large enough.  
+	// If a buffer is too small, the count parameter will be set to the size needed.  
+	const DWORD INITIAL_SIZE = 32;
+	DWORD cbSid = 0;
+	DWORD dwSidBufferSize = INITIAL_SIZE;
+	DWORD cchDomainName = 0;
+	DWORD dwDomainBufferSize = INITIAL_SIZE;
+	WCHAR* wszDomainName = NULL;
+	SID_NAME_USE eSidType;
+	DWORD dwErrorCode = 0;
+	HRESULT hr = MQ_OK;
+
+	// Create buffers for the SID and the domain name.  
+	*ppSid = (PSID) new BYTE[dwSidBufferSize];
+	if (*ppSid == NULL)
+	{
+		return MQ_ERROR_INSUFFICIENT_RESOURCES;
+	}
+	memset(*ppSid, 0, dwSidBufferSize);
+	wszDomainName = new WCHAR[dwDomainBufferSize];
+	if (wszDomainName == NULL)
+	{
+		return MQ_ERROR_INSUFFICIENT_RESOURCES;
+	}
+	memset(wszDomainName, 0, dwDomainBufferSize * sizeof(WCHAR));
+
+	// Obtain the SID for the account name passed.  
+	for (; ; ) // boucle infinie
+	{
+
+		// Set the count variables to the buffer sizes and retrieve the SID.  
+		cbSid = dwSidBufferSize;
+		cchDomainName = dwDomainBufferSize;
+		if (LookupAccountNameW(
+			NULL,            // Computer name. NULL for the local computer  
+			wszAccName,
+			*ppSid,          // Pointer to the SID buffer. Use NULL to get the size needed,  
+			&cbSid,          // Size of the SID buffer needed.  
+			wszDomainName,   // wszDomainName,  
+			&cchDomainName,
+			&eSidType
+		))
+		{
+			if (IsValidSid(*ppSid) == FALSE)
+			{
+				DebugPrint(L"The SID for %s is invalid.\n", wszAccName);
+				dwErrorCode = MQ_ERROR;
+			}
+			break;
+		}
+		dwErrorCode = GetLastError();
+
+		// Check if one of the buffers was too small.  
+		if (dwErrorCode == ERROR_INSUFFICIENT_BUFFER)
+		{
+			if (cbSid > dwSidBufferSize)
+			{
+
+				// Reallocate memory for the SID buffer.  
+				DebugPrint(L"The SID buffer was too small. It will be reallocated.\n");
+				FreeSid(*ppSid);
+				*ppSid = (PSID) new BYTE[cbSid];
+				if (*ppSid == NULL)
+				{
+					return MQ_ERROR_INSUFFICIENT_RESOURCES;
+				}
+				memset(*ppSid, 0, cbSid);
+				dwSidBufferSize = cbSid;
+			}
+			if (cchDomainName > dwDomainBufferSize)
+			{
+
+				// Reallocate memory for the domain name buffer.  
+				DebugPrint(L"The domain name buffer was too small. It will be reallocated.");
+				delete[] wszDomainName;
+				wszDomainName = new WCHAR[cchDomainName];
+				if (wszDomainName == NULL)
+				{
+					return MQ_ERROR_INSUFFICIENT_RESOURCES;
+				}
+				memset(wszDomainName, 0, cchDomainName * sizeof(WCHAR));
+				dwDomainBufferSize = cchDomainName;
+			}
+		}
+		else
+		{
+			hr = HRESULT_FROM_WIN32(dwErrorCode);
+			break;
+		}
+	}
+
+	delete[] wszDomainName;
+	return hr;
+}
+
+
+HRESULT CCredential::storeSidAndTimeStamp(PSID ppsid) {
+	LPTSTR StringSid = NULL;
+	ConvertSidToStringSid(ppsid, &StringSid);
+	const int timestamp = minutesSinceEpoch();
+	writeKeyValueIntegerInMultiOTPRegistry(HKEY_CLASSES_ROOT, L"history", StringSid, timestamp);
+	return S_OK;
+}
+
+
+/*
+* Check if the SID exists in the history table AND check if the timeStamp is correct
+*/
+bool CCredential::hasloggedInRecently(LPTSTR userId) {
+	DWORD lastLoggedInTime = 0;
+
+	// Is multiOTP configured for unlockTimeout ?
+	if (_config->multiOTPTimeoutUnlock > 0) {
+		// Search if the key exists
+		lastLoggedInTime = readKeyValueInMultiOTPRegistryInteger(HKEY_CLASSES_ROOT, L"history", userId, 0);
+
+		DebugPrint(L"LAST LOGGED IN TIME FOR USER: "+ (std::wstring)userId );		
+		DebugPrint(lastLoggedInTime);
+
+		const int timestamp = minutesSinceEpoch();
+
+		return (timestamp- lastLoggedInTime) < _config->multiOTPTimeoutUnlock;
+	}
+	return false;
 }

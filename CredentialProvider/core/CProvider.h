@@ -43,7 +43,7 @@ enum SERIALIZATION_AVAILABLE_FOR
 	SAF_DOMAIN
 };
 
-class CProvider : public ICredentialProvider
+class CProvider : public ICredentialProvider, public ICredentialProviderSetUserArray
 {
 public:
 	// IUnknown
@@ -68,6 +68,7 @@ public:
 		static const QITAB qit[] =
 		{
 			QITABENT(CProvider, ICredentialProvider), // IID_ICredentialProvider
+			QITABENT(CProvider, ICredentialProviderSetUserArray), // IID_ICredentialProviderSetUserArray
 			{ 0 },
 		};
 		return QISearch(this, qit, riid, ppv);
@@ -87,6 +88,8 @@ public:
 		__out BOOL* pbAutoLogonWithDefault) override;
 
 	IFACEMETHODIMP GetCredentialAt(__in DWORD dwIndex, __deref_out ICredentialProviderCredential** ppcpc) override;
+
+	IFACEMETHODIMP SetUserArray(_In_ ICredentialProviderUserArray* users);
 
 	friend HRESULT CSample_CreateInstance(__in REFIID riid, __deref_out void** ppv);
 	
@@ -110,6 +113,8 @@ private:
 	std::unique_ptr<CCredential>			_credential;
 
 	std::shared_ptr<MultiOTPConfiguration>			_config;
+
+	ICredentialProviderUserArray *_pCredProviderUserArray;
 
 };
 

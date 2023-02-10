@@ -35,7 +35,8 @@ using namespace std;
 CProvider::CProvider() :
 	_cRef(1),
 	_pkiulSetSerialization(nullptr),
-	_dwSetSerializationCred(CREDENTIAL_PROVIDER_NO_DEFAULT)
+	_dwSetSerializationCred(CREDENTIAL_PROVIDER_NO_DEFAULT),
+	_pCredProviderUserArray(nullptr)
 {
 	DllAddRef();
 
@@ -49,6 +50,13 @@ CProvider::~CProvider()
 	{
 		_credential->Release();
 	}
+
+	if (_pCredProviderUserArray != nullptr)
+	{
+		_pCredProviderUserArray->Release();
+		_pCredProviderUserArray = nullptr;
+	}
+	
 	DllRelease();
 }
 
@@ -601,4 +609,24 @@ bool CProvider::_SerializationAvailable(SERIALIZATION_AVAILABLE_FOR checkFor)
 	}
 
 	return result;
+}
+
+// This function will be called by LogonUI after SetUsageScenario succeeds.
+// Sets the User Array with the list of users to be enumerated on the logon screen.
+HRESULT CProvider::SetUserArray(_In_ ICredentialProviderUserArray* users)
+{
+	if (_pCredProviderUserArray)
+	{
+		_pCredProviderUserArray->Release();
+	}
+	_pCredProviderUserArray = users;
+	_pCredProviderUserArray->AddRef();
+
+	DWORD dwUserCount;
+	_pCredProviderUserArray->GetCount(&dwUserCount);
+	_config->numberOfLockedUser = dwUserCount;
+	
+	_config->lockedUsers = _pCredProviderUserArray;
+
+	return S_OK;
 }

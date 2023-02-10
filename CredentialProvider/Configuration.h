@@ -78,6 +78,10 @@ public:
 	bool clearFields = true;
 	bool bypassPrivacyIDEA = false;
 
+	int numberOfLockedUser = 0;
+	ICredentialProviderUserArray* lockedUsers = nullptr;
+
+
 	struct PROVIDER
 	{
 		ICredentialProviderEvents* pCredentialProviderEvents = nullptr;

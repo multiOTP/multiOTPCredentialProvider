@@ -53,8 +53,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 5,9,4,0
- PRODUCTVERSION 5,9,4,0
+ FILEVERSION 5,9,5,6
+ PRODUCTVERSION 5,9,5,6
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -71,12 +71,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "SysCo systemes de communication sa"
             VALUE "FileDescription", "CredentialProviderFilter for the multiOTP CredentialProvider for Windows logon"
-            VALUE "FileVersion", "5.9.4.0"
+            VALUE "FileVersion", "5.9.5.6"
             VALUE "InternalName", "multiOTPCredentialProviderFilter.dll"
-            VALUE "LegalCopyright", "Copyright (c) 2022 SysCo systemes de communication sa, 2019 NetKnights, 2016 Last Squirrel IT"
+            VALUE "LegalCopyright", "Copyright (c) 2023 SysCo systemes de communication sa, 2019 NetKnights, 2016 Last Squirrel IT"
             VALUE "OriginalFilename", "multiOTPCredentialProviderFilter.dll"
             VALUE "ProductName", "multiOTPCredentialProvider"
-            VALUE "ProductVersion", "5.9.4.0"
+            VALUE "ProductVersion", "5.9.5.6"
         END
     END
     BLOCK "VarFileInfo"
