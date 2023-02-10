@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+**
+** * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+-->
+<Include>
+  <?if $(var.Platform) = x64 ?>
+    <!-- <?define ProductName = "$(var.BaseProductName) $(var.Version) (64 bit)" ?> -->
+    <?define Win64 = "yes" ?>
+    <?define PlatformProgramFilesFolder = "ProgramFiles64Folder" ?>
+    <?define PlatformSystemFolder = "System64Folder" ?>
+  <?else ?>
+    <!-- <?define ProductName = "$(var.BaseProductName) $(var.Version)" ?> -->
+    <?define Win64 = "no" ?>
+    <?define PlatformProgramFilesFolder = "ProgramFilesFolder" ?>
+    <?define PlatformSystemFolder = "SystemFolder" ?>
+  <?endif ?>
+</Include>

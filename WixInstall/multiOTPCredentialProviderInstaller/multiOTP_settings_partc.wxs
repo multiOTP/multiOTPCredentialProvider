@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+	<Fragment>
+    <UI>
+      <Dialog Id="multiOTPSettingsc" Width="370" Height="270" Title="[ProductName] Setup" NoMinimize="yes">
+        <Control Type="Text" Id="Label_Logon" Width="50" Height="15" X="33" Y="63" Text="{\WixUI_Font_Title}Logon" />
+        <Control Type="RadioButtonGroup" Property="CPUS_LOGON" Id="RadioButtonGroupCPUSLogon" Width="274" Height="20" X="35" Y="78">
+          <RadioButtonGroup Property="CPUS_LOGON">
+            <RadioButton Text="Only Remote" Height="17" Value="1e" Width="70" X="132" Y="0" />
+            <RadioButton Text="Local and Remote" Height="17" Value="0e" Width="90" X="41" Y="0" />
+            <RadioButton Text="Only Local" Height="17" Value="2e" Width="60" X="203" Y="0" />
+            <RadioButton Text="None" Height="17" Value="3d" Width="40" X="0" Y="0" />
+          </RadioButtonGroup>
+        </Control>
+        <Control Type="Text" Id="Label_Unlock" Width="50" Height="15" X="33" Y="108" Text="{\WixUI_Font_Title} Unlock" />
+        <Control Type="RadioButtonGroup" Property="CPUS_UNLOCK" Id="RadioButtonGroupCPUSUnlock" Width="274" Height="20" X="35" Y="123">
+          <RadioButtonGroup Property="CPUS_UNLOCK">
+            <RadioButton Text="Only Remote" Height="17" Value="1e" Width="70" X="132" Y="0" />
+            <RadioButton Text="Local and Remote" Height="17" Value="0e" Width="90" X="41" Y="0" />
+            <RadioButton Text="Only Local" Height="17" Value="2e" Width="60" X="203" Y="0" />
+            <RadioButton Text="None" Height="17" Value="3d" Width="40" X="0" Y="0" />
+          </RadioButtonGroup>
+        </Control>
+        <Control Type="Text" Id="Label_Credui" Width="200" Height="15" X="33" Y="153" Text="{\WixUI_Font_Title}CredUI (e.g. Run as Administrator)" />
+        <Control Type="RadioButtonGroup" Property="CPUS_CREDUI" Id="RadioButtonGroupCPUSCredUI" Width="274" Height="20" X="35" Y="168">
+          <RadioButtonGroup Property="CPUS_CREDUI">
+            <RadioButton Text="Only Remote" Height="17" Value="1e" Width="70" X="132" Y="0" />
+            <RadioButton Text="Local and Remote" Height="17" Value="0e" Width="90" X="41" Y="0" />
+            <RadioButton Text="Only Local" Height="17" Value="2e" Width="60" X="203" Y="0" />
+            <RadioButton Text="None" Height="17" Value="3d" Width="40" X="0" Y="0" />
+          </RadioButtonGroup>
+        </Control>
+        
+        <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="&amp;Back">
+          <Publish Event="NewDialog" Value="multiOTPSettingsb">1</Publish>
+        </Control>
+        <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="&amp;Next">
+          <Publish Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
+        </Control>
+        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancel">
+          <Publish Event="SpawnDialog" Value="CancelDlg">1</Publish>
+        </Control>
+        <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="WixUI_Bmp_Banner" />
+        <Control Id="Description" Type="Text" X="25" Y="23" Width="280" Height="15" Transparent="yes" NoPrefix="yes">
+          <Text>Type the needed multiOTP server information, then click Next.</Text>
+        </Control>
+        <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
+        <Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15" Transparent="yes" NoPrefix="yes">
+          <Text>{\WixUI_Font_Title}multiOTP configuration</Text>
+        </Control>
+        <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" />
+      </Dialog>
+    </UI>
+	</Fragment>
+</Wix>

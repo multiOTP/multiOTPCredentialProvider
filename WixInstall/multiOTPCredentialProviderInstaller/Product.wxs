@@ -1,0 +1,428 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+  <!--<?include $(sys.CURRENTDIR)\Config.wxi?> -->
+  
+  <Product Id="141b967c-a2ba-4dc4-ab6b-93975d20221d" Name="multiOTPCredentialProvider" Language="1033" Version="5.9.5.6" Manufacturer="SysCo" UpgradeCode="f63c1c8c-ce58-4add-b7ba-4e2dca872b50">
+    
+    <Package Id='*' InstallerVersion="200" Compressed="yes" InstallScope="perMachine" Description="multiOTP Credential provider Installer" Platform="x64"/>
+
+    <WixVariable Id="WixUILicenseRtf" Value="..\..\ApacheLicense.rtf" />
+    
+    <Binary Id="ExclamIcon" SourceFile="..\..\ico\exclam.ico" />
+    <Icon Id="multiOTP.ico" SourceFile="..\..\ico\multiOTP.ico "/>
+
+    <Binary Id="SetACL64" SourceFile="..\..\tools\x64\SetACL.exe" />
+    <Binary Id="SetACL32" SourceFile="..\..\tools\i386\SetACL.exe" />
+    
+    <Property Id="ARPPRODUCTICON" Value="multiOTP.ico" />
+
+    <Property Id="VCPP64">
+      <RegistrySearch Id="VCPP64Key"
+                      Root="HKLM"
+                      Key="SOFTWARE\Classes\Installer\Dependencies\Microsoft.VS.VC_RuntimeMinimumVSU_amd64,v14"
+                      Name="Version"
+                      Type="raw"
+                      Win64="yes" />
+    </Property>
+    <Property Id="VCPP86">
+      <RegistrySearch Id="VCPP86Key"
+                      Root="HKLM"
+                      Key="SOFTWARE\Classes\Installer\Dependencies\Microsoft.VS.VC_RuntimeMinimumVSU_x86,v14"
+                      Name="Version"
+                      Type="raw"
+                      Win64="yes"/>
+    </Property>
+    
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+		<MediaTemplate EmbedCab="yes" />
+
+    <WixVariable Id="WixUIBannerBmp" Value="..\..\ico\WixUIBannerBmp.bmp" />
+    <WixVariable Id="WixUIDialogBmp" Value="..\..\ico\WixUIDialogBmp.bmp" />
+    
+    <Condition Message="You need to be an administrator to install this product.">
+      Privileged
+    </Condition>
+
+    <Condition Message='You must run a 64 bits computer.'>
+      VersionNT64
+    </Condition>
+
+    <Condition Message="You need to install Visual C++ x64. Please download it here : https://aka.ms/vs/16/release/vc_redist.x64.exe">
+      <![CDATA[Installed OR VCPP64<>""]]>
+    </Condition>
+
+    <Condition Message="You need to install Visual C++ x86. Please download it here : https://aka.ms/vs/16/release/vc_redist.x86.exe">
+      <![CDATA[Installed OR VCPP86<>""]]>
+    </Condition>
+    
+    <!-- Property reference to implicitly call the built-in custom action WixQueryOsWellKnownSID,
+         in order to use  generic SID : https://docs.microsoft.com/en-us/troubleshoot/windows-server/identity/security-identifiers-in-windows -->
+    <PropertyRef Id="WIX_ACCOUNT_USERS" />
+    <!-- PropertyRef Id="WIX_ACCOUNT_NETWORKSERVICE" / -->
+
+    <Property Id="MULTIOTP_PHP_SOURCE" Value=".\..\..\stable\php"/>
+    <Property Id="MULTIOTP_PHP_DESTINATION" Value=" "/>
+
+    <Property Id="MULTIOTP_LOGINTITLE">
+      <RegistrySearch Id="SearchLoginTitleRegistry" Root="HKCR" Key="CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}" Name="multiOTPLoginTitle" Type="raw" Win64="yes"/>
+    </Property>
+    <Property Id="MULTIOTP_RDPONLY">
+      <RegistrySearch Id='multiOTPRDPOnlyRegistry' Type='raw' Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}' Name='multiOTPRDPOnly' Win64="yes"/>
+    </Property>
+    <Property Id="MULTIOTP_URL">
+      <RegistrySearch Id='multiOTPServersRegistry' Type='raw' Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}' Name='multiOTPServers' Win64="yes"/>
+    </Property>
+    <Property Id="MULTIOTP_TIMEOUT" Value="5">
+      <RegistrySearch Id='multiOTPTimeoutRegistry' Type='raw' Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}' Name='multiOTPServerTimeout' Win64="yes"/>
+    </Property>
+    <Property Id="MULTIOTP_SECRET">
+      <RegistrySearch Id='multiOTPSecretRegistry' Type='raw' Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}' Name='multiOTPSharedSecret' Win64="yes"/>
+    </Property>
+    <Property Id="MULTIOTP_CACHE" Value="1">
+      <RegistrySearch Id='multiOTPCacheRegistry' Type='raw' Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}' Name='multiOTPCacheEnabled' Win64="yes"/>
+    </Property>
+    <Property Id="MULTIOTP_DISPLAYSMSLINK">
+      <RegistrySearch Id='multiOTPDisplaySmsLinkRegistry' Type='raw' Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}' Name='multiOTPDisplaySmsLink' Win64="yes"/>
+    </Property>
+    <Property Id="MULTIOTP_DISPLAYEMAILLINK">
+      <RegistrySearch Id='multiOTPDisplayEmailLinkRegistry' Type='raw' Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}' Name='multiOTPDisplayEmailLink' Win64="yes"/>
+    </Property>
+    <Property Id="MULTIOTP_LOGINTEXT">
+      <RegistrySearch Id="SearchLoginTextRegistry" Root="HKCR" Key="CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}" Name="login_text" Type="raw" Win64="yes"/>
+    </Property>
+    <Property Id="MULTIOTP_FLATDOMAIN">
+      <RegistrySearch Id="SearchFlatDomainRegistry" Root="HKCR" Key="CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}" Name="multiOTPFlatDomain" Type="raw" Win64="yes"/>
+    </Property>
+    <Property Id="MULTIOTP_PATH">
+      <RegistrySearch Id="SearchmultiOTPPathRegistry" Root="HKCR" Key="CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}" Name="multiOTPPath" Type="raw" Win64="yes"/>
+    </Property>
+    <Property Id="MULTIOTP_TIMEOUTCP" Value="60">
+      <RegistrySearch Id='multiOTPTimeoutCPRegistry' Type='raw' Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}' Name='multiOTPTimeout' Win64="yes"/>
+    </Property>
+    <Property Id="MULTIOTP_UPNFORMAT">
+      <RegistrySearch Id='multiOTPUPNFormatRegistry' Type='raw' Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}' Name='multiOTPUPNFormat' Win64="yes"/>
+    </Property>
+
+    <Property Id="MULTIOTP_TWO_STEP_HIDE_OTP" Value="1">
+      <RegistrySearch Id='multiOTPTwoStepHideOTPRegistry' Type='raw' Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}' Name='two_step_hide_otp' Win64="yes"/>
+    </Property>
+    <Property Id="MULTIOTP_TWO_STEP_SEND_PASSWORD" Value="0">
+      <RegistrySearch Id='multiOTPTwoStepSendPasswordRegistry' Type='raw' Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}' Name='two_step_send_password' Win64="yes"/>
+    </Property>
+    <Property Id="MULTIOTP_TWO_STEP_SEND_EMPTY_PASSWORD" Value="0">
+      <RegistrySearch Id='multiOTPTwoStepSendEmptyPasswordRegistry' Type='raw' Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}' Name='two_step_send_empty_password' Win64="yes"/>
+    </Property>
+
+    <Property Id="MULTIOTP_OTP_TEXT" Value="One-time password">
+      <RegistrySearch Id='multiOTPOtpTextRegistry' Type='raw' Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}' Name='otp_text' Win64="yes"/>
+    </Property>
+    <Property Id="MULTIOTP_OTP_HINT_TEXT" Value="One-time password">
+      <RegistrySearch Id='multiOTPHintTextRegistry' Type='raw' Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}' Name='otp_hint_text' Win64="yes"/>
+    </Property>
+    <Property Id="MULTIOTP_OTP_FAIL_TEXT" Value="Wrong one-time password">
+      <RegistrySearch Id='multiOTPFailTextRegistry' Type='raw' Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}' Name='otp_fail_text' Win64="yes"/>
+    </Property>
+    <Property Id="MULTIOTP_BITMAP_PATH">
+      <RegistrySearch Id='multiOTPBitmapPathRegistry' Type='raw' Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}' Name='v1_bitmap_path' Win64="yes"/>
+    </Property>
+    <Property Id="MULTIOTP_EXCLUDED_ACCOUNT">
+      <RegistrySearch Id='multiOTPExcludedAccountRegistry' Type='raw' Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}' Name='excluded_account' Win64="yes"/>
+    </Property>
+    <Property Id="MULTIOTP_DEFAULT_PREFIX">
+      <RegistrySearch Id='multiOTPDefaultPrefixRegistry' Type='raw' Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}' Name='multiOTPDefaultPrefix' Win64="yes"/>
+    </Property>
+    <Property Id="MULTIOTP_LOCALSERVERONLY"> <!-- Undefined means not checked -->
+    </Property>
+    <Property Id="CPUS_LOGON" Value="3d">
+      <RegistrySearch Id="SearchCPUSLogon" Root="HKCR" Key="CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}" Name="cpus_logon" Win64="yes" Type="raw" />
+    </Property>
+    <Property Id="CPUS_UNLOCK" Value="3d">
+      <RegistrySearch Id="SearchCPUSUnlock" Root="HKCR" Key="CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}" Name="cpus_unlock" Win64="yes" Type="raw" />
+    </Property>
+    <Property Id="CPUS_CREDUI" Value="3d">
+      <RegistrySearch Id="SearchCPUSCredUI" Root="HKCR" Key="CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}" Name="cpus_credui" Win64="yes" Type="raw" />
+    </Property>
+    <Property Id="MULTIOTP_NUMLOCKON">
+      <RegistrySearch Id="SearchNumlock" Root="HKLM" Key="CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}" Name="numlockOn" Win64="yes" Type="raw" />
+    </Property>
+    <Property Id="MULTIOTP_TIMEOUTUNLOCK" Value="0">
+      <RegistrySearch Id='multiOTPTimeoutUnlockRegistry' Type='raw' Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}' Name='multiOTPTimeoutUnlock' Win64="yes"/>
+    </Property>
+    <Property Id="MULTIOTP_DISPLAYLASTUSER">
+      <RegistrySearch Id='multiOTPDisplayLastUserRegistry' Type='raw' Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}' Name='multiOTPDisplayLastUser' Win64="yes"/>
+    </Property>
+    <Property Id="MULTIOTP_WITHOUT2FA">
+      <RegistrySearch Id='multiOTPWithout2FaRegistry' Type='raw' Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}' Name='multiOTPWithout2FA' Win64="yes"/>
+    </Property>
+    
+
+    <!-- Set default values if not found in the registry -->
+    <SetProperty Id="MULTIOTP_LOGINTEXT" After="AppSearch" Action="setLoginTextAction1" Value="multiOTP Login">
+      <![CDATA[MULTIOTP_LOGINTITLE="" AND MULTIOTP_LOGINTEXT=""]]>
+    </SetProperty>
+    <SetProperty Id="MULTIOTP_LOGINTEXT" After="AppSearch" Action="setLoginTextAction2" Value="[MULTIOTP_LOGINTITLE]">
+      <![CDATA[MULTIOTP_LOGINTITLE<>"" AND MULTIOTP_LOGINTEXT=""]]>
+    </SetProperty>
+    <SetProperty Id="MULTIOTP_CACHE" After="AppSearch" Value="">
+      <![CDATA[MULTIOTP_CACHE="#0"]]>
+    </SetProperty>
+    <SetProperty Id="MULTIOTP_DISPLAYSMSLINK" After="AppSearch" Value="">
+      <![CDATA[MULTIOTP_DISPLAYSMSLINK="#0"]]>
+    </SetProperty>
+    <SetProperty Id="MULTIOTP_DISPLAYEMAILLINK" After="AppSearch" Value="">
+      <![CDATA[MULTIOTP_DISPLAYEMAILLINK="#0"]]>
+    </SetProperty>
+    <SetProperty Id="MULTIOTP_BITMAP_PATH" After="AppSearch" Value=""> <!-- Pas possible d'utiliser une valeur par d??faut dans property car on r??f??rence une property  -->
+      <![CDATA[MULTIOTP_BITMAP_PATH=""]]>
+    </SetProperty>
+    <SetProperty Id="MULTIOTP_PATH" After="AppSearch" Value="[ProgramFilesFolder]multiOTP\">
+      <![CDATA[MULTIOTP_PATH=""]]>
+    </SetProperty>
+    <SetProperty Id="MULTIOTP_PHP_DESTINATION" After="AppSearch" Value="[INSTALLFOLDER][MULTIOTP_PHP_DESTINATION]\">
+      <![CDATA[MULTIOTP_PHP_DESTINATION=""]]>
+    </SetProperty>
+    <SetProperty Id="MULTIOTP_UPNFORMAT" After="AppSearch" Value="">
+      <![CDATA[MULTIOTP_UPNFORMAT="#0"]]>
+    </SetProperty>
+    <SetProperty Id="MULTIOTP_NUMLOCKON" After="AppSearch" Value="">
+      <![CDATA[MULTIOTP_NUMLOCKON="#0"]]>
+    </SetProperty>
+    <SetProperty Id="MULTIOTP_DISPLAYLASTUSER" After="AppSearch" Value="">
+      <![CDATA[MULTIOTP_DISPLAYLASTUSER="#0"]]>
+    </SetProperty>
+    <SetProperty Id="MULTIOTP_WITHOUT2FA" After="AppSearch" Value="">
+      <![CDATA[MULTIOTP_WITHOUT2FA="#0"]]>
+    </SetProperty>
+    
+    <!-- Clean the checkbox value after the UI process, because checkbox value is null-->
+    <SetProperty Id="MULTIOTP_CACHE" Value="0" Action="cleanMultiOTPCacheAction" Before="InstallInitialize" Sequence="execute">NOT MULTIOTP_CACHE</SetProperty>
+    <SetProperty Id="MULTIOTP_DISPLAYSMSLINK" Value="0" Action="cleanMultiOTPDisplaySmsLinkAction" Before="InstallInitialize" Sequence="execute">NOT MULTIOTP_DISPLAYSMSLINK</SetProperty>
+    <SetProperty Id="MULTIOTP_DISPLAYEMAILLINK" Value="0" Action="cleanMultiOTPDisplayEmailLinkAction" Before="InstallInitialize" Sequence="execute">NOT MULTIOTP_DISPLAYEMAILLINK</SetProperty>
+    <SetProperty Id="MULTIOTP_UPNFORMAT" Value="0" Action="cleanMultiOTPUpnFormatAction" Before="InstallInitialize" Sequence="execute">NOT MULTIOTP_UPNFORMAT</SetProperty>
+    <SetProperty Id="MULTIOTP_NUMLOCKON" Value="0" Action="cleanNumlockOnAction" Before="InstallInitialize" Sequence="execute">NOT MULTIOTP_NUMLOCKON</SetProperty>
+    <SetProperty Id="MULTIOTP_DISPLAYLASTUSER" Value="0" Action="cleanMultiOTPDisplayLastUserAction" Before="InstallInitialize" Sequence="execute">NOT MULTIOTP_DISPLAYLASTUSER</SetProperty>
+    <SetProperty Id="MULTIOTP_WITHOUT2FA" Value="0" Action="cleanMultiOTPWithout2FAAction" Before="InstallInitialize" Sequence="execute">NOT MULTIOTP_WITHOUT2FA</SetProperty>
+    
+    
+    <!-- Directory definitions -->   
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFilesFolder" Name='PFiles'>
+        <!-- source : https://docs.microsoft.com/en-us/previous-versions//aa372057(v=vs.85)?redirectedfrom=MSDN -->
+        <Directory Id="INSTALLFOLDER" Name="multiOTP">
+          <Component Id="multiOTPLoginLogoComponent" Guid="834EC0DF-016E-41FE-BBE0-E2A6BCD49E7B" Win64="no">
+            <File Id="multiOTPLoginLogo" Name="loginLogo.bmp" Source=".\..\..\ico\loginLogo.bmp" KeyPath="yes"> </File>
+          </Component>
+        </Directory>
+      </Directory>
+      <Directory Id="System64Folder" Name='SystemF'>
+        <Component Id='CPLibrary' Guid='9A50EF1C-E1A5-4C53-9CE8-B0E7638257EC' Win64="yes">
+          <File Id='CredentialDLL' Name='multiOTPCredentialProvider.dll' Source='.\..\..\CredentialProvider\bin\x64\Release\multiOTPCredentialProvider.dll' KeyPath='yes'/>
+        </Component>
+        <Component Id='FilterLibrary' Guid='FF8E4CA3-7FB9-41C4-8B26-D5401541E543' Win64="yes">
+          <File Id='FilterDLL' Name='multiOTPCredentialProviderFilter.dll' Source='.\..\..\CredentialProviderFilter\bin\x64\Release\multiOTPCredentialProviderFilter.dll' KeyPath='yes' />
+        </Component>
+      </Directory>
+
+      <Component Id='RegistryCPComponent' Guid='C19202C5-AAB4-409F-A1D6-E12048959FE6' Win64="yes">
+        <RegistryKey Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}' ForceCreateOnInstall='yes' Id='clsidCPRegistry'>
+          <RegistryKey Key='InprocServer32' ForceCreateOnInstall='yes' Id='clsidCPInnocRegistry'>
+            <RegistryValue Type='string' Value='multiOTPCredentialProvider.dll'/>
+            <RegistryValue Type='string' Name='ThreadingModel' Value='Apartment'/>
+          </RegistryKey>
+          <RegistryValue Type='string' Value='multiOTPCredentialProvider'/>        
+        </RegistryKey>
+        <RegistryKey Root='HKLM' Key='SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential Providers\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}' ForceCreateOnInstall='yes' Id='clsidCPDllRegistry'>
+          <RegistryValue Type='string' Value='multiOTPCredentialProvider'/>
+        </RegistryKey>
+      </Component>
+
+      <Component Id='RegistryCPFComponent' Guid='64D2D8E0-495D-48C6-A7EA-7AEC19045ECF' Win64="yes">
+        <RegistryKey Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D979}' ForceCreateOnInstall='yes' Id='clsidCPFRegistry'>
+          <RegistryKey Key='InprocServer32' ForceCreateOnInstall='yes' Id='clsidCPFInnocRegistry'>
+            <RegistryValue Type='string' Value='multiOTPCredentialProviderFilter.dll'/>
+            <RegistryValue Type='string' Name='ThreadingModel' Value='Apartment'/>
+          </RegistryKey>
+          <RegistryValue Type='string' Value='multiOTPCredentialProviderFilter'/>
+        </RegistryKey>
+        <RegistryKey Root='HKLM' Key='SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential Provider Filters\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D979}' ForceCreateOnInstall='yes' Id='clsidCPFDllRegistry'>
+          <RegistryValue Type='string' Value='multiOTPCredentialProviderFilter'/>
+        </RegistryKey>
+      </Component>
+
+      <Component Id='RegistryWriteComponents' Guid='3B987442-F126-4FDD-A3F8-178C7850E391' Win64="yes"> <!-- Ne pas enlever le yes sinon ??a n'??crit plus au bon endroit m??me avec yes -->
+        <RegistryKey Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}' ForceCreateOnInstall='yes'>
+          <RegistryValue Type='string' Value='MultiOTPCredentialProvider'/>
+          <RegistryValue Type='string' Name='login_text' Value='[MULTIOTP_LOGINTEXT]'/> <!-- [] pour prendre la valeur contenue dans la propri??t?? -->
+          <RegistryValue Type='integer' Name='multiOTPCacheEnabled' Value='[MULTIOTP_CACHE]'/>
+          <RegistryValue Type='integer' Name='multiOTPDisplaySmsLink' Value='[MULTIOTP_DISPLAYSMSLINK]'/>
+          <RegistryValue Type='integer' Name='multiOTPDisplayEmailLink' Value='[MULTIOTP_DISPLAYEMAILLINK]'/>
+          <RegistryValue Type='string' Name='multiOTPFlatDomain' Value='[MULTIOTP_FLATDOMAIN]'/>
+          <RegistryValue Type='string' Name='multiOTPPath' Value='[MULTIOTP_PATH]'/>
+          <RegistryValue Type='string' Name='multiOTPServers' Value='[MULTIOTP_URL]'/>
+          <RegistryValue Type='integer' Name='multiOTPServerTimeout' Value='[MULTIOTP_TIMEOUT]'/>
+          <RegistryValue Type='string' Name='multiOTPSharedSecret' Value='[MULTIOTP_SECRET]'/>
+          <RegistryValue Type='integer' Name='multiOTPTimeout' Value='[MULTIOTP_TIMEOUTCP]'/>
+          <RegistryValue Type='integer' Name='multiOTPUPNFormat' Value='[MULTIOTP_UPNFORMAT]'/>
+          <RegistryValue Type='string' Name='two_step_hide_otp' Value='[MULTIOTP_TWO_STEP_HIDE_OTP]'/>
+          <RegistryValue Type='string' Name='two_step_send_password' Value='[MULTIOTP_TWO_STEP_SEND_PASSWORD]'/>
+          <RegistryValue Type='string' Name='two_step_send_empty_password' Value='[MULTIOTP_TWO_STEP_SEND_EMPTY_PASSWORD]'/>
+          <RegistryValue Type='string' Name='otp_text' Value='[MULTIOTP_OTP_TEXT]'/>
+          <RegistryValue Type='string' Name='otp_hint_text' Value='[MULTIOTP_OTP_HINT_TEXT]'/>
+          <RegistryValue Type='string' Name='otp_fail_text' Value='[MULTIOTP_OTP_FAIL_TEXT]'/>
+          <RegistryValue Type='string' Name='v1_bitmap_path' Value='[MULTIOTP_BITMAP_PATH]'/>
+          <RegistryValue Type='string' Name='excluded_account' Value='[MULTIOTP_EXCLUDED_ACCOUNT]'/>
+          <RegistryValue Type='string' Name='multiOTPDefaultPrefix' Value='[MULTIOTP_DEFAULT_PREFIX]'/>
+          <RegistryValue Type='string' Name='currentOfflineUser' Value=''/>
+          <RegistryValue Type='string' Name='lastUserAuthenticated' Value=''/>
+          <RegistryValue Type="string" Name="cpus_logon"            Value="[CPUS_LOGON]" /> 
+          <RegistryValue Type="string" Name="cpus_unlock"           Value="[CPUS_UNLOCK]" />
+          <RegistryValue Type="string" Name="cpus_credui"           Value="[CPUS_CREDUI]" />
+          <RegistryValue Type='integer' Name='multiOTPTimeoutUnlock' Value='[MULTIOTP_TIMEOUTUNLOCK]'/>
+          <RegistryValue Type='integer' Name='multiOTPDisplayLastUser' Value='[MULTIOTP_DISPLAYLASTUSER]'/>
+          <RegistryValue Type='integer' Name='multiOTPWithout2FA' Value='[MULTIOTP_WITHOUT2FA]'/>
+          <RegistryValue Type='integer' Name='numlockOn' Value='[MULTIOTP_NUMLOCKON]'/>
+        </RegistryKey>
+        <RegistryKey Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}\LEGACYcache' ForceCreateOnInstall='yes' />
+        <RegistryKey Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}\UPNcache' ForceCreateOnInstall='yes' />
+        <RemoveRegistryValue Id='cleanMultiOTPLoginTitle' Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}' Name='multiOTPLoginTitle'/>
+        <RemoveRegistryValue Id='cleanMultiOTPRdpOnly' Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}' Name='multiOTPRDPOnly'/>
+        <RemoveRegistryValue Id='cleanMultiOTPPrefixPass' Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}' Name='multiOTPPrefixPass'/>
+
+        <RemoveRegistryKey Id='cleanLegacyCacheOnUninstall' Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}\LEGACYcache' Action='removeOnUninstall'/>
+        <RemoveRegistryKey Id='cleanUpnCacheOnUninstall' Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}\UPNcache' Action='removeOnUninstall'/>
+        <RemoveRegistryKey Id='cleanCurrentOfflineUserOnUninstall' Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}\currentOfflineUser' Action='removeOnUninstall'/>
+        <RemoveRegistryKey Id='cleanLastUserAuthenticatedOnUninstall' Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}\lastUserAuthenticated' Action='removeOnUninstall'/>
+        <RemoveRegistryKey Id='cleanLastUserTimestampOnUninstall' Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}\lastUserTimestamp' Action='removeOnUninstall'/>
+        <RemoveRegistryKey Id='cleanHistory' Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}\history' Action='removeOnUninstall'/>
+        
+      </Component>
+        
+    </Directory>
+    
+    <Feature Id='Complete' Level='1'>
+      <ComponentRef Id='multiOTPLoginLogoComponent' />
+      <ComponentGroupRef Id='stableFilesGroup' />
+			<ComponentRef Id='CPLibrary' />
+			<ComponentRef Id='FilterLibrary' />
+      <ComponentRef Id='RegistryCPComponent' />
+      <ComponentRef Id='RegistryCPFComponent' />
+      <ComponentRef Id='RegistryWriteComponents' />
+    </Feature>
+
+    <CustomAction Id="cleanIntegerValues" Script="vbscript" Execute="immediate" Return="check">
+      <![CDATA[
+        Session.Property("MULTIOTP_TIMEOUT") = Replace(Session.Property("MULTIOTP_TIMEOUT"), "#", "")
+        Session.Property("MULTIOTP_TIMEOUTCP") = Replace(Session.Property("MULTIOTP_TIMEOUTCP"), "#", "")
+        Session.Property("MULTIOTP_DISPLAYSMSLINK") = Replace(Session.Property("MULTIOTP_DISPLAYSMSLINK"), "#", "")
+        Session.Property("MULTIOTP_DISPLAYEMAILLINK") = Replace(Session.Property("MULTIOTP_DISPLAYEMAILLINK"), "#", "")
+        Session.Property("MULTIOTP_UPNFORMAT") = Replace(Session.Property("MULTIOTP_UPNFORMAT"), "#", "")
+        Session.Property("MULTIOTP_NUMLOCKON") = Replace(Session.Property("MULTIOTP_NUMLOCKON"), "#", "")
+        Session.Property("MULTIOTP_TIMEOUTUNLOCK") = Replace(Session.Property("MULTIOTP_TIMEOUTUNLOCK"), "#", "")
+        Session.Property("MULTIOTP_DISPLAYLASTUSER") = Replace(Session.Property("MULTIOTP_DISPLAYLASTUSER"), "#", "")
+        Session.Property("MULTIOTP_WITHOUT2FA") = Replace(Session.Property("MULTIOTP_WITHOUT2FA"), "#", "")
+      ]]>
+    </CustomAction>
+
+    <!-- -on "HKEY_CLASSES_ROOT\CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}" : registry entry
+           -ot reg : object type is registry
+           -actn setprot : action is to set protection flag
+           -op "dacl:p_c" : process the DACL (permission list), Object is protected, ACEs from parent are copied. -->
+    <CustomAction
+      Id="SetACL64_CA1"
+      BinaryKey="SetACL64"
+      Impersonate="no"
+      Execute="deferred"
+      ExeCommand='-on "HKEY_CLASSES_ROOT\CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}" -ot reg -actn setprot -op "dacl:p_c"'
+      Return="ignore"
+    />
+
+    <!-- -on "HKEY_CLASSES_ROOT\CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}" : registry entry
+           -ot reg : object type is registry
+           -actn ace : adds or modifies access control entries (ACEs)
+           -ace "n:S-1-5-32-545;m:set;p:read" : "Users" read rights are set
+           -ace "n:S-1-5-32-545;m:revoke;p:read" : "Users" read rights are revoked -->
+    <CustomAction
+      Id="SetACL64_CA2"
+      BinaryKey="SetACL64"
+      Impersonate="no"
+      Execute="deferred"
+      ExeCommand='-on "HKEY_CLASSES_ROOT\CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}" -ot reg -actn ace -ace "n:S-1-5-32-545;m:set;p:read"'
+      Return="ignore"
+    />
+
+    <!-- -on "[MULTIOTP_PATH]" : multiOTP folder
+           -ot file : object type is file/directory
+           -actn setprot : action is to set protection flag
+           -op "dacl:p_c" : process the DACL (permission list), Object is protected, ACEs from parent are copied. -->
+    <CustomAction
+      Id="SetACL64_CA3"
+      BinaryKey="SetACL64"
+      Impersonate="no"
+      Execute="deferred"
+      ExeCommand='-on "[MULTIOTP_PATH]\" -ot file -actn setprot -op "dacl:p_c"'
+      Return="ignore"
+      />
+
+    <!-- -on "[MULTIOTP_PATH]" : multiOTP folder
+           -ot file : object type is file/directory
+           -actn ace : adds or modifies access control entries (ACEs)
+           -ace "n:S-1-5-32-545;m:revoke;p:read" : "Users" read rights are revoked -->
+    <!--S-1-5-32-545 = Authenticated user group-->
+    <CustomAction
+      Id="SetACL64_CA4"
+      BinaryKey="SetACL64"
+      Impersonate="no"
+      Execute="deferred"
+      ExeCommand='-on "[MULTIOTP_PATH]\" -ot file -actn ace -ace "n:S-1-5-32-545;m:revoke;p:read"'
+      Return="ignore"
+    />
+
+    <CustomAction
+      Id="SetACL32_CA1"
+      BinaryKey="SetACL32"
+      Impersonate="no"
+      Execute="deferred"
+      ExeCommand='-on "HKEY_CLASSES_ROOT\CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}" -ot reg -actn setprot -op "dacl:p_c"'
+      Return="ignore"
+    />
+
+    
+    <CustomAction
+      Id="SetACL32_CA2"
+      BinaryKey="SetACL32"
+      Impersonate="no"
+      Execute="deferred"
+      ExeCommand='-on "HKEY_CLASSES_ROOT\CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}" -ot reg -actn ace -ace "n:S-1-5-32-545;m:set;p:read"'
+      Return="ignore"
+    />
+    
+    <InstallUISequence>
+      <Custom Action='cleanIntegerValues' After='LaunchConditions'></Custom>
+    </InstallUISequence>
+
+    <InstallExecuteSequence>
+      <!-- Not during Uninstall or Upgrade, based on https://stackoverflow.com/a/17608049/286021 -->
+      <!-- Win64 version -->
+      <Custom Action="SetACL64_CA1" Before="InstallFinalize">(NOT REMOVE="ALL") AND ($(var.Platform) = x64)</Custom>
+      <!--<Custom Action="SetACL64_CA2" Before="InstallFinalize">(NOT REMOVE="ALL") AND ($(var.Platform) = x64)</Custom>-->
+      <Custom Action="SetACL64_CA3" Before="InstallFinalize">(NOT REMOVE="ALL") AND ($(var.Platform) = x64)</Custom>
+      <Custom Action="SetACL64_CA4" Before="InstallFinalize">(NOT REMOVE="ALL") AND ($(var.Platform) = x64)</Custom>
+      <!-- Win32 version -->
+      <Custom Action="SetACL32_CA1" Before="InstallFinalize">(NOT REMOVE="ALL") AND (NOT $(var.Platform) = x64)</Custom>
+      <!--<Custom Action="SetACL32_CA2" Before="InstallFinalize">(NOT REMOVE="ALL") AND (NOT $(var.Platform) = x64)</Custom> -->
+    </InstallExecuteSequence>
+
+    <UI Id="MyWixUI_FeatureTree">
+      <UIRef Id="WixUI_FeatureTree" />
+      <UIRef Id="WixUI_ErrorProgressText" />
+
+      <DialogRef Id="multiOTPSettingsa" />
+      <DialogRef Id="multiOTPSettingsb" />
+      <DialogRef Id="multiOTPSettingsc" />
+
+      <Publish Dialog="LicenseAgreementDlg" Control="Next" Event="NewDialog" Value="multiOTPSettingsa" Order="3">LicenseAccepted = "1"</Publish>
+      <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="multiOTPSettingsc">1</Publish>
+    </UI>
+    
+  </Product>
+</Wix>

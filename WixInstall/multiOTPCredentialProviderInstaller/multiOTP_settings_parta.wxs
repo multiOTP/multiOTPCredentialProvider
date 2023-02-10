@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+	<Fragment>
+    <UI>
+      <TextStyle Id="WixUI_Font_Normal_Italic" FaceName="Tahoma" Size="8" Italic="yes" />
+      <Dialog Id="multiOTPSettingsa" Width="370" Height="270" Title="[ProductName] Setup" NoMinimize="yes">
+        <Control Id="LoginTitleLabel" Type="Text" X="20" Y="63" Width="350" Height="15" TabSkip="no" Text="{\WixUI_Font_Title}multiOTP Login Title"/>
+        <Control Id="LoginTitle" Type="Edit" X="20" Y="75" Width="300" Height="18" Property="MULTIOTP_LOGINTEXT" Text="{80}" />
+        <Control Id="multiOTPUrlLabel" Type="Text" X="20" Y="100" Width="350" Height="15" TabSkip="no" Text="{\WixUI_Font_Title}URL of your multiOTP server(s), separated by semi-colons"/>
+        <Control Id="multiOTPUrlExample" Type="Text" X="20" Y="112" Width="350" Height="15" TabSkip="no" Text="{\WixUI_Font_Normal_Italic}Example: https://192.168.1.88;http://ip.address.of.server:8112" />
+        <Control Id="multiOTPUrl" Type="Edit" X="20" Y="124" Width="300" Height="18" Property="MULTIOTP_URL" Text="{200}" />
+
+        <Control Id="multiOTPLocalServerOnly" Type="CheckBox" X="20" Y="144" Width="320" Height="18" Property="MULTIOTP_LOCALSERVERONLY" CheckBoxValue="1" Text="No remote server, local multiOTP only" />
+        
+        <Control Id="multiOTPTimeoutLabel" Type="Text" X="20" Y="171" Width="270" Height="15" TabSkip="no" Text="{\WixUI_Font_Title}Timeout (in seconds) before switching to the next server :" />
+        <Control Id="multiOTPTimeout" Type="Edit" X="290" Y="169" Width="20" Height="18" Property="MULTIOTP_TIMEOUT" Integer="yes"/>
+
+        <Control Id="multiOTPSecretLabel" Type="Text" X="20" Y="194" Width="200" Height="15" TabSkip="no" Text="{\WixUI_Font_Title}Secret shared with multiOTP server(s):" />
+        <Control Id="multiOTPSecret" Type="Edit" X="205" Y="192" Width="100" Height="18" Property="MULTIOTP_SECRET" Password="yes"/>
+        <Control Id="multiOTPSecretIndication1Label" Type="Text" X="20" Y="210" Width="350" Height="15" TabSkip="no" Text="{\WixUI_Font_Normal_Italic}On your multiOTP server, Menu Configuration/Devices, Edit/Add a device" />
+        <Control Id="multiOTPSecretIndication2Label" Type="Text" X="20" Y="222" Width="350" Height="15" TabSkip="no" Text="{\WixUI_Font_Normal_Italic}that match the IP and subnet mask of this current Windows machine." />
+        
+        <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="&amp;Back">
+          <Publish Event="NewDialog" Value="LicenseAgreementDlg">1</Publish>
+        </Control>
+        <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="&amp;Next">
+          <Publish Event="SpawnDialog" Value="LocalAndRemoteServerDlg" Order="1">MULTIOTP_URL AND MULTIOTP_LOCALSERVERONLY = 1</Publish>
+          <Publish Event="SpawnDialog" Value="NoSecretMessageDlg" Order="2">MULTIOTP_SECRET="" AND NOT MULTIOTP_LOCALSERVERONLY</Publish>
+          <Publish Event="SpawnDialog" Value="NoServerURLMessageDlg" Order="3">MULTIOTP_URL="" AND NOT MULTIOTP_LOCALSERVERONLY</Publish>
+          <Publish Event="NewDialog" Value="multiOTPSettingsb" Order="4">(MULTIOTP_URL OR MULTIOTP_LOCALSERVERONLY) AND (MULTIOTP_SECRET OR MULTIOTP_LOCALSERVERONLY=1) AND NOT (MULTIOTP_URL AND MULTIOTP_LOCALSERVERONLY = 1) </Publish>
+        </Control>
+        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancel">
+          <Publish Event="SpawnDialog" Value="CancelDlg">1</Publish>
+        </Control>
+        <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="WixUI_Bmp_Banner" />
+        <Control Id="Description" Type="Text" X="25" Y="23" Width="280" Height="15" Transparent="yes" NoPrefix="yes">
+          <Text>Type the needed multiOTP server information, then click Next.</Text>
+        </Control>
+        <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
+        <Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15" Transparent="yes" NoPrefix="yes">
+          <Text>{\WixUI_Font_Title}multiOTP configuration</Text>
+        </Control>
+        <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" />
+      </Dialog>
+    </UI>
+    <UI>
+      <Dialog Id="NoServerURLMessageDlg" Width="260" Height="85" Title="[ProductName] Setup" NoMinimize="yes">
+        <Control Id="Icon" Type="Icon" X="15" Y="15" Width="24" Height="24" ToolTip="Information icon" FixedSize="yes" IconSize="32" Text="ExclamIcon" />
+        <Control Id="Return" Type="PushButton" X="100" Y="57" Width="56" Height="17" Default="yes" Cancel="yes" Text="&amp;Return">
+          <Publish Event="EndDialog" Value="Return">1</Publish>
+        </Control>
+        <Control Id="Text" Type="Text" X="20" Y="15" Width="250" Height="30" TabSkip="no">
+          <Text>
+            Please specify a hostname or activate local multiOTP only.
+          </Text>
+        </Control>
+      </Dialog>
+    </UI>
+    <UI>
+      <Dialog Id="NoSecretMessageDlg" Width="260" Height="85" Title="[ProductName] Setup" NoMinimize="yes">
+        <Control Id="Icon" Type="Icon" X="15" Y="15" Width="24" Height="24" ToolTip="Information icon" FixedSize="yes" IconSize="32" Text="ExclamIcon" />
+        <Control Id="Return" Type="PushButton" X="100" Y="57" Width="56" Height="17" Default="yes" Cancel="yes" Text="&amp;Return">
+          <Publish Event="EndDialog" Value="Return">1</Publish>
+        </Control>
+        <Control Id="Text" Type="Text" X="48" Y="15" Width="194" Height="30" TabSkip="no">
+          <Text>
+            Please specify the secret.
+          </Text>
+        </Control>
+      </Dialog>
+    </UI>
+    <UI>
+      <Dialog Id="LocalAndRemoteServerDlg" Width="260" Height="85" Title="[ProductName] Setup" NoMinimize="yes">
+        <Control Id="Icon" Type="Icon" X="15" Y="15" Width="24" Height="24" ToolTip="Information icon" FixedSize="yes" IconSize="32" Text="ExclamIcon" />
+        <Control Id="Return" Type="PushButton" X="100" Y="57" Width="56" Height="17" Default="yes" Cancel="yes" Text="&amp;Return">
+          <Publish Event="EndDialog" Value="Return">1</Publish>
+        </Control>
+        <Control Id="Text" Type="Text" X="20" Y="15" Width="250" Height="15" TabSkip="no">
+          <Text>
+            You cannot use a remote multiOTP server and
+          </Text>
+        </Control>
+        <Control Id="Text2" Type="Text" X="20" Y="27" Width="250" Height="15" TabSkip="no">
+          <Text>
+            activate the checkbox for local multiOTP only.
+          </Text>
+        </Control>
+      </Dialog>
+    </UI>
+	</Fragment>
+</Wix>
