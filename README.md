@@ -160,8 +160,8 @@ TECHNICAL DETAILS
    * otp_fail_text                 Specify a custom text that is shown when the OTP verification failed.
    * v1_bitmap_path                The complete path and filename of a bitmap image. This is a customized login image. The image must be a version 3
                                    Windows BMP file with a resolution of 128x128 pixels.
-   * multiOTPTimeoutUnlock		   [0|1] Set to 1 to display a button in order to autocomplete the username with the last username authenticated
-   * multiOTPDisplayLastUser       Timeout (in minutes) before asking 2FA again on unlock (0 means always ask)
+   * multiOTPTimeoutUnlock		     Timeout (in minutes) before asking 2FA again on unlock (0 means always ask)
+   * multiOTPDisplayLastUser       [0|1] Set to 1 to display a button in order to autocomplete the username with the last username authenticated
    * multiOTPWithout2FA            [0|1] Set to 1 to disable 2FA prompt for multiTOP without2FA users
 
 THANKS TO
