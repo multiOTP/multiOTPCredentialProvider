@@ -7,11 +7,9 @@ multiOTP Credential Provider for multiOTP is a free and open source implementati
 (c) 2015-2016 ArcadeJust ("RDP only" enhancement)  
 (c) 2013-2015 Last Squirrel IT  
 
-Current build: 5.9.5.6 (2023-02-10)  
+Current build: 5.9.6.1 (2023-05-10)  
 
 The binary download page is available here : https://download.multiotp.net/credential-provider/ (download link are at the bottom of the page)
-
-Please note that the multiOTPCredentialProvider-files-only-A.B.C.D.zip zipped file contains only the DLL in x64 format.
 
 [![Donate via PayPal](https://img.shields.io/badge/donate-paypal-87ceeb.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&currency_code=USD&business=paypal@sysco.ch&item_name=Donation%20for%20multiOTP%20project)
 *Please consider supporting this project by making a donation via [PayPal](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&currency_code=USD&business=paypal@sysco.ch&item_name=Donation%20for%20multiOTP%20project)*
@@ -31,9 +29,11 @@ multiOTP Credential Provider for multiOTP supporting Windows 7/8/8.1/10/2012(R2)
 
 PREREQUISITES
 =============
-- last x86 AND x64 MSVC++ redistribuable installed (Microsoft Visual C++ Redistributable for Visual Studio 2015, 2017, 2019 and 2022)
-  https://aka.ms/vs/17/release/vc_redist.x86.exe and https://aka.ms/vs/17/release/vc_redist.x64.exe
-- installed multiOTP server(s)
+- For x64 edition: last x64 MSVC++ redistribuable installed (Microsoft Visual C++ Redistributable for Visual Studio 2015, 2017, 2019 and 2022)
+  https://aka.ms/vs/17/release/vc_redist.x64.exe
+- For x86 edition: last x86 MSVC++ redistribuable installed (Microsoft Visual C++ Redistributable for Visual Studio 2015, 2017, 2019 and 2022)
+  https://aka.ms/vs/17/release/vc_redist.x86.exe
+- installed multiOTP server(s) (or select local use during install)
 - configured multiOTP user (multiOTP username = [domain user name] or [windows local account name] or [microsoft account name])
 
 
@@ -48,8 +48,8 @@ Which Authentication Mode should I choose?
 
 MSI DEPLOYMENT
 ==============
-Be sure that last x86 AND x64 MSVC++ redistribuable are installed.
-If it's not the case, you can deploy them automatically using the four MSI provided in the vc_redist_MSI.zip file
+Be sure that last MSVC++ redistribuable are installed.
+If it's not the case, you can deploy them automatically using the four MSI provided in the VC++_MSI_Deployment folder
 
 Using Orca, you can create Transform files in order to set the settings of the credential provider.
 The following properties can be set :
@@ -87,7 +87,7 @@ Create a second GPO that applies to the selected computers, adding the following
 * Computer Configuration > Policies > Administrative Templates > System > Group Policy
   * Enable the Specify startup policy processing wait time. Set Amount of time to wait (in seconds): = 120
 
-If x86 AND x64 MSVC++ redistributable are not already installed on those computers,
+If MSVC++ redistributable are not already installed on those computers,
 create a GPO to deploy the 4 x86 AND x64 MSVC++ redistribuable files.
 
 Finaly, create a GPO that applies to the selected computers to deploy the MSI with its MST file
@@ -160,7 +160,7 @@ TECHNICAL DETAILS
    * otp_fail_text                 Specify a custom text that is shown when the OTP verification failed.
    * v1_bitmap_path                The complete path and filename of a bitmap image. This is a customized login image. The image must be a version 3
                                    Windows BMP file with a resolution of 128x128 pixels.
-   * multiOTPTimeoutUnlock		     Timeout (in minutes) before asking 2FA again on unlock (0 means always ask)
+   * multiOTPTimeoutUnlock		   Timeout (in minutes) before asking 2FA again on unlock (0 means always ask)
    * multiOTPDisplayLastUser       [0|1] Set to 1 to display a button in order to autocomplete the username with the last username authenticated
    * multiOTPWithout2FA            [0|1] Set to 1 to disable 2FA prompt for multiTOP without2FA users
 
@@ -179,6 +179,8 @@ CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
 
+2023-05-10 5.9.6.1 ENH: PHP 8.2 x64 integration (don't need x86 MSVC++ redistribuable files anymore)
+                   ENH: x86 edition of multiOTP Credential Provider can now be created/compiled from the source on GitHub
 2023-02-10 5.9.5.6 ENH: New option to enable NumLock during published apps authentication
                    ENH: Unlock timeout handling supported for multiple accounts, FastUserSwitching is available again
 2022-11-04 5.9.4.0 FIX: Last user account is now also stored when doing unlock, which will fix some unlock timeout issues
@@ -202,7 +204,7 @@ CHANGE LOG OF RELEASED VERSIONS
                    ENH: Better domain name support
 2022-01-04 5.8.5.1 ENH: Documentation added for credsui and UPN
 2021-12-24 5.8.5.0 ENH: UPN notation support reintroduced in the new implementation
-2021-09-14 5.8.4.0 FIX: multiOTPServerTimeout in now saved in a DWORD
+2021-09-14 5.8.4.0 FIX: multiOTPServerTimeout is now saved in a DWORD
                    FIX: Upgrade from a previous MSI installation without uninstall and reinstall
 2021-09-14 5.8.3.0 ENH: Allow again a tile image in the same folder of the DLL
                    ENH: Remote server is optional again

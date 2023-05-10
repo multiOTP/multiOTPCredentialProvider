@@ -1,0 +1,102 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <?include $(sys.CURRENTDIR)\Config.wxi?>
+    <Fragment>
+        <DirectoryRef Id="INSTALLFOLDER">
+            <Component Id="cmpC0272C84AD5A96F3E1A3472C35065956" Guid="DD1DC23A-0892-41C6-9DE8-0706ED265956" Win64="$(var.Win64)">
+                <File Id="fil80E9E48AA971E3EEEFB3A0EAAFE65956" KeyPath="yes" Source=".\..\..\stable\multiotp.exe" />
+            </Component>
+            <Directory Id="dir3DC076071D141F236F37937E208D129D" Name="php">
+                <Component Id="cmp8E231DD9CB31F60270BC4F7F43A35956" Guid="B13FAA40-EF14-46DB-A664-E10A3A185956" Win64="$(var.Win64)">
+                    <File Id="filDA53B02C825707141338C90E753B5956" KeyPath="yes" Source=".\..\..\stable\php\multiotp.windows.php" />
+                </Component>
+                <Component Id="cmp212F65C8C435C57913BE1A8986080203" Guid="54535C76-B9E2-45BF-AE76-1A8986080203" Win64="$(var.Win64)">
+                    <File Id="fil2A07532B38854688B540F3D686080203" KeyPath="yes" Source=".\..\..\stable\php_x86\libcrypto-3.dll" />
+                </Component>
+                <Component Id="cmp468486DB68271AB2894C6AB986080203" Guid="34A71494-EAF5-478A-A9F3-6AB986080203" Win64="$(var.Win64)">
+                    <File Id="filA8E32CF908D3A87F9F0D3E3286080203" KeyPath="yes" Source=".\..\..\stable\php_x86\libpq.dll" />
+                </Component>
+                <Component Id="cmp08158176C26CCB8D715FD86986080203" Guid="76B337B5-42CA-46F0-A348-D86986080203" Win64="$(var.Win64)">
+                    <File Id="filCF0EF86E1F4A2F255B7F47A486080203" KeyPath="yes" Source=".\..\..\stable\php_x86\libsasl.dll" />
+                </Component>
+                <Component Id="cmpB6AC4B01BC4984E2053DCA3E86080203" Guid="2B1A3943-920B-40FB-B936-CA3E86080203" Win64="$(var.Win64)">
+                    <File Id="fil1516A97EBE7D014FB8EEE5AF86080203" KeyPath="yes" Source=".\..\..\stable\php_x86\libssl-3.dll" />
+                </Component>
+                <Component Id="cmp1A014A972A0D962CAEB9782D86080203" Guid="CCA591AF-7925-4D5B-85A0-782D86080203" Win64="$(var.Win64)">
+                    <File Id="filA0A470F57ECEB7C3AFE940EA86080203" KeyPath="yes" Source=".\..\..\stable\php_x86\php-win.exe" />
+                </Component>
+                <Component Id="cmpCFAE6A97E70B99C73D5E4BEF86080203" Guid="430B3D03-360A-4453-8FED-4BEF86080203" Win64="$(var.Win64)">
+                    <File Id="filFF17AF86EABF40E0325434BE86080203" KeyPath="yes" Source=".\..\..\stable\php_x86\php.exe" />
+                </Component>
+                <Component Id="cmpC80A86BD867B3E873EB5AAE986080203" Guid="F0C688ED-3325-4BD1-B911-AAE986080203" Win64="$(var.Win64)">
+                    <File Id="filC8DCB2652CEA5456DFA049EF86080203" KeyPath="yes" Source=".\..\..\stable\php_x86\php.ini" />
+                </Component>
+                <Component Id="cmpF66E4128519295A470BEBCBE86080203" Guid="5E5D76CA-9B90-4C08-8A62-BCBE86080203" Win64="$(var.Win64)">
+                    <File Id="fil947C13912BE23B4EBD0118B686080203" KeyPath="yes" Source=".\..\..\stable\php_x86\php8.dll" />
+                </Component>
+                <Directory Id="dirC7498F43AAA0A42298C67AB4DF3CF2BE" Name="ext">
+                    <Component Id="cmp49AE0674A61CFDCE4807A01B86080203" Guid="DCC82C1E-D7A1-4F00-AD33-A01B86080203" Win64="$(var.Win64)">
+                        <File Id="fil9B53881F3BED87D0A1C47FD386080203" KeyPath="yes" Source=".\..\..\stable\php_x86\ext\php_gd.dll" />
+                    </Component>
+                    <Component Id="cmp2F323DBFCE16E7A0B3470E3586080203" Guid="EE1BCC1A-C731-4D61-95B9-0E3586080203" Win64="$(var.Win64)">
+                        <File Id="fil73F8A2B1CFF7423ADE01F4C686080203" KeyPath="yes" Source=".\..\..\stable\php_x86\ext\php_gmp.dll" />
+                    </Component>
+                    <Component Id="cmp6D6F6B39BE7DB573371468DB86080203" Guid="9946AC52-E0C3-4EAB-A161-68DB86080203" Win64="$(var.Win64)">
+                        <File Id="fil203105C0FF468065EB158F5A86080203" KeyPath="yes" Source=".\..\..\stable\php_x86\ext\php_ldap.dll" />
+                    </Component>
+                    <Component Id="cmpA3047FDF834C498E54D5508E86080203" Guid="BD93AF8B-3431-43B7-A8E9-508E86080203" Win64="$(var.Win64)">
+                        <File Id="fil4B034BA8415E59B71954A5BA86080203" KeyPath="yes" Source=".\..\..\stable\php_x86\ext\php_mbstring.dll" />
+                    </Component>
+                    <Component Id="cmp401524CF915038D87E06CE2686080203" Guid="7CE6AC5E-3AE0-4840-BCD2-CE2686080203" Win64="$(var.Win64)">
+                        <File Id="filC2A7932D934ADD94166B02EB86080203" KeyPath="yes" Source=".\..\..\stable\php_x86\ext\php_mysqli.dll" />
+                    </Component>
+                    <Component Id="cmp4B41E2EEF0B0A052CEFBB7F086080203" Guid="EB3CF896-CF5E-494F-BDA2-B7F086080203" Win64="$(var.Win64)">
+                        <File Id="fil882D82D5F871712B7D084F0F86080203" KeyPath="yes" Source=".\..\..\stable\php_x86\ext\php_openssl.dll" />
+                    </Component>
+                    <Component Id="cmp8B6297B926883DE90AE1B8B586080203" Guid="CAF90F5A-2377-41B4-9CCE-B8B586080203" Win64="$(var.Win64)">
+                        <File Id="filD032E92C97FBA63864CDFF7986080203" KeyPath="yes" Source=".\..\..\stable\php_x86\ext\php_pgsql.dll" />
+                    </Component>
+                    <Component Id="cmpC36E9D6BA08EA91AF9412A6986080203" Guid="DC7D2BFC-AF51-452D-A220-2A6986080203" Win64="$(var.Win64)">
+                        <File Id="fil5599B845E457BDEF79C7C1AC86080203" KeyPath="yes" Source=".\..\..\stable\php_x86\ext\php_sockets.dll" />
+                    </Component>
+                </Directory>
+            </Directory>
+            <Directory Id="dir4DC5984F168CD2B3704AB946AF3214BE" Name="templates">
+                <Component Id="cmpE716CB1D68B380E55F193704DA8E5956" Guid="AA200181-0C6E-4AC4-970F-0262C66B5956" Win64="$(var.Win64)">
+                    <File Id="fil37AC8666786024B9D943DDA8B7A35956" KeyPath="yes" Source=".\..\..\stable\templates\emailtemplate.html" />
+                </Component>
+                <Component Id="cmp9A57A60B71470CF00DFECB903A0F5956" Guid="78F08E0A-D13B-4741-B6B0-A1D927895956"  Win64="$(var.Win64)">
+                    <File Id="fil7872A2388045417B3802B4CB1BA45956" KeyPath="yes" Source=".\..\..\stable\templates\scratchtemplate.html" />
+                </Component>
+                <Component Id="cmp5FB3844E48E59480E7615426D1795956" Guid="72B3E1F2-7899-455B-9F5B-741E756D5956"  Win64="$(var.Win64)">
+                    <File Id="fil30E05F8CA4591A43F538F5F90BA35956" KeyPath="yes" Source=".\..\..\stable\templates\template.html" />
+                </Component>
+            </Directory>
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <ComponentGroup Id="stableFilesGroup">
+            <ComponentRef Id="cmpC0272C84AD5A96F3E1A3472C35065956" />
+            <ComponentRef Id="cmp8E231DD9CB31F60270BC4F7F43A35956" />
+            <ComponentRef Id="cmp212F65C8C435C57913BE1A8986080203" />
+            <ComponentRef Id="cmp468486DB68271AB2894C6AB986080203" />
+            <ComponentRef Id="cmp08158176C26CCB8D715FD86986080203" />
+            <ComponentRef Id="cmpB6AC4B01BC4984E2053DCA3E86080203" />
+            <ComponentRef Id="cmp1A014A972A0D962CAEB9782D86080203" />
+            <ComponentRef Id="cmpCFAE6A97E70B99C73D5E4BEF86080203" />
+            <ComponentRef Id="cmpC80A86BD867B3E873EB5AAE986080203" />
+            <ComponentRef Id="cmpF66E4128519295A470BEBCBE86080203" />
+            <ComponentRef Id="cmp49AE0674A61CFDCE4807A01B86080203" />
+            <ComponentRef Id="cmp2F323DBFCE16E7A0B3470E3586080203" />
+            <ComponentRef Id="cmp6D6F6B39BE7DB573371468DB86080203" />
+            <ComponentRef Id="cmpA3047FDF834C498E54D5508E86080203" />
+            <ComponentRef Id="cmp401524CF915038D87E06CE2686080203" />
+            <ComponentRef Id="cmp4B41E2EEF0B0A052CEFBB7F086080203" />
+            <ComponentRef Id="cmp8B6297B926883DE90AE1B8B586080203" />
+            <ComponentRef Id="cmpC36E9D6BA08EA91AF9412A6986080203" />
+            <ComponentRef Id="cmpE716CB1D68B380E55F193704DA8E5956" />
+            <ComponentRef Id="cmp9A57A60B71470CF00DFECB903A0F5956" />
+            <ComponentRef Id="cmp5FB3844E48E59480E7615426D1795956" />
+        </ComponentGroup>
+    </Fragment>
+</Wix>

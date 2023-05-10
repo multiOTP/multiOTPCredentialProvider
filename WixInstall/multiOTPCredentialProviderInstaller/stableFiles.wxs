@@ -1,102 +1,179 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <?include $(sys.CURRENTDIR)\Config.wxi?>
     <Fragment>
         <DirectoryRef Id="INSTALLFOLDER">
-            <Component Id="cmpC0272C84AD5A96F3E1A3472C35064132" Guid="DD1DC23A-0892-41C6-9DE8-0706ED2664A1" Win64="no">
-                <File Id="fil80E9E48AA971E3EEEFB3A0EAAFE65621" KeyPath="yes" Source=".\..\..\stable\multiotp.exe" />
+            <Component Id="cmpC0272C84AD5A96F3E1A3472C35065956" Guid="DD1DC23A-0892-41C6-9DE8-0706ED265956" Win64="$(var.Win64)">
+                <File Id="fil80E9E48AA971E3EEEFB3A0EAAFE65956" KeyPath="yes" Source=".\..\..\stable\multiotp.exe" />
             </Component>
-            <Directory Id="dir3DC076071D141F236F37937E208D129D" Name="php">
-
-                <Component Id="cmp212F65C8C435C57913BE1A899D7C1E25" Guid="54535C76-B9E2-45BF-AE76-5F3ED7C95140" Win64="no">
-                    <File Id="fil2A07532B38854688B540F3D6972A9CD8" KeyPath="yes" Source=".\..\..\stable\php\libcrypto-1_1.dll" />
+            <Directory Id="dir4DC5984F168CD2B3704AB946AF3214BE" Name="templates">
+                <Component Id="cmpE716CB1D68B380E55F193704DA8E5956" Guid="AA200181-0C6E-4AC4-970F-0262C66B5956" Win64="$(var.Win64)">
+                    <File Id="fil37AC8666786024B9D943DDA8B7A35956" KeyPath="yes" Source=".\..\..\stable\templates\emailtemplate.html" />
                 </Component>
-                <Component Id="cmp468486DB68271AB2894C6AB9AB76B339" Guid="34A71494-EAF5-478A-A9F3-DEB044474D3B" Win64="no">
-                    <File Id="filA8E32CF908D3A87F9F0D3E324A14570C" KeyPath="yes" Source=".\..\..\stable\php\libpq.dll" />
+                <Component Id="cmp9A57A60B71470CF00DFECB903A0F5956" Guid="78F08E0A-D13B-4741-B6B0-A1D927895956"  Win64="$(var.Win64)">
+                    <File Id="fil7872A2388045417B3802B4CB1BA45956" KeyPath="yes" Source=".\..\..\stable\templates\scratchtemplate.html" />
                 </Component>
-                <Component Id="cmp08158176C26CCB8D715FD869434AA479" Guid="76B337B5-42CA-46F0-A348-343AB1E65F6E" Win64="no">
-                    <File Id="filCF0EF86E1F4A2F255B7F47A46749E5AD" KeyPath="yes" Source=".\..\..\stable\php\libsasl.dll" />
+                <Component Id="cmp5FB3844E48E59480E7615426D1795956" Guid="72B3E1F2-7899-455B-9F5B-741E756D5956"  Win64="$(var.Win64)">
+                    <File Id="fil30E05F8CA4591A43F538F5F90BA35956" KeyPath="yes" Source=".\..\..\stable\templates\template.html" />
                 </Component>
-                <Component Id="cmpB6AC4B01BC4984E2053DCA3EDE6DC652" Guid="2B1A3943-920B-40FB-B936-9C173CA3F772" Win64="no">
-                    <File Id="fil1516A97EBE7D014FB8EEE5AF2FC6EE11" KeyPath="yes" Source=".\..\..\stable\php\libssl-1_1.dll" />
+            </Directory>
+            <?if $(var.Platform) = x64 ?>
+              <Directory Id="dir3DC076071D141F236F37937E208D129D" Name="php">
+                <Component Id="cmp8E231DD9CB31F60270BC4F7F43A35956" Guid="B13FAA40-EF14-46DB-A664-E10A3A185956" Win64="$(var.Win64)">
+                    <File Id="filDA53B02C825707141338C90E753B5956" KeyPath="yes" Source=".\..\..\stable\php\multiotp.windows.php" />
                 </Component>
-                <Component Id="cmp8E231DD9CB31F60270BC4F7F43A35743" Guid="B13FAA40-EF14-46DB-A664-E10A3A18DF94" Win64="no">
-                    <File Id="filDA53B02C825707141338C90E753B2439" KeyPath="yes" Source=".\..\..\stable\php\multiotp.windows.php" />
+                <Component Id="cmp212F65C8C435C57913BE1A8964080203" Guid="54535C76-B9E2-45BF-AE76-1A899D080203" Win64="$(var.Win64)">
+                    <File Id="fil2A07532B38854688B540F3D664080203" KeyPath="yes" Source=".\..\..\stable\php\libcrypto-3-x64.dll" />
                 </Component>
-                <Component Id="cmp1A014A972A0D962CAEB9782D69553D76" Guid="CCA591AF-7925-4D5B-85A0-9A25FC493551" Win64="no">
-                    <File Id="filA0A470F57ECEB7C3AFE940EA3EA5F754" KeyPath="yes" Source=".\..\..\stable\php\php-win.exe" />
+                <Component Id="cmp468486DB68271AB2894C6AB964080203" Guid="34A71494-EAF5-478A-A9F3-6AB9AB080203" Win64="$(var.Win64)">
+                    <File Id="filA8E32CF908D3A87F9F0D3E3264080203" KeyPath="yes" Source=".\..\..\stable\php\libpq.dll" />
                 </Component>
-                <Component Id="cmpCFAE6A97E70B99C73D5E4BEF4BD357D4" Guid="430B3D03-360A-4453-8FED-385280A28382" Win64="no">
-                    <File Id="filFF17AF86EABF40E0325434BECEBDD862" KeyPath="yes" Source=".\..\..\stable\php\php.exe" />
+                <Component Id="cmp08158176C26CCB8D715FD86964080203" Guid="76B337B5-42CA-46F0-A348-D86943080203" Win64="$(var.Win64)">
+                    <File Id="filCF0EF86E1F4A2F255B7F47A464080203" KeyPath="yes" Source=".\..\..\stable\php\libsasl.dll" />
                 </Component>
-                <Component Id="cmpC80A86BD867B3E873EB5AAE9965E843E" Guid="F0C688ED-3325-4BD1-B911-92045F7D4F07" Win64="no">
-                    <File Id="filC8DCB2652CEA5456DFA049EF03BAA559" KeyPath="yes" Source=".\..\..\stable\php\php.ini" />
+                <Component Id="cmpB6AC4B01BC4984E2053DCA3E64080203" Guid="2B1A3943-920B-40FB-B936-CA3EDE080203" Win64="$(var.Win64)">
+                    <File Id="fil1516A97EBE7D014FB8EEE5AF64080203" KeyPath="yes" Source=".\..\..\stable\php\libssl-3-x64.dll" />
                 </Component>
-                <Component Id="cmpF66E4128519295A470BEBCBE6E47D6B1" Guid="5E5D76CA-9B90-4C08-8A62-FF35206259DA" Win64="no">
-                    <File Id="fil947C13912BE23B4EBD0118B684BB8FA9" KeyPath="yes" Source=".\..\..\stable\php\php7.dll" />
+                <Component Id="cmp1A014A972A0D962CAEB9782D64080203" Guid="CCA591AF-7925-4D5B-85A0-782D69080203" Win64="$(var.Win64)">
+                    <File Id="filA0A470F57ECEB7C3AFE940EA64080203" KeyPath="yes" Source=".\..\..\stable\php\php-win.exe" />
+                </Component>
+                <Component Id="cmpCFAE6A97E70B99C73D5E4BEF64080203" Guid="430B3D03-360A-4453-8FED-4BEF4B080203" Win64="$(var.Win64)">
+                    <File Id="filFF17AF86EABF40E0325434BE64080203" KeyPath="yes" Source=".\..\..\stable\php\php.exe" />
+                </Component>
+                <Component Id="cmpC80A86BD867B3E873EB5AAE964080203" Guid="F0C688ED-3325-4BD1-B911-AAE996080203" Win64="$(var.Win64)">
+                    <File Id="filC8DCB2652CEA5456DFA049EF64080203" KeyPath="yes" Source=".\..\..\stable\php\php.ini" />
+                </Component>
+                <Component Id="cmpF66E4128519295A470BEBCBE64080203" Guid="5E5D76CA-9B90-4C08-8A62-BCBE6E080203" Win64="$(var.Win64)">
+                    <File Id="fil947C13912BE23B4EBD0118B664080203" KeyPath="yes" Source=".\..\..\stable\php\php8.dll" />
                 </Component>
                 <Directory Id="dirC7498F43AAA0A42298C67AB4DF3CF2BE" Name="ext">
-                    <Component Id="cmp49AE0674A61CFDCE4807A01BE9E3F6C4" Guid="DCC82C1E-D7A1-4F00-AD33-474256075094" Win64="no">
-                        <File Id="fil9B53881F3BED87D0A1C47FD33028110D" KeyPath="yes" Source=".\..\..\stable\php\ext\php_gd2.dll" />
+                    <Component Id="cmp49AE0674A61CFDCE4807A01B64080203" Guid="DCC82C1E-D7A1-4F00-AD33-A01BE9080203" Win64="$(var.Win64)">
+                        <File Id="fil9B53881F3BED87D0A1C47FD364080203" KeyPath="yes" Source=".\..\..\stable\php\ext\php_gd.dll" />
                     </Component>
-                    <Component Id="cmp2F323DBFCE16E7A0B3470E35C6F57FAA" Guid="EE1BCC1A-C731-4D61-95B9-928BB11491D1" Win64="no">
-                        <File Id="fil73F8A2B1CFF7423ADE01F4C6FA133E20" KeyPath="yes" Source=".\..\..\stable\php\ext\php_gmp.dll" />
+                    <Component Id="cmp2F323DBFCE16E7A0B3470E3564080203" Guid="EE1BCC1A-C731-4D61-95B9-0E35C6080203" Win64="$(var.Win64)">
+                        <File Id="fil73F8A2B1CFF7423ADE01F4C664080203" KeyPath="yes" Source=".\..\..\stable\php\ext\php_gmp.dll" />
                     </Component>
-                    <Component Id="cmp6D6F6B39BE7DB573371468DB3F858D3C" Guid="9946AC52-E0C3-4EAB-A161-743771FEF184" Win64="no">
-                        <File Id="fil203105C0FF468065EB158F5AD3897702" KeyPath="yes" Source=".\..\..\stable\php\ext\php_ldap.dll" />
+                    <Component Id="cmp6D6F6B39BE7DB573371468DB64080203" Guid="9946AC52-E0C3-4EAB-A161-68DB3F080203" Win64="$(var.Win64)">
+                        <File Id="fil203105C0FF468065EB158F5A64080203" KeyPath="yes" Source=".\..\..\stable\php\ext\php_ldap.dll" />
                     </Component>
-                    <Component Id="cmpA3047FDF834C498E54D5508E8AAE1E70" Guid="BD93AF8B-3431-43B7-A8E9-877D10E51AB2" Win64="no">
-                        <File Id="fil4B034BA8415E59B71954A5BA2663954F" KeyPath="yes" Source=".\..\..\stable\php\ext\php_mbstring.dll" />
+                    <Component Id="cmpA3047FDF834C498E54D5508E64080203" Guid="BD93AF8B-3431-43B7-A8E9-508E8A080203" Win64="$(var.Win64)">
+                        <File Id="fil4B034BA8415E59B71954A5BA64080203" KeyPath="yes" Source=".\..\..\stable\php\ext\php_mbstring.dll" />
                     </Component>
-                    <Component Id="cmp401524CF915038D87E06CE269852A171" Guid="7CE6AC5E-3AE0-4840-BCD2-26DC547F6194" Win64="no">
-                        <File Id="filC2A7932D934ADD94166B02EB45F780B1" KeyPath="yes" Source=".\..\..\stable\php\ext\php_mysqli.dll" />
+                    <Component Id="cmp401524CF915038D87E06CE2664080203" Guid="7CE6AC5E-3AE0-4840-BCD2-CE2698080203" Win64="$(var.Win64)">
+                        <File Id="filC2A7932D934ADD94166B02EB64080203" KeyPath="yes" Source=".\..\..\stable\php\ext\php_mysqli.dll" />
                     </Component>
-                    <Component Id="cmp4B41E2EEF0B0A052CEFBB7F074D10979" Guid="EB3CF896-CF5E-494F-BDA2-C6FC4EB515C9" Win64="no">
-                        <File Id="fil882D82D5F871712B7D084F0F00756B6E" KeyPath="yes" Source=".\..\..\stable\php\ext\php_openssl.dll" />
+                    <Component Id="cmp4B41E2EEF0B0A052CEFBB7F064080203" Guid="EB3CF896-CF5E-494F-BDA2-B7F074080203" Win64="$(var.Win64)">
+                        <File Id="fil882D82D5F871712B7D084F0F64080203" KeyPath="yes" Source=".\..\..\stable\php\ext\php_openssl.dll" />
                     </Component>
-                    <Component Id="cmp8B6297B926883DE90AE1B8B5208E07C7" Guid="CAF90F5A-2377-41B4-9CCE-BF5CF57ED5FC" Win64="no">
-                        <File Id="filD032E92C97FBA63864CDFF79F78580F7" KeyPath="yes" Source=".\..\..\stable\php\ext\php_pgsql.dll" />
+                    <Component Id="cmp8B6297B926883DE90AE1B8B564080203" Guid="CAF90F5A-2377-41B4-9CCE-B8B520080203" Win64="$(var.Win64)">
+                        <File Id="filD032E92C97FBA63864CDFF7964080203" KeyPath="yes" Source=".\..\..\stable\php\ext\php_pgsql.dll" />
                     </Component>
-                    <Component Id="cmpC36E9D6BA08EA91AF9412A69DC8DEC7D" Guid="DC7D2BFC-AF51-452D-A220-0ACC21B2A7D3" Win64="no">
-                        <File Id="fil5599B845E457BDEF79C7C1AC28EBFE78" KeyPath="yes" Source=".\..\..\stable\php\ext\php_sockets.dll" />
+                    <Component Id="cmpC36E9D6BA08EA91AF9412A6964080203" Guid="DC7D2BFC-AF51-452D-A220-2A69DC080203" Win64="$(var.Win64)">
+                        <File Id="fil5599B845E457BDEF79C7C1AC64080203" KeyPath="yes" Source=".\..\..\stable\php\ext\php_sockets.dll" />
                     </Component>
                 </Directory>
-            </Directory>
-            <Directory Id="dir4DC5984F168CD2B3704AB946AF3214BE" Name="templates">
-                <Component Id="cmpE716CB1D68B380E55F193704DA8E61B9" Guid="AA200181-0C6E-4AC4-970F-0262C66B3D1D" Win64="no">
-                    <File Id="fil37AC8666786024B9D943DDA8B7A38691" KeyPath="yes" Source=".\..\..\stable\templates\emailtemplate.html" />
+              </Directory>
+            <?else?>
+              <Directory Id="dir3DC076071D141F236F37937E208D129D" Name="php">
+                <Component Id="cmp8E231DD9CB31F60270BC4F7F43A35956" Guid="B13FAA40-EF14-46DB-A664-E10A3A185956" Win64="$(var.Win64)">
+                    <File Id="filDA53B02C825707141338C90E753B5956" KeyPath="yes" Source=".\..\..\stable\php\multiotp.windows.php" />
                 </Component>
-                <Component Id="cmp9A57A60B71470CF00DFECB903A0F65B5" Guid="78F08E0A-D13B-4741-B6B0-A1D9278930F1"  Win64="no">
-                    <File Id="fil7872A2388045417B3802B4CB1BA4CA07" KeyPath="yes" Source=".\..\..\stable\templates\scratchtemplate.html" />
+                <Component Id="cmp212F65C8C435C57913BE1A8986080203" Guid="54535C76-B9E2-45BF-AE76-1A8986080203" Win64="$(var.Win64)">
+                    <File Id="fil2A07532B38854688B540F3D686080203" KeyPath="yes" Source=".\..\..\stable\php_x86\libcrypto-3.dll" />
                 </Component>
-                <Component Id="cmp5FB3844E48E59480E7615426D1792DF4" Guid="72B3E1F2-7899-455B-9F5B-741E756D971C"  Win64="no">
-                    <File Id="fil30E05F8CA4591A43F538F5F90BA309FD" KeyPath="yes" Source=".\..\..\stable\templates\template.html" />
+                <Component Id="cmp468486DB68271AB2894C6AB986080203" Guid="34A71494-EAF5-478A-A9F3-6AB986080203" Win64="$(var.Win64)">
+                    <File Id="filA8E32CF908D3A87F9F0D3E3286080203" KeyPath="yes" Source=".\..\..\stable\php_x86\libpq.dll" />
                 </Component>
-            </Directory>
+                <Component Id="cmp08158176C26CCB8D715FD86986080203" Guid="76B337B5-42CA-46F0-A348-D86986080203" Win64="$(var.Win64)">
+                    <File Id="filCF0EF86E1F4A2F255B7F47A486080203" KeyPath="yes" Source=".\..\..\stable\php_x86\libsasl.dll" />
+                </Component>
+                <Component Id="cmpB6AC4B01BC4984E2053DCA3E86080203" Guid="2B1A3943-920B-40FB-B936-CA3E86080203" Win64="$(var.Win64)">
+                    <File Id="fil1516A97EBE7D014FB8EEE5AF86080203" KeyPath="yes" Source=".\..\..\stable\php_x86\libssl-3.dll" />
+                </Component>
+                <Component Id="cmp1A014A972A0D962CAEB9782D86080203" Guid="CCA591AF-7925-4D5B-85A0-782D86080203" Win64="$(var.Win64)">
+                    <File Id="filA0A470F57ECEB7C3AFE940EA86080203" KeyPath="yes" Source=".\..\..\stable\php_x86\php-win.exe" />
+                </Component>
+                <Component Id="cmpCFAE6A97E70B99C73D5E4BEF86080203" Guid="430B3D03-360A-4453-8FED-4BEF86080203" Win64="$(var.Win64)">
+                    <File Id="filFF17AF86EABF40E0325434BE86080203" KeyPath="yes" Source=".\..\..\stable\php_x86\php.exe" />
+                </Component>
+                <Component Id="cmpC80A86BD867B3E873EB5AAE986080203" Guid="F0C688ED-3325-4BD1-B911-AAE986080203" Win64="$(var.Win64)">
+                    <File Id="filC8DCB2652CEA5456DFA049EF86080203" KeyPath="yes" Source=".\..\..\stable\php_x86\php.ini" />
+                </Component>
+                <Component Id="cmpF66E4128519295A470BEBCBE86080203" Guid="5E5D76CA-9B90-4C08-8A62-BCBE86080203" Win64="$(var.Win64)">
+                    <File Id="fil947C13912BE23B4EBD0118B686080203" KeyPath="yes" Source=".\..\..\stable\php_x86\php8.dll" />
+                </Component>
+                <Directory Id="dirC7498F43AAA0A42298C67AB4DF3CF2BE" Name="ext">
+                    <Component Id="cmp49AE0674A61CFDCE4807A01B86080203" Guid="DCC82C1E-D7A1-4F00-AD33-A01B86080203" Win64="$(var.Win64)">
+                        <File Id="fil9B53881F3BED87D0A1C47FD386080203" KeyPath="yes" Source=".\..\..\stable\php_x86\ext\php_gd.dll" />
+                    </Component>
+                    <Component Id="cmp2F323DBFCE16E7A0B3470E3586080203" Guid="EE1BCC1A-C731-4D61-95B9-0E3586080203" Win64="$(var.Win64)">
+                        <File Id="fil73F8A2B1CFF7423ADE01F4C686080203" KeyPath="yes" Source=".\..\..\stable\php_x86\ext\php_gmp.dll" />
+                    </Component>
+                    <Component Id="cmp6D6F6B39BE7DB573371468DB86080203" Guid="9946AC52-E0C3-4EAB-A161-68DB86080203" Win64="$(var.Win64)">
+                        <File Id="fil203105C0FF468065EB158F5A86080203" KeyPath="yes" Source=".\..\..\stable\php_x86\ext\php_ldap.dll" />
+                    </Component>
+                    <Component Id="cmpA3047FDF834C498E54D5508E86080203" Guid="BD93AF8B-3431-43B7-A8E9-508E86080203" Win64="$(var.Win64)">
+                        <File Id="fil4B034BA8415E59B71954A5BA86080203" KeyPath="yes" Source=".\..\..\stable\php_x86\ext\php_mbstring.dll" />
+                    </Component>
+                    <Component Id="cmp401524CF915038D87E06CE2686080203" Guid="7CE6AC5E-3AE0-4840-BCD2-CE2686080203" Win64="$(var.Win64)">
+                        <File Id="filC2A7932D934ADD94166B02EB86080203" KeyPath="yes" Source=".\..\..\stable\php_x86\ext\php_mysqli.dll" />
+                    </Component>
+                    <Component Id="cmp4B41E2EEF0B0A052CEFBB7F086080203" Guid="EB3CF896-CF5E-494F-BDA2-B7F086080203" Win64="$(var.Win64)">
+                        <File Id="fil882D82D5F871712B7D084F0F86080203" KeyPath="yes" Source=".\..\..\stable\php_x86\ext\php_openssl.dll" />
+                    </Component>
+                    <Component Id="cmp8B6297B926883DE90AE1B8B586080203" Guid="CAF90F5A-2377-41B4-9CCE-B8B586080203" Win64="$(var.Win64)">
+                        <File Id="filD032E92C97FBA63864CDFF7986080203" KeyPath="yes" Source=".\..\..\stable\php_x86\ext\php_pgsql.dll" />
+                    </Component>
+                    <Component Id="cmpC36E9D6BA08EA91AF9412A6986080203" Guid="DC7D2BFC-AF51-452D-A220-2A6986080203" Win64="$(var.Win64)">
+                        <File Id="fil5599B845E457BDEF79C7C1AC86080203" KeyPath="yes" Source=".\..\..\stable\php_x86\ext\php_sockets.dll" />
+                    </Component>
+                </Directory>
+              </Directory>
+            <?endif?>
         </DirectoryRef>
     </Fragment>
     <Fragment>
         <ComponentGroup Id="stableFilesGroup">
-            <ComponentRef Id="cmpC0272C84AD5A96F3E1A3472C35064132" />
-            <ComponentRef Id="cmp212F65C8C435C57913BE1A899D7C1E25" />
-            <ComponentRef Id="cmp468486DB68271AB2894C6AB9AB76B339" />
-            <ComponentRef Id="cmp08158176C26CCB8D715FD869434AA479" />
-            <ComponentRef Id="cmpB6AC4B01BC4984E2053DCA3EDE6DC652" />
-            <ComponentRef Id="cmp8E231DD9CB31F60270BC4F7F43A35743" />
-            <ComponentRef Id="cmp1A014A972A0D962CAEB9782D69553D76" />
-            <ComponentRef Id="cmpCFAE6A97E70B99C73D5E4BEF4BD357D4" />
-            <ComponentRef Id="cmpC80A86BD867B3E873EB5AAE9965E843E" />
-            <ComponentRef Id="cmpF66E4128519295A470BEBCBE6E47D6B1" />
-            <ComponentRef Id="cmp49AE0674A61CFDCE4807A01BE9E3F6C4" />
-            <ComponentRef Id="cmp2F323DBFCE16E7A0B3470E35C6F57FAA" />
-            <ComponentRef Id="cmp6D6F6B39BE7DB573371468DB3F858D3C" />
-            <ComponentRef Id="cmpA3047FDF834C498E54D5508E8AAE1E70" />
-            <ComponentRef Id="cmp401524CF915038D87E06CE269852A171" />
-            <ComponentRef Id="cmp4B41E2EEF0B0A052CEFBB7F074D10979" />
-            <ComponentRef Id="cmp8B6297B926883DE90AE1B8B5208E07C7" />
-            <ComponentRef Id="cmpC36E9D6BA08EA91AF9412A69DC8DEC7D" />
-            <ComponentRef Id="cmpE716CB1D68B380E55F193704DA8E61B9" />
-            <ComponentRef Id="cmp9A57A60B71470CF00DFECB903A0F65B5" />
-            <ComponentRef Id="cmp5FB3844E48E59480E7615426D1792DF4" />
+            <ComponentRef Id="cmpC0272C84AD5A96F3E1A3472C35065956" />
+            <ComponentRef Id="cmpE716CB1D68B380E55F193704DA8E5956" />
+            <ComponentRef Id="cmp9A57A60B71470CF00DFECB903A0F5956" />
+            <ComponentRef Id="cmp5FB3844E48E59480E7615426D1795956" />
+            <ComponentRef Id="cmp8E231DD9CB31F60270BC4F7F43A35956" />
+            <?if $(var.Platform) = x64 ?>
+              <ComponentRef Id="cmp212F65C8C435C57913BE1A8964080203" />
+              <ComponentRef Id="cmp468486DB68271AB2894C6AB964080203" />
+              <ComponentRef Id="cmp08158176C26CCB8D715FD86964080203" />
+              <ComponentRef Id="cmpB6AC4B01BC4984E2053DCA3E64080203" />
+              <ComponentRef Id="cmp1A014A972A0D962CAEB9782D64080203" />
+              <ComponentRef Id="cmpCFAE6A97E70B99C73D5E4BEF64080203" />
+              <ComponentRef Id="cmpC80A86BD867B3E873EB5AAE964080203" />
+              <ComponentRef Id="cmpF66E4128519295A470BEBCBE64080203" />
+              <ComponentRef Id="cmp49AE0674A61CFDCE4807A01B64080203" />
+              <ComponentRef Id="cmp2F323DBFCE16E7A0B3470E3564080203" />
+              <ComponentRef Id="cmp6D6F6B39BE7DB573371468DB64080203" />
+              <ComponentRef Id="cmpA3047FDF834C498E54D5508E64080203" />
+              <ComponentRef Id="cmp401524CF915038D87E06CE2664080203" />
+              <ComponentRef Id="cmp4B41E2EEF0B0A052CEFBB7F064080203" />
+              <ComponentRef Id="cmp8B6297B926883DE90AE1B8B564080203" />
+              <ComponentRef Id="cmpC36E9D6BA08EA91AF9412A6964080203" />
+            <?else?>
+              <ComponentRef Id="cmp212F65C8C435C57913BE1A8986080203" />
+              <ComponentRef Id="cmp468486DB68271AB2894C6AB986080203" />
+              <ComponentRef Id="cmp08158176C26CCB8D715FD86986080203" />
+              <ComponentRef Id="cmpB6AC4B01BC4984E2053DCA3E86080203" />
+              <ComponentRef Id="cmp1A014A972A0D962CAEB9782D86080203" />
+              <ComponentRef Id="cmpCFAE6A97E70B99C73D5E4BEF86080203" />
+              <ComponentRef Id="cmpC80A86BD867B3E873EB5AAE986080203" />
+              <ComponentRef Id="cmpF66E4128519295A470BEBCBE86080203" />
+              <ComponentRef Id="cmp49AE0674A61CFDCE4807A01B86080203" />
+              <ComponentRef Id="cmp2F323DBFCE16E7A0B3470E3586080203" />
+              <ComponentRef Id="cmp6D6F6B39BE7DB573371468DB86080203" />
+              <ComponentRef Id="cmpA3047FDF834C498E54D5508E86080203" />
+              <ComponentRef Id="cmp401524CF915038D87E06CE2686080203" />
+              <ComponentRef Id="cmp4B41E2EEF0B0A052CEFBB7F086080203" />
+              <ComponentRef Id="cmp8B6297B926883DE90AE1B8B586080203" />
+              <ComponentRef Id="cmpC36E9D6BA08EA91AF9412A6986080203" />
+            <?endif?>
         </ComponentGroup>
     </Fragment>
 </Wix>

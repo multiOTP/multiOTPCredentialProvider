@@ -5,14 +5,22 @@
 ** * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 -->
 <Include>
+
+
+  <?define Version="5.9.6.1" ?>
+  <?define Manufacturer = "SysCo" ?>
+  <?define BaseProductName = "multiOTP Credential Provider" ?>
+
   <?if $(var.Platform) = x64 ?>
-    <!-- <?define ProductName = "$(var.BaseProductName) $(var.Version) (64 bit)" ?> -->
+    <?define ProductName = "$(var.BaseProductName) $(var.Version) (64 bit)" ?>
     <?define Win64 = "yes" ?>
+    <?define BinFolder = "x64" ?>
     <?define PlatformProgramFilesFolder = "ProgramFiles64Folder" ?>
     <?define PlatformSystemFolder = "System64Folder" ?>
   <?else ?>
-    <!-- <?define ProductName = "$(var.BaseProductName) $(var.Version)" ?> -->
+    <?define ProductName = "$(var.BaseProductName) $(var.Version) (32 bit)" ?>
     <?define Win64 = "no" ?>
+    <?define BinFolder = "Win32" ?>
     <?define PlatformProgramFilesFolder = "ProgramFilesFolder" ?>
     <?define PlatformSystemFolder = "SystemFolder" ?>
   <?endif ?>

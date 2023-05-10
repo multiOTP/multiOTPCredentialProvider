@@ -2,8 +2,8 @@
  * multiOTP Credential Provider
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.5.6
- * @date      2023-02-10
+ * @version   5.9.6.1
+ * @date      2023-05-10
  * @since     2013
  * @copyright (c) 2016-2023 SysCo systemes de communication sa
  * @copyright (c) 2015-2016 ArcadeJust ("RDP only" enhancement)
