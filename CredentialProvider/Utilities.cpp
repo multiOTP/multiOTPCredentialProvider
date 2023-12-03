@@ -745,6 +745,18 @@ HRESULT Utilities::ReadUserField()
 		{
 			// only user input, copy string
 			user_name = wstring(input);
+			
+			// If the name doesn't contains @
+			auto const posAt = input.find_first_of(L"@", 0);
+			if (pos == std::string::npos) {
+				// Read prefix domain in the registry
+				DWORD dwDefaultPrefixSize = 0;
+				PWSTR pszDefaultPrefix = L"";
+				dwDefaultPrefixSize = readRegistryValueString(CONF_DEFAULT_PREFIX, &pszDefaultPrefix, L"");
+				if (dwDefaultPrefixSize > 1) {
+					domain_name = wstring(pszDefaultPrefix);
+				}
+			}
 		}
 		else
 		{
@@ -839,10 +851,9 @@ HRESULT Utilities::ResetScenario(
 	ICredentialProviderCredentialEvents* pCredProvCredentialEvents)
 {
 	DebugPrint(__FUNCTION__);
+
 	// 2 step progress is reset aswell, therefore put the submit button next to the password field again
-	_config->isSecondStep = false;
-	_config->provider.pCredProvCredentialEvents->SetFieldSubmitButton(
-		_config->provider.pCredProvCredential, FID_SUBMIT_BUTTON, FID_LDAP_PASS);
+	_config->isSecondStep = false;	
 
 	if (_config->provider.cpu == CPUS_UNLOCK_WORKSTATION)
 	{
@@ -866,6 +877,7 @@ HRESULT Utilities::ResetScenario(
 		else
 		{
 			SetScenario(pSelf, pCredProvCredentialEvents, SCENARIO::LOGON_BASE);
+			_config->provider.pCredProvCredentialEvents->SetFieldSubmitButton(_config->provider.pCredProvCredential, FID_SUBMIT_BUTTON, FID_LDAP_PASS);
 		}
 	}
 

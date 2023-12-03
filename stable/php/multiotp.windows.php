@@ -35,8 +35,8 @@
  * PHP 5.4.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.6.1
- * @date      2023-05-10
+ * @version   5.9.7.1
+ * @date      2023-12-03
  * @since     2010-06-08
  * @copyright (c) 2010-2023 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -275,8 +275,8 @@ if (!isset($multiotp)) {
  * PHP 5.4.0 or higher is supported.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.6.1
- * @date      2023-05-10
+ * @version   5.9.7.1
+ * @date      2023-12-03
  * @since     2010-06-08
  * @copyright (c) 2010-2023 SysCo systemes de communication sa
  * @copyright GNU Lesser General Public License
@@ -480,8 +480,8 @@ class Multiotp
  * @brief     Main class definition of the multiOTP project.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.6.1
- * @date      2023-05-10
+ * @version   5.9.7.1
+ * @date      2023-12-03
  * @since     2010-07-18
  */
 {
@@ -596,8 +596,8 @@ class Multiotp
    * @retval  void
    *
    * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
-   * @version   5.9.6.1
-   * @date      2023-05-10
+   * @version   5.9.7.1
+   * @date      2023-12-03
    * @since     2010-07-18
    */
   function __construct(
@@ -621,11 +621,11 @@ class Multiotp
 
       if (!isset($this->_class)) { $this->_class = base64_decode('bXVsdGlPVFA='); }
       if (!isset($this->_version)) {
-        $temp_version = '@version   5.9.6.1'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
+        $temp_version = '@version   5.9.7.1'; // You should add a suffix for your changes (for example 5.0.3.2-andy-2016-10-XX)
         $this->_version = nullable_trim(mb_substr($temp_version, 8));
       }
       if (!isset($this->_date)) {
-        $temp_date = '@date      2023-05-10'; // You should update the date with the date of your changes
+        $temp_date = '@date      2023-12-03'; // You should update the date with the date of your changes
         $this->_date = nullable_trim(mb_substr($temp_date, 8));
       }
       if (!isset($this->_copyright)) { $this->_copyright = base64_decode('KGMpIDIwMTAtMjAyMyBTeXNDbyBzeXN0ZW1lcyBkZSBjb21tdW5pY2F0aW9uIHNh'); }
@@ -753,6 +753,7 @@ class Multiotp
           'debug'                       => "int(1) DEFAULT 0",
           'default_algorithm'           => "TEXT DEFAULT 'totp'",
           'default_dialin_ip_mask'      => "TEXT DEFAULT ''",
+          'default_pin_digits'          => "int(10) DEFAULT 4",
           'default_user_group'          => "TEXT DEFAULT ''",
           'default_request_ldap_pwd'    => "int(1) DEFAULT 1",
           'default_request_prefix_pin'  => "int(1) DEFAULT 1",
@@ -805,7 +806,7 @@ class Multiotp
           'ldap_recursive_cache_only'   => "int(1) DEFAULT 0",
           'ldap_recursive_groups'       => "int(1) DEFAULT 1",
           'ldap_server_password'        => "TEXT DEFAULT ''",
-          // Default type 1 is Active Directory, 2 for Generic LDAP, 3 for legacy Active Directory
+          // Default type 1 is Active Directory, 2 for Generic LDAP, 3 for legacy Active Directory, 4 for eDirectory, 5 for Microsoft Entra ID (Azure AD)
           'ldap_server_type'            => "int(10) DEFAULT 1",
           'ldap_ssl'                    => "int(1) DEFAULT 0",
           'ldap_synced_user_attribute'  => "TEXT DEFAULT ''",
@@ -1804,7 +1805,7 @@ class Multiotp
 
 
   function SetUserLanguage($value) {
-    $this->_user_data['language'] = nullable_trim($value);
+    $this->_user_data['language'] = mb_strtolower(nullable_trim($value),'UTF-8');
   }
 
 
@@ -1818,7 +1819,7 @@ class Multiotp
 
 
   function SetLanguage($value) {
-    $this->_config_data['language'] = nullable_trim($value);
+    $this->_config_data['language'] = mb_strtolower(nullable_trim($value),'UTF-8');
   }
 
 
@@ -1917,6 +1918,7 @@ class Multiotp
 
     $this->_errors_text[50] = "ERROR: QRcode not created";
     $this->_errors_text[51] = "ERROR: UrlLink not created (no provisionable client for this protocol)";
+    $this->_errors_text[52] = "ERROR: HTML info not created";
     $this->_errors_text[58] = "ERROR: File is missing";
     $this->_errors_text[59] = "ERROR: Bad restore configuration password";
 
@@ -1943,6 +1945,7 @@ class Multiotp
     $this->_errors_text[88] = "ERROR: Device is not defined as a HA slave";
     $this->_errors_text[89] = "ERROR: Device is not defined as a HA master";
 
+    $this->_errors_text[91] = "ERROR: Authentication failed (without2fa token not authorized here)";
     $this->_errors_text[92] = "ERROR: Authentication failed (bad password)";
     $this->_errors_text[93] = "ERROR: Authentication failed (time based token probably out of sync)";
     $this->_errors_text[94] = "ERROR: API request error";
@@ -2954,7 +2957,7 @@ class Multiotp
       $encoded_stats_value = urlencode(base64_encode($rsa->encrypt(json_encode($stats_array))));
       $result_stats = $this->PostHttpDataXmlRequest($encoded_stats_value, "http://stats.multiotp.net/", 5);
       // if (FALSE !== mb_strpos($result_stats, "OK")) {
-      // We have to upgrade the anonymous last update even if the answer id not correct, because we could be offline
+      // We have to upgrade the anonymous last update even if the answer is not correct, because we could be offline
 
       if ((FALSE !== mb_strpos($result_stats, "<infoweb>")) && (FALSE !== mb_strpos($result_stats, "</infoweb>"))) {
           $infoweb_start = mb_strpos($result_stats, "<infoweb>") + mb_strlen("<infoweb>");
@@ -3125,11 +3128,11 @@ class Multiotp
   function RestoreConfiguration(
     $rc_array = array()
   ) {
-    $backup_file       = isset($rc_array['backup_file'])       ? $rc_array['backup_file'] : '';
-    $restore_key       = isset($rc_array['restore_key'])       ? $rc_array['restore_key'] : '';
-    $ignore_attributes = isset($rc_array['ignore_attributes']) ? $rc_array['ignore_attributes'] : array();
-    $ignore_files      = isset($rc_array['ignore_files'])      ? $rc_array['ignore_files'] : array();
-    $rename_files      = isset($rc_array['rename_files'])      ? $rc_array['rename_files'] : array();
+    $backup_file       = isset($rc_array['backup_file'])       ? $rc_array['backup_file']              : '';
+    $restore_key       = isset($rc_array['restore_key'])       ? $rc_array['restore_key']              : '';
+    $ignore_attributes = isset($rc_array['ignore_attributes']) ? $rc_array['ignore_attributes']        : array();
+    $ignore_files      = isset($rc_array['ignore_files'])      ? $rc_array['ignore_files']             : array();
+    $rename_files      = isset($rc_array['rename_files'])      ? $rc_array['rename_files']             : array();
     $update_config     = isset($rc_array['update_config'])     ? (TRUE === $rc_array['update_config']) : FALSE;
     $ignore_config     = isset($rc_array['ignore_config'])     ? (TRUE === $rc_array['ignore_config']) : FALSE;
     $automatically     = isset($rc_array['automatically'])     ? (TRUE === $rc_array['automatically']) : FALSE;
@@ -3138,16 +3141,20 @@ class Multiotp
     if (!is_array($ignore_attributes)) {
       $ignore_attributes = array('multiotp-database-format', 'actual_version', 'anonymous_');
     } else {
-      $ignore_attributes = array_merge($ignore_attributes, array('multiotp-database-format', 'actual_version', 'anonymous_'));
+      $ignore_attributes = array_merge($ignore_attributes,
+                                       array('multiotp-database-format',
+                                             'actual_version',
+                                             'anonymous_'
+                                            ));
     }
     if (!is_array($rename_files)) {
       $rename_files = array();
     }
 
     if (('*CLEAR*' == $restore_key) || ('*UNENC*' == $restore_key)) {
-        $restore_key = '';
+      $restore_key = '';
     } elseif ('' == $restore_key) {
-        $restore_key = $this->GetEncryptionKey();
+      $restore_key = $this->GetEncryptionKey();
     }
 
     $type = '';
@@ -3728,11 +3735,11 @@ class Multiotp
       $logfile_content = $log_datetime."\t".$severity_txt."\t".$user_log."\t".$category_log."\t".str_replace("\n", $this->IsDebugViaHtml()?"<br />":"; ", $log_text)."\t".$local_only."\t".$this->GetCreateHost();
 
       if (($this->GetDisplayLogFlag()) && (!$hide_on_display) && (!$this->GetNoDisplayLogFlag())) {
-          $display_text = "\nLOG ".$log_datetime.' '.$severity_txt.' '.(("" == $user_log)?"":'(user '.$user_log.') ').$category_log.' '.$log_text."\n";
-          if ($this->IsDebugViaHtml()) {
-              $display_text = str_replace("\n","<br />\n", htmlentities($display_text));
-          }
-          echo $display_text;
+        $display_text = "\nLOG ".$log_datetime.' '.$severity_txt.' '.(("" == $user_log)?"":'(user '.$user_log.') ').$category_log.' '.$log_text."\n";
+        if ($this->IsDebugViaHtml()) {
+          $display_text = str_replace("\n","<br />\n", htmlentities($display_text));
+        }
+        echo $display_text;
       }
 
       if (("" != nullable_trim($this->GetSysLogServer())) && (!$this->IsSysLogServerBad()) && (!$no_syslog)) {
@@ -3759,9 +3766,9 @@ class Multiotp
                   // Do an asynchronous SysLog if possible (Linux)
                   $cli_command = "";
                   if (file_exists('/bin/nc')) {
-                      // https://nelsonslog.wordpress.com/2013/04/19/faking-out-remote-syslog-via-netcat/
-                      $cli_command = "echo \"<$syslog_severity_facility>$syslog_timestamp $syslog_hostname $syslog_process: $syslog_fqdn $syslog_ip_from $syslog_content\" | /bin/nc $syslog_server -u $syslog_port -w $syslog_timeout > /dev/null 2>&1";
-                      exec("nohup $cli_command &", $output);
+                    // https://nelsonslog.wordpress.com/2013/04/19/faking-out-remote-syslog-via-netcat/
+                    $cli_command = "echo \"<$syslog_severity_facility>$syslog_timestamp $syslog_hostname $syslog_process: $syslog_fqdn $syslog_ip_from $syslog_content\" | /bin/nc $syslog_server -u $syslog_port -w $syslog_timeout > /dev/null 2>&1";
+                    exec("nohup $cli_command &", $output);
                   }
 
                   // Otherwise, or in the verbose mode also, PHP SysLog class
@@ -3873,8 +3880,9 @@ class Multiotp
   }
 
 
+  // ShowLog($as_result = FALSE) : $as_result : don't echo the log content, only return it
   function ShowLog(
-      $as_result = FALSE
+    $as_result = FALSE
   ) {
       $result = "";
       if ('mysql' == $this->GetBackendType()) {
@@ -3887,9 +3895,7 @@ class Multiotp
                       $result = FALSE;
                   } else {
                       while ($aRow = $rResult->fetch_assoc()) {
-                          if ($as_result) {
-                              $result.= nullable_trim($aRow['datetime'].' '.$aRow['user']).' '.$aRow['logentry']."\n";
-                          }
+                        $result.= nullable_trim($aRow['datetime'].' '.$aRow['user']).' '.$aRow['logentry']."\n";
                       }                         
                   }
               } elseif (!($rResult = mysql_query($sQuery, $this->_mysql_database_link))) {
@@ -3897,9 +3903,7 @@ class Multiotp
                   $result = FALSE;
               } else {
                   while ($aRow = mysql_fetch_assoc($rResult)) {
-                      if ($as_result) {
-                          $result.= nullable_trim($aRow['datetime'].' '.$aRow['user']).' '.$aRow['logentry']."\n";
-                      }
+                    $result.= nullable_trim($aRow['datetime'].' '.$aRow['user']).' '.$aRow['logentry']."\n";
                   }                         
               }
           }
@@ -3913,9 +3917,7 @@ class Multiotp
                   $result = FALSE;
               } else {
                   while ($aRow = pg_fetch_assoc($rResult)) {
-                      if ($as_result) {
-                          $result.= nullable_trim($aRow['datetime'].' '.$aRow['user']).' '.$aRow['logentry']."\n";
-                      }
+                    $result.= nullable_trim($aRow['datetime'].' '.$aRow['user']).' '.$aRow['logentry']."\n";
                   }                         
               }
           }
@@ -3924,20 +3926,18 @@ class Multiotp
         if ($log_file_handle = @fopen($this->GetLogFolder().$this->GetLogFileName(),"r")) {
           flock($log_file_handle, LOCK_SH);
           while (!feof($log_file_handle)) {
-            if ($as_result) {
-              $result.= nullable_trim(fgets($log_file_handle))."\n";
-            }
+            $result.= nullable_trim(fgets($log_file_handle))."\n";
           }
           fclose($log_file_handle);
         }
       }
       if (false !== $result) {
-          if (!$as_result) {
-              echo $result;
-              return true;
-          } else {
-              return $result;
-          }
+        if (!$as_result) {
+          echo $result;
+          return true;
+        } else {
+          return $result;
+        }
       } else {
         return $result;
       }
@@ -4900,13 +4900,23 @@ class Multiotp
   }
 
 
+  function EnableDeveloperMode() {
+    $this->_config_data['developer_mode'] = 0;
+  }
+
+
+  function DisableDeveloperMode() {
+    $this->_config_data['developer_mode'] = 1;
+  }
+
+
   function GetDeveloperMode() {
-      return $this->_config_data['developer_mode'];
+    return $this->_config_data['developer_mode'];
   }
 
 
   function IsDeveloperMode() {
-      return (1 == intval($this->_config_data['developer_mode']));
+    return (1 == intval($this->_config_data['developer_mode']));
   }
 
 
@@ -5439,7 +5449,7 @@ class Multiotp
       $encryption_key_param = ''
   ) {
       $result = FALSE;
-
+      
       $encryption_key = $encryption_key_param ;
 
       if ('' == $encryption_key) {
@@ -5492,18 +5502,14 @@ class Multiotp
         }
       }
 
-      if (!$encryption_only)
-      {
-          if ($this->_initialize_backend)
-          {
+      if (!$encryption_only) {
+          if ($this->_initialize_backend) {
               $this->SetBackendTypeValidated("", FALSE);
               $this->WriteConfigData();
           }
           // And now, we override the values if another backend type is defined
-          if ($this->GetBackendTypeValidated())
-          {
-              switch ($this->GetBackendType())
-              {
+          if ($this->GetBackendTypeValidated()) {
+              switch ($this->GetBackendType()) {
                   case 'mysql':
                       if ($this->OpenMysqlDatabase())
                       {
@@ -5657,20 +5663,22 @@ class Multiotp
           
           $array_to_parse = $this->_sql_tables_schema['stat'];
           foreach ($array_to_parse as $stat_key => $stat_format) {
-              $pos = mb_strpos(mb_strtoupper($stat_format,'UTF-8'), 'DEFAULT');
-              $default_value = "";
-              if ($pos !== FALSE) {
-                  $default_value = nullable_trim(mb_substr($stat_format, $pos + mb_strlen("DEFAULT")));
-                  if (("'" == mb_substr($default_value,0,1)) && ("'" == mb_substr($default_value,-1))) {
-                      $default_value = mb_substr($default_value,1,-1);
-                  }
+            $pos = mb_strpos(mb_strtoupper($stat_format,'UTF-8'), 'DEFAULT');
+            $default_value = "";
+            if ($pos !== FALSE) {
+              $default_value = nullable_trim(mb_substr($stat_format, $pos + mb_strlen("DEFAULT")));
+              if (("'" == mb_substr($default_value,0,1)) && ("'" == mb_substr($default_value,-1))) {
+                $default_value = mb_substr($default_value,1,-1);
               }
-              if (isset($this->_stat_data[$stat_key]) && ($this->_stat_data[$stat_key] != $default_value)) {
-                  $this->_config_data[$stat_key] == $this->_stat_data[$stat_key];
+            }
+            if (isset($this->_stat_data[$stat_key]) && ($this->_stat_data[$stat_key] != $default_value)) {
+              $this->_config_data[$stat_key] = $this->_stat_data[$stat_key];
+              if ($this->GetVerboseFlag()) {
+                $this->WriteLog("Debug: **ReadConfigData, stat value for $stat_key was " . $this->_stat_data[$stat_key], FALSE, FALSE, 8888, 'System', '');
               }
+            }
           }
       }
-
       return $result;
   }
 
@@ -5897,6 +5905,13 @@ class Multiotp
           if (('last_sync_update' != $stat_key) && ('last_sync_update_host' != $stat_key) && ('last_update' != $stat_key) && ('last_update_host' != $stat_key) && ('create_time' != $stat_key) && ('create_host' != $stat_key) && ($stat_key == $key)) {
             $this->_stat_data[$stat_key] = $this->_config_data[$key];
             $old_value = (isset($this->_stat_data_read[$key]) ? $this->_stat_data_read[$key] : "");
+            
+            if ($this->GetVerboseFlag()) {
+              if ('available_firmware_version' == $key) {
+                $this->WriteLog("Debug: **WriteStatData, stat value for $key: '$value' (was '$old_value' before)", FALSE, FALSE, 8888, 'Debug', '');
+              }
+            }
+
             if ($value != $old_value) {
               $write_needed = true;
               if ($this->GetVerboseFlag()) {
@@ -6089,45 +6104,43 @@ class Multiotp
   function GetUptime(
       $text_output = true
   ) {
-      $uptime = '';
-      if (file_exists('/proc/uptime')) {
-        if ($file = @fopen('/proc/uptime', 'r')) {
-          $data = @fread($file, 128);
-          if ($data !== false) {
-            $upsecs = (int)mb_substr($data, 0, mb_strpos($data, ' '));
-            $days = floor($upsecs/60/60/24);
-            $hours = $upsecs/60/60%24;
-            $minutes = $upsecs/60%60;
-            $seconds = $upsecs%60;
-            // $uptime = Array ( 'days' => $days, 'hours' => $hours, 'minutes' => $minutes, 'seconds' => $seconds );
-            $uptime = $days." day".(($days>1)?'s':'').", ".mb_substr('00'.$hours, -2).':'.mb_substr('00'.$minutes, -2).':'.mb_substr('00'.$seconds, -2);
-          }
-          fclose($file);
+    $uptime = '';
+    if (file_exists('/proc/uptime')) {
+      if ($file = @fopen('/proc/uptime', 'r')) {
+        $data = @fread($file, 128);
+        if ($data !== false) {
+          $upsecs = (int)mb_substr($data, 0, mb_strpos($data, ' '));
+          $days = floor($upsecs/60/60/24);
+          $hours = $upsecs/60/60%24;
+          $minutes = $upsecs/60%60;
+          $seconds = $upsecs%60;
+          // $uptime = Array ( 'days' => $days, 'hours' => $hours, 'minutes' => $minutes, 'seconds' => $seconds );
+          $uptime = $days." day".(($days>1)?'s':'').", ".mb_substr('00'.$hours, -2).':'.mb_substr('00'.$minutes, -2).':'.mb_substr('00'.$seconds, -2);
         }
+        fclose($file);
       }
-      else
-      {
-          $pagefile = 'C:\pagefile.sys';
-          if (!is_file($pagefile)) {
-              $pagefile = 'D:\pagefile.sys';
-              if (!is_file($pagefile)) {
-                  $pagefile = '';
-              }
-          }
-          if ('' != $pagefile) {
-              $gettime = (time() - filemtime($pagefile));
-              $upsecs = $gettime;
-              $days = floor($gettime / (24 * 3600));
-              $gettime = $gettime - ($days * (24 * 3600));
-              $hours = floor($gettime / (3600));
-              $gettime = $gettime - ($hours * (3600));
-              $minutes = floor($gettime / (60));
-              $gettime = $gettime - ($minutes * 60);
-              $seconds = $gettime; - ($seconds * 1);
-              $uptime = $days." day".(($days>1)?'s':'').", ".mb_substr('00'.$hours, -2).':'.mb_substr('00'.$minutes, -2).':'.mb_substr('00'.$seconds, -2);
-          }
-      }
-      return ($text_output?$uptime:$upsecs);
+    } else {
+        $pagefile = 'C:\pagefile.sys';
+        if (!is_file($pagefile)) {
+            $pagefile = 'D:\pagefile.sys';
+            if (!is_file($pagefile)) {
+                $pagefile = '';
+            }
+        }
+        if ('' != $pagefile) {
+            $gettime = (time() - filemtime($pagefile));
+            $upsecs = $gettime;
+            $days = floor($gettime / (24 * 3600));
+            $gettime = $gettime - ($days * (24 * 3600));
+            $hours = floor($gettime / (3600));
+            $gettime = $gettime - ($hours * (3600));
+            $minutes = floor($gettime / (60));
+            $gettime = $gettime - ($minutes * 60);
+            $seconds = $gettime; - ($seconds * 1);
+            $uptime = $days." day".(($days>1)?'s':'').", ".mb_substr('00'.$hours, -2).':'.mb_substr('00'.$minutes, -2).':'.mb_substr('00'.$seconds, -2);
+        }
+    }
+    return ($text_output ? $uptime : $upsecs);
   }
 
 
@@ -6362,6 +6375,22 @@ class Multiotp
       return strtoupper($temp); // ! THIS NON-MB strtoupper must stay as is !
   }
 
+
+  function GenerateNTMLv2(
+    $account,
+    $password,
+    $domain = "",
+    $client_challenge = "",
+    $server_challenge = ""
+  ) {
+    $unicode_password= iconv ( 'UTF-8', 'UTF-16LE', $password );
+
+    $NTLM_Key = mhash ( MHASH_MD4, $unicode_password);
+    $NTLM_Hash = mhash ( MHASH_MD5, iconv ( 'UTF-8', 'UTF-16LE', strtoupper ( $account ) . $domain ), $NTLM_Key );
+    $NTLM_Chal_Hash = mhash ( MHASH_MD5, pack ( "H*", $server_challenge . $client_challenge ), $NTLM_Hash );
+
+    return strtoupper ( bin2hex ( $NTLM_Chal_Hash ) );
+  }
 
   function SetState(
       $value
@@ -6665,13 +6694,13 @@ class Multiotp
   function SetDefaultAlgorithm(
       $value
   ) {
-      $this->_config_data['default_algorithm'] = ((intval($value) > 0)?1:0);
+      $this->_config_data['default_algorithm'] = mb_strtolower($value,'UTF-8');
   }
 
 
   function GetDefaultAlgorithm()
   {
-      return $this->_config_data['default_algorithm'];
+      return mb_strtolower($this->_config_data['default_algorithm'],'UTF-8');
   }
 
 
@@ -6909,14 +6938,14 @@ class Multiotp
       $value
   ) {
       if ($this->IsValidAlgorithm($value)) {
-        $this->_config_data['ldap_default_algorithm'] = $value;
+        $this->_config_data['ldap_default_algorithm'] = mb_strtolower($value,'UTF-8');
       }
   }
 
 
   function GetLdapDefaultAlgorithm()
   {
-      return $this->_config_data['ldap_default_algorithm'];
+      return mb_strtolower($this->_config_data['ldap_default_algorithm'],'UTF-8');
   }
 
 
@@ -7211,6 +7240,10 @@ class Multiotp
           $this->SetLdapCnIdentifier('uid');
           $this->SetLdapGroupAttribute("groupMembership");
           $this->SetLdapGroupCnIdentifier('cn');
+      } elseif (5 == $value) { // Microsoft Entra ID /* TODO : implement Microsoft Entra ID */
+          $this->SetLdapCnIdentifier('');
+          $this->SetLdapGroupAttribute("");
+          $this->SetLdapGroupCnIdentifier('');
       } else { // Generic LDAP or eDirectory
           $this->SetLdapCnIdentifier('uid');
           $this->SetLdapGroupAttribute("memberOf");
@@ -7243,7 +7276,7 @@ class Multiotp
   function SetLdapFilter(
       $value = ''
   ) {
-      $this->_config_data['ldap_filter'] = trim($value);
+      $this->_config_data['ldap_filter'] = nullable_trim($value);
   }
 
 
@@ -7382,15 +7415,27 @@ class Multiotp
 
 
   function SetSmsDigits(
-      $value
+    $value
   ) {
-      $this->_config_data['sms_digits'] = intval($value);
+    $digits = intval($value);
+    if ($digits < 6) {
+      $digits = 6;
+    } elseif ($digits > 32) {
+      $digits = 32;
+    }
+    $this->_config_data['sms_digits'] = intval($digits);
   }
 
 
   function GetSmsDigits()
   {
-      return $this->_config_data['sms_digits'];
+    $value = intval($this->_config_data['sms_digits']);
+    if ($value < 4) {
+      $value = 4;
+    } elseif ($value > 32) {
+      $value = 32;
+    }
+    return intval($value);
   }
 
 
@@ -7430,6 +7475,80 @@ class Multiotp
   function GetEmailCodeTimeout()
   {
       return $this->_config_data['email_code_timeout'];
+  }
+
+
+  function SetDefaultPinDigits(
+      $value
+  ) {
+    $digits = intval($value);
+    if ($digits < 4) {
+      $digits = 4;
+    } elseif ($digits > 32) {
+      $digits = 32;
+    }
+    $this->_config_data['default_pin_digits'] = intval($digits);
+  }
+
+
+  function GetDefaultPinDigits()
+  {
+    $value = intval($this->_config_data['default_pin_digits']);
+    if ($value < 4) {
+      $value = 4;
+    } elseif ($value > 32) {
+      $value = 32;
+    }
+    return intval($value);
+  }
+
+
+  function GeneratePin(
+    $value = 0
+  ) {
+    $digits = intval($value);
+    if ($digits < 1) {
+      $digits = $this->GetDefaultPinDigits();
+    } elseif ($digits < 4) {
+      $digits = 4;
+    } elseif ($digits > 32) {
+      $digits = 32;
+    }
+    do {
+      $regenerate = false;
+      $result = '';
+      $last_digit = '';
+      $same_counter = 0;
+      $increment_counter = 0;
+      $decrement_counter = 0;
+      for ($i = 0; $i < $digits; $i++) {
+        $digit = strval(mt_rand(0,9));
+        if (strval($digit) == strval($last_digit)) {
+          $same_counter++;
+          $increment_counter = 0;
+          $decrement_counter = 0;
+        } elseif (intval($digit-1) == intval($last_digit)) {
+          $same_counter = 0;
+          $increment_counter++;
+          $decrement_counter = 0;
+        } elseif (intval($digit+1) == intval($last_digit)) {
+          $same_counter = 0;
+          $increment_counter = 0;
+          $decrement_counter++;
+        } else {
+          $same_counter = 0;
+          $increment_counter = 0;
+          $decrement_counter = 0;
+        }
+        if (($same_counter >= 2) || ($increment_counter >= 3) || ($decrement_counter >= 3)) {
+          $regenerate = true;
+          break;
+        }
+        $last_digit = $digit;
+        $result.= $digit;
+      }
+    } while ($regenerate);
+    return $result;
   }
 
 
@@ -8515,7 +8634,7 @@ class Multiotp
 
 
   function CalculateMsChap2Response(
-      $user,
+      $account,
       $secret,
       $domain = "",
       $hex_mschap_challenge = '',
@@ -8557,7 +8676,7 @@ class Multiotp
       /*
       $kr = hash_hmac('md5',
                       pack('H*',hash('md4', $hash)),
-                      $this->Convert2Unicode(strtoupper($user).$domain)
+                      $this->Convert2Unicode(strtoupper($account).$domain)
                      ); // ! THIS NON-MB strtoupper must stay as is !
                      
       $nt_response_sig = hash_hmac('md5',
@@ -8579,7 +8698,7 @@ class Multiotp
       }
       else
       {
-          $challenge = substr(pack('H*',hash('sha1', $peer_challenge.$mschap_challenge.$user)), 0, 8);
+          $challenge = substr(pack('H*',hash('sha1', $peer_challenge.$mschap_challenge.$account)), 0, 8);
       }
 
       $hash = substr($hash.str_repeat("\0",21), 0, 21);
@@ -8609,13 +8728,13 @@ class Multiotp
 
 
   function CheckMsChap2Response(
-      $user,
+      $account,
       $secret,
       $domain = '',
       $hex_mschap_challenge = '',
       $hex_mschap2_response = ''
   ) {
-      $result = $this->CalculateMsChap2Response($user, $secret, $domain, $hex_mschap_challenge, $hex_mschap2_response);
+      $result = $this->CalculateMsChap2Response($account, $secret, $domain, $hex_mschap_challenge, $hex_mschap2_response);
       
       return ($this->GetMsChap2Response() == strtolower($result));
   }
@@ -8831,26 +8950,26 @@ class Multiotp
 
               $the_pin = $pin;
               if ('' == $the_pin) {
-                  $the_pin = mt_rand(1000,9999);
+                $the_pin = $this->GeneratePin();
               }
               $this->SetUserTokenNumberOfDigits($number_of_digits);
 
               $the_seed = (('' == $seed)?mb_substr(md5(date("YmdHis").mt_rand(100000,999999)),0,20).mb_substr(md5(mt_rand(100000,999999).date("YmdHis")),0,20):$seed);
               
               if (('hotp' == mb_strtolower($algorithm,'UTF-8')) || ('yubicootp' == mb_strtolower($algorithm,'UTF-8'))) {
-                  $next_event = ((-1 == $time_interval_or_next_event)?0:$time_interval_or_next_event);
-                  $time_interval = 0;
+                $next_event = ((-1 == $time_interval_or_next_event)?0:$time_interval_or_next_event);
+                $time_interval = 0;
               } elseif (('totp' == mb_strtolower($algorithm,'UTF-8')) || ('motp' == mb_strtolower($algorithm,'UTF-8'))) {
-                  $next_event = 0;
-                  $time_interval = ((-1 == $time_interval_or_next_event)?30:$time_interval_or_next_event);
-                  if ('motp' == mb_strtolower($algorithm,'UTF-8')) {
-                      // $the_seed = (('' == $seed)?mb_substr(md5(date("YmdHis").mt_rand(100000,999999)),0,16):$seed);
-                      $time_interval = 10;
-                      if ((mb_strlen($the_pin) < 4) || (0 == intval($the_pin))) {
-                          $the_pin = mt_rand(1000,9999);
-                      }
-                      $the_pin = mb_substr($the_pin, 0, 4);
+                $next_event = 0;
+                $time_interval = ((-1 == $time_interval_or_next_event)?30:$time_interval_or_next_event);
+                if ('motp' == mb_strtolower($algorithm,'UTF-8')) {
+                  // $the_seed = (('' == $seed)?mb_substr(md5(date("YmdHis").mt_rand(100000,999999)),0,16):$seed);
+                  $time_interval = 10;
+                  if ((mb_strlen($the_pin) < 4) || (0 == intval($the_pin))) {
+                    $the_pin = $this->GeneratePin(4); // PIN of 4 digits is mandatory for motp
                   }
+                  $the_pin = mb_substr($the_pin, 0, 4); // PIN of 4 digits is mandatory for motp
+                }
               } else { // without2FA or unknown
                   $next_event = 0;
                   $time_interval = 0;
@@ -8961,9 +9080,8 @@ class Multiotp
               $this->SetUserTokenLastEvent($this->GetTokenLastEvent());
 
               $the_pin = $pin;
-              if ('' == $the_pin)
-              {
-                  $the_pin = mt_rand(1000,9999);
+              if ('' == $the_pin) {
+                $the_pin = $this->GeneratePin();
               }
               
               $this_email = nullable_trim($email);
@@ -9127,13 +9245,13 @@ class Multiotp
       }
 
       // Simplify current algorithm info
-      $html = preg_replace('/IfMultiotpUserAlgorithm="[BCHIMOPTUY,]*'.mb_strtoupper($this->GetUserAlgorithm(),'UTF-8').'[BCHIMOPTUY,]*"}/i', 'IfMultiotpUserAlgorithm="'.mb_strtoupper($this->GetUserAlgorithm(),'UTF-8').'"}', $html);
+      $html = preg_replace('/IfMultiotpUserAlgorithm="[2ABCFHIMOPTUWY,]*'.mb_strtoupper($this->GetUserAlgorithm(),'UTF-8').'[2ABCFHIMOPTUWY,]*"}/i', 'IfMultiotpUserAlgorithm="'.mb_strtoupper($this->GetUserAlgorithm(),'UTF-8').'"}', $html);
 
       // Clean other algorithms info
       foreach (explode("\t",$this->GetAlgorithmsList()) as $algorithm_one) {
           if (mb_strtoupper($algorithm_one,'UTF-8') != mb_strtoupper($this->GetUserAlgorithm(),'UTF-8')) {
-              $html = preg_replace('/<!--\s*\{\/IfMultiotpUserAlgorithm="[BCHIMOPTUY,]*'.mb_strtoupper($algorithm_one,'UTF-8').'[BCHIMOPTUY,]*"\}\s*-->/i', ' -- {/IfMultiotpUserAlgorithm="DELETE"} -->', $html);
-              $html = preg_replace('/<!--\s*\{IfMultiotpUserAlgorithm="[BCHIMOPTUY,]*'.mb_strtoupper($algorithm_one,'UTF-8').'[BCHIMOPTUY,]*"\}\s*-->/i', '<!-- {IfMultiotpUserAlgorithm="DELETE"} -- ', $html);
+              $html = preg_replace('/<!--\s*\{\/IfMultiotpUserAlgorithm="[2ABCFHIMOPTUWY,]*'.mb_strtoupper($algorithm_one,'UTF-8').'[2ABCFHIMOPTUWY,]*"\}\s*-->/i', ' -- {/IfMultiotpUserAlgorithm="DELETE"} -->', $html);
+              $html = preg_replace('/<!--\s*\{IfMultiotpUserAlgorithm="[2ABCFHIMOPTUWY,]*'.mb_strtoupper($algorithm_one,'UTF-8').'[2ABCFHIMOPTUWY,]*"\}\s*-->/i', '<!-- {IfMultiotpUserAlgorithm="DELETE"} -- ', $html);
           }
       }
 
@@ -9653,7 +9771,7 @@ class Multiotp
               $this->SetUserTokenAlgoSuite(''); // Default algorithm suite (HMAC-SHA1)
               $the_pin = $pin;
               if ('' == $the_pin) {
-                  $the_pin = mt_rand(1000,9999);
+                  $the_pin = $this->GeneratePin();
               }
               $this->SetUserPrefixPin($prefix_required);
               $this->SetUserTokenNumberOfDigits(6);
@@ -9661,18 +9779,17 @@ class Multiotp
 
               $seed = mb_substr(md5(date("YmdHis").mt_rand(100000,999999)),0,20).mb_substr(md5(mt_rand(100000,999999).date("YmdHis")),0,20);
 
-              if ('totp' == mb_strtolower($algorithm,'UTF-8'))
-              {
-                  $time_interval = 30;
+              if ('totp' == mb_strtolower($algorithm,'UTF-8')) {
+                $time_interval = 30;
               } elseif ('motp' == mb_strtolower($algorithm,'UTF-8')) {
-                  $seed = mb_substr($seed,0,16);
-                  $time_interval = 10;
-                  if ((mb_strlen($the_pin) < 4) || (0 == intval($the_pin)))
-                  {
-                      $the_pin = mt_rand(1000,9999);
-                  }
+                $seed = mb_substr($seed,0,16);
+                $time_interval = 10;
+                if ((mb_strlen($the_pin) < 4) || (0 == intval($the_pin))) {
+                  $the_pin = $this->GeneratePin(4); // PIN of 4 digits is mandatory for motp
+                }
+                $the_pin = mb_substr($the_pin, 0, 4); // PIN of 4 digits is mandatory for motp
               } else {
-                  $time_interval = 0;
+                $time_interval = 0;
               }
 
               $this->SetUserPin($the_pin);
@@ -10487,6 +10604,10 @@ class Multiotp
             $result = false;
           }
       }
+
+
+      // We force the algorithm to be ALWAYS in lowercase
+      $temp_user_array['algorithm'] = mb_strtolower($temp_user_array['algorithm'],'UTF-8');
 
       $now_epoch = time();
       $temp_user_array['delayed_account'] = (($temp_user_array['error_counter'] >= $this->GetMaxDelayedFailures()) && ($now_epoch < ((isset($temp_user_array['last_error']) ? $temp_user_array['last_error'] : 0) + $this->GetMaxDelayedTime())));
@@ -11726,17 +11847,40 @@ class Multiotp
 
 
   function SetUserMultiAccount(
-      $value
+      $first_param,
+      $second_param = "*-*"
   ) {
-      $this->_user_data['multi_account'] = $value;
-      return TRUE;
+      $result = TRUE;
+      $data = 0;
+      if ($second_param == "*-*") {
+          $data = $first_param;
+      } else {
+          $result = $this->SetUser($first_param);
+          $data = $second_param;
+      }
+      $this->_user_data['multi_account'] = $data;
+
+      return $result;
   }
 
 
-  function GetUserMultiAccount()
-  {
-      return $this->_user_data['multi_account'];
+  function GetUserMultiAccount(
+      $user = ''
+  ) {
+      if ($user != '') {
+          $this->SetUser($user);
+      }
+      return intval(isset($this->_user_data['multi_account']) ? $this->_user_data['multi_account'] : 0);
   }
+  
+
+  function IsUserMultiAccount(
+      $user = ''
+  ) {
+      return (1 == ($this->GetUserMultiAccount($user)));
+  }
+  
+
 
 
   function SetUserAttribute(
@@ -15956,12 +16100,12 @@ class Multiotp
                 if (@ldap_bind($ldapconn, ($this->GetLdapBindDn().$this->GetLdapAccountSuffix()), ($this->GetLdapServerPassword()))) {
                   /*
                   if ($this->GetVerboseFlag()) {
-                      echo "DEBUG\n";
-                      if (ldap_get_option($ldapconn, LDAP_OPT_DIAGNOSTIC_MESSAGE, $extended_error)) {
-                          echo "Error Binding to LDAP: $extended_error";
-                      } else {
-                          echo "Error Binding to LDAP: No additional information is available.";
-                      }
+                    echo "DEBUG\n";
+                    if (ldap_get_option($ldapconn, LDAP_OPT_DIAGNOSTIC_MESSAGE, $extended_error)) {
+                      echo "Error Binding to LDAP: $extended_error";
+                    } else {
+                      echo "Error Binding to LDAP: No additional information is available.";
+                    }
                   }
                   */
                   $result = TRUE;
@@ -16418,10 +16562,7 @@ class Multiotp
         $sms_number = $this->CleanPhoneNumber($this->GetUserSms());
         if ('' != $sms_number) {
           $sms_message_prefix = nullable_trim($this->GetSmsMessage());
-          $sms_now_steps = $now_epoch;
-          $sms_digits = $this->GetSmsDigits();
-          $sms_seed_bin = hex2bin(md5('sMs'.$this->GetEncryptionKey().$this->GetUserTokenSeed().$user.$now_epoch));
-          $sms_token = $this->GenerateOathHotp($sms_seed_bin,$sms_now_steps,$sms_digits);
+          $sms_token = $this->GeneratePin($this->GetSmsDigits());
 
           $this->SetUserSmsOtp($sms_token);
           $this->SetUserSmsValidity($now_epoch + $this->GetSmsTimeout());
@@ -16467,10 +16608,7 @@ class Multiotp
         }
         $email = $this->GetUserEmail();
         if ('' != $email) {
-          $steps = $now_epoch;
-          $digits = $this->GetEmailDigits();
-          $seed_bin = hex2bin(md5('EmaiL'.$this->GetEncryptionKey().$this->GetUserTokenSeed().$user.$now_epoch));
-          $token = $this->GenerateOathHotp($seed_bin, $steps, $digits);
+          $token = $this->GeneratePin($this->GetEmailDigits());
 
           $this->SetUserEmailOtp($token);
           $this->SetUserEmailValidity($now_epoch + $this->GetEmailCodeTimeout());
@@ -16898,20 +17036,21 @@ class Multiotp
       }
       
       if ($this->IsGlobalChallengeResponse()) {
-          $challenge_response_enabled = 1;
-          $sms_challenge_enabled = ($this->IsGlobalSmsChallenge() ? 1:0);
-          $text_sms_challenge = $this->GetGlobalTextSmsChallenge();
-          $text_token_challenge = $this->GetGlobalTextTokenChallenge();
+        $challenge_response_enabled = 1;
+        $sms_challenge_enabled = ($this->IsGlobalSmsChallenge() ? 1:0);
+        $text_sms_challenge = $this->GetGlobalTextSmsChallenge();
+        $text_token_challenge = $this->GetGlobalTextTokenChallenge();
       }
   
       $state = nullable_trim($this->GetState());
       if ('' == $state) {
-          $state = "multiOTP".mb_substr(md5($this->GetEncryptionKey().time().mt_rand(100000,999999)),0,24);
+        $state = "multiOTP".mb_substr(md5($this->GetEncryptionKey().time().mt_rand(100000,999999)),0,24);
       }
 
       $cache_result_enabled = false;
       $disable_error_counter = false;
       $force_no_prefix_pin = false;
+      $multi_account_enabled = false;
       
       $supplemental_login_info = "";
 
@@ -16960,7 +17099,8 @@ class Multiotp
           // For multi-account definition, we are also looking on the server(s) if any
           if ($this->ReadUserData($real_user)) {
               // multi account works only if authentication is done with PAP
-              if (1 == intval($this->GetUserMultiAccount())) {
+              if ($this->IsUserMultiAccount()) {
+                  $multi_account_enabled = true;
                   $pos = strrpos($input_to_check, " ");
                   if ($pos !== FALSE) {
                       $real_user = mb_substr($input_to_check,0,$pos);
@@ -17020,7 +17160,8 @@ class Multiotp
           $result = 99; // Unknown error
 
           // multi account works only if authentication is done with PAP
-          if (1 == intval($this->GetUserMultiAccount())) {
+          if ($this->IsUserMultiAccount()) {
+              $multi_account_enabled = true;
               $pos = strrpos($input_to_check, " ");
               if ($pos !== FALSE) {
                   $real_user = mb_substr($input_to_check,0,$pos);
@@ -17304,7 +17445,7 @@ class Multiotp
                   } elseif ('' != $this->GetMsChap2Response()) {
                       $clear_code_confirmed = $code_confirmed;
                       $code_confirmed = $this->CalculateMsChap2Response($real_user, $code_confirmed);
-                      if ($this->GetVerboseFlag()) {
+                      if ($this->IsDeveloperMode()) {
                         $this->WriteLog("Debug: *CalculateMsChap2Response($real_user, $clear_code_confirmed) for SMS: $code_confirmed", false, false, 19, 'Debug', '');
                       }
                   }
@@ -17405,7 +17546,7 @@ class Multiotp
                   } elseif ('' != $this->GetMsChap2Response()) {
                       $clear_code_confirmed = $code_confirmed;
                       $code_confirmed = $this->CalculateMsChap2Response($real_user, $code_confirmed);
-                      if ($this->GetVerboseFlag()) {
+                      if ($this->IsDeveloperMode()) {
                         $this->WriteLog("Debug: *CalculateMsChap2Response($real_user, $clear_code_confirmed) for Email: $code_confirmed", false, false, 19, 'Debug', '');
                       }
                   }
@@ -17503,7 +17644,7 @@ class Multiotp
                   } elseif ('' != $this->GetMsChap2Response()) {
                       $clear_code_confirmed = $code_confirmed;
                       $code_confirmed = $this->CalculateMsChap2Response($real_user, $code_confirmed);
-                      if ($this->GetVerboseFlag()) {
+                      if ($this->IsDeveloperMode()) {
                         $this->WriteLog("Debug: *CalculateMsChap2Response($real_user, $clear_code_confirmed) for scratch password: $code_confirmed", false, false, 19, 'Debug', '');
                       }
                   }
@@ -17754,7 +17895,7 @@ class Multiotp
                                   $clear_code_confirmed = $code_confirmed;
                                   $code_confirmed_without_pin = mb_strtolower($this->CalculateMsChap2Response($real_user, $code_confirmed_without_pin),'UTF-8');
                                   $code_confirmed = mb_strtolower($this->CalculateMsChap2Response($real_user, $code_confirmed),'UTF-8');
-                                  if ($this->GetVerboseFlag()) {
+                                  if ($this->IsDeveloperMode()) {
                                     $this->WriteLog("Debug: *CalculateMsChap2Response($real_user, $clear_code_confirmed) for motp: $code_confirmed", false, false, 19, 'Debug', '');
                                   }
                               }
@@ -17817,16 +17958,16 @@ class Multiotp
                           }
                       } while (($check_step < $max_steps) && (90 <= $result));
                       if ($display_status) {
-                          echo "\r\n";
+                        echo "\r\n";
                       }
                       if (90 <= $result) {
-                          if ($this->CompareUserLastFailedCredential(nullable_trim($input.' '.$input_sync))) {
-                              $disable_error_counter = true;
-                          }
-                          if (!$disable_error_counter) {
-                              $this->SetUserErrorCounter($error_counter+1);
-                          }
-                          $this->SetUserTokenLastError($now_epoch);
+                        if ($this->CompareUserLastFailedCredential(nullable_trim($input.' '.$input_sync))) {
+                          $disable_error_counter = true;
+                        }
+                        if (!$disable_error_counter) {
+                          $this->SetUserErrorCounter($error_counter+1);
+                        }
+                        $this->SetUserTokenLastError($now_epoch);
                       }
                       break;
                   case 'hotp';
@@ -17863,7 +18004,7 @@ class Multiotp
                                   $clear_code_confirmed = $code_confirmed;
                                   $code_confirmed_without_pin = mb_strtolower($this->CalculateMsChap2Response($real_user, $code_confirmed_without_pin),'UTF-8');
                                   $code_confirmed = mb_strtolower($this->CalculateMsChap2Response($real_user, $code_confirmed),'UTF-8');
-                                  if ($this->GetVerboseFlag()) {
+                                  if ($this->IsDeveloperMode()) {
                                     $this->WriteLog("Debug: *CalculateMsChap2Response($real_user, $clear_code_confirmed) for hotp: $code_confirmed", false, false, 19, 'Debug', '');
                                   }
                               }
@@ -17924,16 +18065,16 @@ class Multiotp
                           }
                       } while (($check_step < $max_steps) && ((90 <= $result)));
                       if ($display_status) {
-                          echo "\r\n";
+                        echo "\r\n";
                       }
                       if (90 <= $result) {
-                          if ($this->CompareUserLastFailedCredential(nullable_trim($input.' '.$input_sync))) {
-                              $disable_error_counter = true;
-                          }
-                          if (!$disable_error_counter) {
-                              $this->SetUserErrorCounter($error_counter+1);
-                          }
-                          $this->SetUserTokenLastError($now_epoch);
+                        if ($this->CompareUserLastFailedCredential(nullable_trim($input.' '.$input_sync))) {
+                          $disable_error_counter = true;
+                        }
+                        if (!$disable_error_counter) {
+                          $this->SetUserErrorCounter($error_counter+1);
+                        }
+                        $this->SetUserTokenLastError($now_epoch);
                       }
                       break;
                   case 'yubicootp';
@@ -18028,7 +18169,7 @@ class Multiotp
                                   $clear_code_confirmed = $code_confirmed;
                                   $code_confirmed_without_pin = mb_strtolower($this->CalculateMsChap2Response($real_user, $code_confirmed_without_pin),'UTF-8');
                                   $code_confirmed = mb_strtolower($this->CalculateMsChap2Response($real_user, $code_confirmed),'UTF-8');
-                                  if ($this->GetVerboseFlag()) {
+                                  if ($this->IsDeveloperMode()) {
                                     $this->WriteLog("Debug: *CalculateMsChap2Response($real_user, $clear_code_confirmed) for totp: $code_confirmed", false, false, 19, 'Debug', '');
                                   }
                               }
@@ -18089,7 +18230,7 @@ class Multiotp
                           }
                       } while (($check_step < $max_steps) && (90 <= $result));
                       if ($display_status) {
-                          echo "\r\n";
+                        echo "\r\n";
                       }
                       if (90 <= $result) {
                           
@@ -18122,7 +18263,7 @@ class Multiotp
                                       $clear_code_confirmed = $code_confirmed;
                                       $code_confirmed_without_pin = mb_strtolower($this->CalculateMsChap2Response($real_user, $code_confirmed_without_pin),'UTF-8');
                                       $code_confirmed = mb_strtolower($this->CalculateMsChap2Response($real_user, $code_confirmed),'UTF-8');
-                                      if ($this->GetVerboseFlag()) {
+                                  if ($this->IsDeveloperMode()) {
                                         $this->WriteLog("Debug: *CalculateMsChap2Response($real_user, $clear_code_confirmed) for totp: $code_confirmed", false, false, 19, 'Debug', '');
                                       }
                                   }
@@ -18147,9 +18288,16 @@ class Multiotp
                       }
                       break;
                   case 'without2fa';
+                      // NO without2fa token as multi_account authentication
+                      if ($multi_account_enabled) {
+                        $result = 91;
+                        $this->WriteLog("Error: authentication failed".$supplemental_login_info." for user ".$real_user." (without2fa token not authorized here)", FALSE, FALSE, $result, 'User');
+                        return $result;
+                      }
+
                       $result = 92; // ERROR: Authentication failed (bad password)
                       if ($input_is_empty) {
-                          $input_to_check = '';
+                        $input_to_check = '';
                       }
 
                       $bad_precheck = FALSE;
@@ -21247,78 +21395,158 @@ class Multiotp
   }
 
 
-  function GetHardwareType()
-  {
-      $type = "unknown";
-      $os_running = php_uname();
-      // Is it potentially a Raspberry Pi 2 or a BeagleBone Black ?
-      if (false !== mb_strpos(mb_strtolower($os_running,'UTF-8'), 'armv8')) {
-          $type = 'RP3'; // Raspberry Pi 3 (BCM2709)
-          $hardware = '';
-          exec("cat /proc/cpuinfo | grep --color=never -i Hardware", $output);
-          foreach ($output as $line) {
-            $line.= "  ";
-            if (preg_match("/^Hardware\s*:\s*(.*)/", $line)) {
-              preg_match_all("/^Hardware\s*:\s*(.*)/", $line, $result_array, PREG_SET_ORDER);
-              if (isset($result_array[0][1])) {
-                $hardware = mb_strtoupper(nullable_trim($result_array[0][1]),'UTF-8');
-                break;
-              }
-            }
+  function GetHardwareType(
+    $return_array = false
+  ) {
+    $os_running = str_replace(' '. $this->GetSystemName(), '', php_uname());
+
+    // Hardware detection (2023-11-23)
+    $type       = 'unknown';
+    $family     = 'unknown';
+    $model      = 'unknown';
+    $hardware   = 'unknown';
+    $cpu_speed  = 'unknown';
+    $os_running = isset($os_running) ? $os_running : php_uname();
+
+    // Is it a Windows platform (for development only) ?
+    if (mb_strtolower(mb_substr(PHP_OS, 0, 3),'UTF-8') === 'win') {
+      $type   = 'DVP';
+      $family = 'WIN';
+      $model  = 'Windows device';
+    } else {
+      $model  = 'Linux device';
+      exec("cat /proc/cpuinfo | grep --color=never -i Model", $output);
+      foreach ($output as $line) {
+        $line.= "  ";
+        if (preg_match("/^Model\s*:\s*(.*)/", $line)) {
+          preg_match_all("/^Model\s*:\s*(.*)/", $line, $result_array, PREG_SET_ORDER);
+          if (isset($result_array[0][1])) {
+            $model = nullable_trim($result_array[0][1]);
+            break;
           }
-          if (FALSE !== mb_strpos(mb_strtolower($hardware,'UTF-8'), 'bcm28')) {
-            $type = 'RP3+'; // Raspberry Pi 3B+
+        }
+      }
+      exec("cat /proc/cpuinfo | grep --color=never -i Hardware", $output);
+      foreach ($output as $line) {
+        $line.= "  ";
+        if (preg_match("/^Hardware\s*:\s*(.*)/", $line)) {
+          preg_match_all("/^Hardware\s*:\s*(.*)/", $line, $result_array, PREG_SET_ORDER);
+          if (isset($result_array[0][1])) {
+            $hardware = nullable_trim($result_array[0][1]);
+            break;
           }
-      } elseif (FALSE !== mb_strpos(mb_strtolower($os_running,'UTF-8'), 'armv7l')) {
-        $hardware = '';
-        exec("cat /proc/cpuinfo | grep --color=never -i Hardware", $output);
+        }
+      }
+      if ('' == $hardware) {
+        exec("cat /proc/cpuinfo | grep --color=never -i \"model name\"", $output);
         foreach ($output as $line) {
           $line.= "  ";
-          if (preg_match("/^Hardware\s*:\s*(.*)/", $line)) {
-            preg_match_all("/^Hardware\s*:\s*(.*)/", $line, $result_array, PREG_SET_ORDER);
+          if (preg_match("/^model name\s*:\s*(.*)/", $line)) {
+            preg_match_all("/^model name\s*:\s*(.*)/", $line, $result_array, PREG_SET_ORDER);
             if (isset($result_array[0][1])) {
-              $hardware = mb_strtoupper(nullable_trim($result_array[0][1]),'UTF-8');
+              $hardware = nullable_trim($result_array[0][1]);
               break;
             }
           }
         }
-        if (FALSE !== mb_strpos(mb_strtolower($hardware,'UTF-8'), 'bcm27')) {
-                  // Raspberry Pi (BCM 2709)
-                  $lscpu = '';
-                  exec("/usr/bin/lscpu | grep --color=never -i \"CPU max MHz\"", $output);
-                  foreach ($output as $line) {
-                      $line.= "  ";
-                      if (preg_match("/^CPU max MHz\s*:\s*(.*)/", $line)) {
-                          preg_match_all("/^CPU max MHz\s*:\s*(.*)/", $line, $result_array, PREG_SET_ORDER);
-                          if (isset($result_array[0][1])) {
-                              $lscpu = mb_strtoupper(nullable_trim($result_array[0][1]),'UTF-8');
-                              break;
-                          }
-                      }
-                  }
-                  if (false !== mb_strpos(mb_strtolower($lscpu,'UTF-8'), '1500')) {
-                      $type = 'RP4'; // Raspberry Pi 4 B
-                  } elseif (false !== mb_strpos(mb_strtolower($lscpu,'UTF-8'), '1200')) {
-                      $type = 'RP3'; // Raspberry Pi 3
-                  } else {
-                      $type = 'RP2'; // Raspberry Pi 2
-                  }
-        } elseif (FALSE !== mb_strpos(mb_strtolower($hardware,'UTF-8'), 'bcm28')) {
-          $type = 'RP3+'; // Raspberry Pi 3B+
+      }
+      exec("/usr/bin/lscpu | grep --color=never -i MHz", $output);
+      foreach ($output as $line) {
+        $line.= "  ";
+        if (preg_match("/^CPU max MHz\s*:\s*(.*)/", $line)) {
+          preg_match_all("/^CPU max MHz\s*:\s*(.*)/", $line, $result_array, PREG_SET_ORDER);
+          if (isset($result_array[0][1])) {
+            $cpu_speed = intval(nullable_trim($result_array[0][1]));
+            break;
+          }
+        }
+      }
+      if ('' == $cpu_speed) {
+        foreach ($output as $line) {
+          $line.= "  ";
+          if (preg_match("/^cpu MHz\s*:\s*(.*)/", $line)) {
+            preg_match_all("/^cpu MHz\s*:\s*(.*)/", $line, $result_array, PREG_SET_ORDER);
+            if (isset($result_array[0][1])) {
+              $cpu_speed = intval(nullable_trim($result_array[0][1]));
+              break;
+            }
+          }
+        }
+      }
+      if (false !== mb_stripos($model,'Raspberry Pi 5')) {
+        $type = 'RP5';
+        $family = 'RPI';
+      } elseif (false !== mb_stripos($model,'Raspberry Pi 4')) {
+        $type = 'RP4';
+        $family = 'RPI';
+      } elseif (false !== mb_stripos($model,'Raspberry Pi 3 Model B Plus')) {
+        $type = 'RP3+';
+        $family = 'RPI';
+      } elseif (false !== mb_stripos($model,'Raspberry Pi 3')) {
+        $type = 'RP3';
+        $family = 'RPI';
+      } elseif (false !== mb_stripos($model,'Raspberry Pi 2')) {
+        $type = 'RP2';
+        $family = 'RPI';
+      } elseif (false !== mb_stripos($model,'Raspberry Pi')) {
+        $type = 'RP';
+        $family = 'RPI';
+      } elseif ((false !== mb_stripos($os_running, 'armv8')) || (FALSE !== mb_stripos($os_running, 'aarch64'))) {
+        if ((FALSE !== mb_stripos($hardware, 'bcm27')) || (FALSE !== mb_stripos($hardware, 'bcm28'))) {
+          if (false !== mb_stripos($cpu_speed, '1500')) {
+            $type = 'RP4';
+            $family = 'RPI';
+          } elseif (false !== mb_stripos($cpu_speed, '1400')) {
+            $type = 'RP3+';
+            $family = 'RPI';
+          } else {
+            $type = 'RP3';
+            $family = 'RPI';
+          }
+        } else {
+            $type = 'ARM';
+            $family = 'ARM';
+        }
+      } elseif (FALSE !== mb_stripos($os_running, 'armv7l')) {
+        if ((FALSE !== mb_stripos($hardware, 'bcm27')) || (FALSE !== mb_stripos($hardware, 'bcm28'))) {
+          if (false !== mb_stripos($cpu_speed, '1500')) {
+            $type = 'RP4';
+            $family = 'RPI';
+          } elseif (false !== mb_stripos($cpu_speed, '1400')) {
+            $type = 'RP3+';
+            $family = 'RPI';
+          } elseif (false !== mb_stripos($cpu_speed, '1200')) {
+            $type = 'RP3';
+            $family = 'RPI';
+          } else {
+            $type = 'RP2';
+            $family = 'RPI';
+          }
         } else {
           $type = 'BBB'; // Beaglebone Black (Generic AM33XX and others)
+          $family = 'ARM';
         }
-      // Is it potentially a Raspberry Pi B/B+ ?
-      } elseif (FALSE !== mb_strpos(mb_strtolower($os_running,'UTF-8'), 'armv6l')) {
+      } elseif (FALSE !== mb_stripos($os_running, 'armv6l')) {
           $type = 'RPI';
-      // Is it potentially a Windows development platform ?
-      } elseif (mb_strtolower(mb_substr(PHP_OS, 0, 3),'UTF-8') === 'win') {
-          $type = "DVP";
+          $family = 'RPI';
       // Is it a virtual appliance and/or a Linux Debian edition
-      } elseif (FALSE !== mb_strpos(mb_strtolower($os_running,'UTF-8'), 'debian')) {
+      } elseif (FALSE !== mb_stripos($os_running, 'debian')) {
           $type = 'VAP';
+          $family = 'VAP';
       }
+    }
+    // End of hardware detection (2023-11-23)
+
+    if ($return_array) {
+      return array("type"       => $type,
+                   "family"     => $family,
+                   "model"      => $model,
+                   "hardware"   => $hardware,
+                   "cpu_speed"  => $cpu_speed,
+                   "os_running" => $os_running);
+    } else {
       return $type;
+    }
   }
 
 
@@ -22026,6 +22254,7 @@ EOL;
   }
 
 
+  // The XmlServer is called from the client side using PostHttpDataXmlRequest function
   function XmlServer($data)
   {
       // $this->WriteLog("Info: Host received the following request: $data", FALSE, FALSE, 8888, 'Debug', '');
@@ -22352,14 +22581,14 @@ EOL;
           
           $server_password = md5($command_name.$this->GetServerSecret($remote_ip).$server_challenge);
           
-      }elseif ($this->GetVerboseFlag()) {
+      } elseif ($this->GetVerboseFlag()) {
           $this->WriteLog("Info: *Server received the following request: $data", FALSE, FALSE, 8888, 'Server-Client', '');
       }
       
       $error_description = $this->GetErrorText($error_code);
       
       if ($this->GetVerboseFlag()) {
-          $this->WriteLog("Info: *Server secret used for command ".$command_name." with error code result ".$error_code.": ".$this->GetServerSecret($remote_ip), FALSE, FALSE, 8888, 'Server-Client', '');
+        $this->WriteLog("Info: *Server secret used for command ".$command_name." with error code result ".$error_code.": ".$this->GetServerSecret($remote_ip), FALSE, FALSE, 8888, 'Server-Client', '');
       }
       
       $xml_data = str_replace('*Command*', $command_name, $xml_data);
@@ -22380,9 +22609,8 @@ EOL;
       header("Content-type: text/xml");
 
       if ($this->_xml_dump_in_log) {
-          $this->WriteLog("Info: Server sent the following answer: $xml_data", FALSE, FALSE, 8888, 'Debug', '');
+        $this->WriteLog("Info: Server sent the following answer: $xml_data", FALSE, FALSE, 8888, 'Debug', '');
       }
-
       echo $xml_data;
   }
 
@@ -22497,8 +22725,8 @@ class MultiotpSms
  * @brief     SMS message using any SMS Provider.
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.5.4
- * @date      2022-12-31
+ * @version   5.9.7.0
+ * @date      2023-11-21
  * @since     2018-10-09
  *
  * Predefined providers:
@@ -22562,6 +22790,7 @@ class MultiotpSms
  *
  * Change Log
  *
+ *   2023-11-21 5.9.7.0 SysCo/al Cleaned code
  *   2023-03-21 5.9.5.8 SysCo/al smsgateway provider added
  *                               Specific URL can be specified in the constructor
  *   2022-12-26 5.9.5.3 SysCo/al Updated eCall API
@@ -22576,857 +22805,871 @@ class MultiotpSms
  *   2018-10-09 5.4.0.2 SysCo/al First implementation
  */
 {
-    // Standard values (for predefined providers)
-    var $provider;
-    var $api_id;
-    var $ip;
-    var $port;
-    var $username;
-    var $password;
-    var $from;
-    var $to;
-    var $msg;
-    
-    // Custom values (for customized provider)
-    var $url;
-    var $send_template;
-    var $method;
-    var $encoding;
-    var $status_success;
-    var $content_success;
-    var $no_double_zero;
-    var $international_format;
-    var $basic_auth;
-    var $content_encoding;
-    var $header;
-    
-    // Timeout
-    var $timeout;
+  // Standard values (for predefined providers)
+  var $provider;
+  var $api_id;
+  var $ip;
+  var $port;
+  var $username;
+  var $password;
+  var $from;
+  var $to;
+  var $msg;
+  
+  // Custom values (for customized provider)
+  var $url;
+  var $send_template;
+  var $method;
+  var $encoding;
+  var $status_success;
+  var $content_success;
+  var $no_double_zero;
+  var $international_format;
+  var $basic_auth;
+  var $content_encoding;
+  var $header;
+  
+  // Timeout
+  var $timeout;
 
-    // Debug flag
-    var $debug;
+  // Debug flag
+  var $debug;
 
-    // This is automatically activated if needed
-    var $encode_ampersand;
+  // This is automatically activated if needed
+  var $encode_ampersand;
 
-    var $last_result;
-    var $reply_status;
-    var $reply_content;
+  var $last_result;
+  var $reply_status;
+  var $reply_content;
 
 
-    function __construct(
-        $config_array = array()
-    ) {
-        $this->resetValues();
-        $this->provider = isset($config_array['provider']) ? trim($config_array['provider']) : '';
-        if (isset($config_array['url'])) { $this->url = trim($config_array['url']); }
-        if (isset($config_array['send_template'])) { $this->send_template = $config_array['send_template']; }
-        if (isset($config_array['api_id'])) { $this->api_id = $config_array['api_id']; }
-        if (isset($config_array['ip'])) { $this->ip = $config_array['ip']; }
-        if (isset($config_array['port'])) { $this->port = $config_array['port']; }
-        if (isset($config_array['username'])) { $this->username = $config_array['username']; }
-        if (isset($config_array['password'])) { $this->password = $config_array['password']; }
-        if (isset($config_array['from'])) { $this->from = $config_array['from']; }
-        if (isset($config_array['to'])) { $this->setTo($config_array['to']); }
-        if (isset($config_array['msg'])) { $this->setMsg($config_array['msg']); }
-        if (isset($config_array['method'])) { $this->method = $config_array['method']; }
-        if (isset($config_array['encoding'])) { $this->encoding = $config_array['encoding']; }
-        if (isset($config_array['status_success'])) { $this->status_success = $config_array['status_success']; }
-        if (isset($config_array['content_success'])) { $this->content_success = $config_array['content_success']; }
-        if (isset($config_array['no_double_zero'])) { $this->no_double_zero = (TRUE == $config_array['no_double_zero']); }
-        if (isset($config_array['international_format'])) { $this->international_format = (TRUE == $config_array['international_format']); }
-        if (isset($config_array['basic_auth'])) { $this->basic_auth = (TRUE == $config_array['basic_auth']); }
-        if (isset($config_array['content_encoding'])) { $this->content_encoding = $config_array['content_encoding']; }
-        if (isset($config_array['header'])) { $this->header = $config_array['header']; }
-        if (isset($config_array['debug'])) { $this->debug = (TRUE == $config_array['debug']); }
-        if (isset($config_array['timeout'])) { $this->timeout = intval($config_array['timeout']); }
-        if (isset($config_array['encode_ampersand'])) { $this->encode_ampersand = (TRUE == $config_array['encode_ampersand']); }
-        if ($this->timeout < 1) {
-            $this->timeout = 5;
-        }
-        if ('' != $this->provider) { $this->setProvider($this->provider); }
+  function __construct(
+    $config_array = array()
+  ) {
+    $this->resetValues();
+    $this->provider = isset($config_array['provider']) ? trim($config_array['provider']) : '';
+    if (isset($config_array['url'])) { $this->url = trim($config_array['url']); }
+    if (isset($config_array['send_template'])) { $this->send_template = $config_array['send_template']; }
+    if (isset($config_array['api_id'])) { $this->api_id = $config_array['api_id']; }
+    if (isset($config_array['ip'])) { $this->ip = $config_array['ip']; }
+    if (isset($config_array['port'])) { $this->port = $config_array['port']; }
+    if (isset($config_array['username'])) { $this->username = $config_array['username']; }
+    if (isset($config_array['password'])) { $this->password = $config_array['password']; }
+    if (isset($config_array['from'])) { $this->from = $config_array['from']; }
+    if (isset($config_array['to'])) { $this->setTo($config_array['to']); }
+    if (isset($config_array['msg'])) { $this->setMsg($config_array['msg']); }
+    if (isset($config_array['method'])) { $this->method = $config_array['method']; }
+    if (isset($config_array['encoding'])) { $this->encoding = $config_array['encoding']; }
+    if (isset($config_array['status_success'])) { $this->status_success = $config_array['status_success']; }
+    if (isset($config_array['content_success'])) { $this->content_success = $config_array['content_success']; }
+    if (isset($config_array['no_double_zero'])) { $this->no_double_zero = (TRUE == $config_array['no_double_zero']); }
+    if (isset($config_array['international_format'])) { $this->international_format = (TRUE == $config_array['international_format']); }
+    if (isset($config_array['basic_auth'])) { $this->basic_auth = (TRUE == $config_array['basic_auth']); }
+    if (isset($config_array['content_encoding'])) { $this->content_encoding = $config_array['content_encoding']; }
+    if (isset($config_array['header'])) { $this->header = $config_array['header']; }
+    if (isset($config_array['debug'])) { $this->debug = (TRUE == $config_array['debug']); }
+    if (isset($config_array['timeout'])) { $this->timeout = intval($config_array['timeout']); }
+    if (isset($config_array['encode_ampersand'])) { $this->encode_ampersand = (TRUE == $config_array['encode_ampersand']); }
+    if ($this->timeout < 1) {
+      $this->timeout = 5;
     }
+    if ('' != $this->provider) { $this->setProvider($this->provider); }
+  }
 
 
-    function resetValues($reset_provider = TRUE)
-    {
-        if ($reset_provider) {
-            $this->provider = "";
-        }
-        $this->url = "";
+  function resetValues(
+    $reset_provider = TRUE
+  ) {
+    if ($reset_provider) {
+      $this->provider = "";
+    }
+    $this->url = "";
+    $this->send_template = "";
+    $this->api_id = "";
+    $this->ip = "";
+    $this->port = "";
+    $this->username = "";
+    $this->password = "";
+    $this->from = "";
+    $this->to = "";
+    $this->msg = "";
+    $this->method = "POST-XML";
+    $this->encoding = "UTF";
+    $this->status_success = "";
+    $this->content_success = "";
+    $this->timeout = 5;
+    $this->last_result = FALSE;
+    $this->reply_status = "";
+    $this->reply_content = "";
+    $this->no_double_zero = FALSE;
+    $this->international_format = FALSE;
+    $this->basic_auth = FALSE;
+    $this->content_encoding = "";
+    $this->header = "";
+
+    $this->encode_ampersand = FALSE;
+  }
+
+
+  function setNoDoubleZero(
+    $value
+  ) {
+    $this->no_double_zero = (TRUE == $value);
+  }
+
+
+  function getNoDoubleZero()
+  {
+    return (TRUE == $this->no_double_zero);
+  }
+
+
+  function setInternationalFormat(
+    $value
+  ) {
+    $this->international_format = (TRUE == $value);
+  }
+
+
+  function getInternationalFormat()
+  {
+    return (TRUE == $this->international_format);
+  }
+
+
+  function setEncoding(
+    $encoding
+  ) {
+    $this->encoding = mb_strtoupper(mb_substr($encoding, 0, 3),'UTF-8');
+  }
+
+
+  function getEncoding()
+  {
+    $encoding = "UTF-8";
+    if ('UTF' == mb_strtoupper(mb_substr($this->encoding, 0, 3),'UTF-8')) {
+      $encoding = "UTF-8";
+    } elseif ('ISO' == mb_strtoupper(mb_substr($this->encoding, 0, 3),'UTF-8')) {
+      $encoding = "ISO-8859-1";
+    }
+    return $encoding;
+  }
+
+
+  function setProvider(
+    $provider
+  ) {
+    switch ($provider) {
+      case 'afilnet':
+        $this->url = "https://www.afilnet.com/api/http/?class=sms&method=sendsms&user=%user&password=%pass&from=%from&to=%to&sms=%msg";
         $this->send_template = "";
-        $this->api_id = "";
-        $this->ip = "";
-        $this->port = "";
-        $this->username = "";
-        $this->password = "";
-        $this->from = "";
-        $this->to = "";
-        $this->msg = "";
-        $this->method = "POST-XML";
+        $this->method = "GET";
         $this->encoding = "UTF";
-        $this->status_success = "";
-        $this->content_success = "";
-        $this->timeout = 5;
-        $this->last_result = FALSE;
-        $this->reply_status = "";
-        $this->reply_content = "";
+        $this->status_success = "20";
+        $this->content_success = "\"status\":\"SUCCESS\"";
+        $this->no_double_zero = TRUE;
+        $this->international_format = FALSE;
+        $this->basic_auth = FALSE;
+        $this->content_encoding = "URL";
+        $this->header = "";
+        break;
+      case 'aspsms':
+        $this->url = "https://xml3.aspsms.com/xmlsvr.asp https://xml4.aspsms.com/xmlsvr.asp";
+        $this->send_template = "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\r\n".
+                               "<aspsms>\r\n".
+                               "  <Userkey>%user</Userkey>\r\n".
+                               "  <Password>%pass</Password>\r\n".
+                               "  <AffiliateId>208355</AffiliateId>\r\n".
+                           "  <Recipient>\r\n".
+                               "    <PhoneNumber>%to</PhoneNumber>\r\n".
+                               "  </Recipient>\r\n".
+                               "  <Originator>%from</Originator>\r\n".
+                               "  <MessageData>%msg</MessageData>\r\n".
+                               "  <Action>SendTextSMS</Action>\r\n".
+                               "</aspsms>\r\n";
+        $this->method = "POST-XML";
+        $this->encoding = "ISO";
+        $this->status_success = "20";
+        $this->content_success = "<ErrorCode>1</ErrorCode>";
+        $this->no_double_zero = FALSE;
+        $this->basic_auth = FALSE;
+        $this->content_encoding = "HTML";
+        break;
+      case 'aspsms-ucs2':
+        $this->url = "https://xml3.aspsms.com/xmlsvr.asp https://xml4.aspsms.com/xmlsvr.asp";
+        $this->send_template = "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\r\n".
+                               "<aspsms>\r\n".
+                               "  <Userkey>%user</Userkey>\r\n".
+                               "  <Password>%pass</Password>\r\n".
+                               "  <AffiliateId>208355</AffiliateId>\r\n".
+                               "  <Recipient>\r\n".
+                               "    <PhoneNumber>%to</PhoneNumber>\r\n".
+                               "  </Recipient>\r\n".
+                               "  <Originator>%from</Originator>\r\n".
+                               "  <XSer>020108</XSer>\r\n".
+                               "  <MessageData>%ucs2msg</MessageData>\r\n".
+                               "  <Action>SendBinaryData</Action>\r\n".
+                               "</aspsms>\r\n";
+        $this->method = "POST-XML";
+        $this->encoding = "ISO";
+        $this->status_success = "20";
+        $this->content_success = "<ErrorCode>1</ErrorCode>";
+        $this->no_double_zero = FALSE;
+        $this->international_format = FALSE;
+        $this->basic_auth = FALSE;
+        $this->content_encoding = "HTML";
+        $this->header = "";
+        break;
+      case 'clickatell':
+        $this->url = "https://api.clickatell.com/xml/xml http://api.clickatell.com/xml/xml";
+        $this->send_template = "data=<clickAPI>".
+                                 "<sendMsg>".
+                                   "<api_id>%api_id</api_id>".
+                                   "<user>%user</user>".
+                                   "<password>%pass</password>".
+                                   "<to>%to</to>".
+                                   "<from>%from</from>".
+                                   "<text><![CDATA[%msg]]></text>".
+                                 "</sendMsg>".
+                               "</clickAPI>";
+        $this->method = "POST";
+        $this->encoding = "UTF";
+        $this->status_success = "20";
+        $this->content_success = "<apiMsgId>";
+        $this->no_double_zero = TRUE;
+        $this->international_format = FALSE;
+        $this->basic_auth = FALSE;
+        $this->content_encoding = "";
+        $this->header = "";
+        break;
+      case 'clickatell2':
+        $this->url = "https://platform.clickatell.com/messages/http/send?apiKey=%api_id&to=%to&content=%msg";
+        $this->send_template = "";
+        $this->method = "GET";
+        $this->encoding = "UTF";
+        $this->status_success = "20";
+        $this->content_success = "\"accepted\":true";
+        $this->no_double_zero = TRUE;
+        $this->international_format = FALSE;
+        $this->basic_auth = FALSE;
+        $this->content_encoding = "URL";
+        $this->header = "";
+        break;
+      case 'ecall':
+        $this->url = "https://url.ecall.ch/api/sms?username=%user&password=%pass&address=%to&message=%msg";
+        $this->send_template = "";
+        $this->method = "GET";
+        $this->encoding = "UTF";
+        $this->status_success = "20";
+        $this->content_success = "0";
+        $this->no_double_zero = FALSE;
+        $this->international_format = FALSE;
+        $this->basic_auth = FALSE;
+        $this->content_encoding = "URL";
+        $this->header = "";
+        break;
+      case 'intellisms':
+        $this->url = "https://www.intellisoftware.co.uk/smsgateway/sendmsg.aspx https://www.intellisoftware2.co.uk/smsgateway/sendmsg.aspx";
+        $this->send_template = "username=%user&password=%pass&originator=%from&to=%to&text=%msg&type=1";
+        $this->method = "POST";
+        $this->encoding = "ISO";
+        $this->status_success = "20";
+        $this->content_success = "ID:";
+        $this->no_double_zero = TRUE;
+        $this->international_format = FALSE;
+        $this->basic_auth = FALSE;
+        $this->content_encoding = "URL";
+        $this->header = "";
+        break;
+      case 'nexmo':
+        $this->url = "https://rest.nexmo.com/sms/json";
+        $this->send_template = "api_key=%api_id&api_secret=%pass&from=%from&to=%to&text=%msg";
+        $this->method = "POST";
+        $this->encoding = "UTF";
+        $this->status_success = "20";
+        $this->content_success = "\"status\": \"0\"";
+        $this->no_double_zero = TRUE;
+        $this->international_format = FALSE;
+        $this->basic_auth = FALSE;
+        $this->content_encoding = "URL";
+        $this->header = "";
+        break;
+      case 'nowsms':
+        if (empty($this->url)) {
+          $this->url = "http://%ip:%port/?PhoneNumber=%to&Text=%msg";
+        }
+        $this->send_template = "";
+        $this->method = "GET";
+        $this->encoding = "UTF";
+        $this->status_success = "20";
+        $this->content_success = "Message Submitted";
+        $this->no_double_zero = FALSE;
+        $this->international_format = FALSE;
+        $this->basic_auth = TRUE;
+        $this->content_encoding = "";
+        $this->header = "";
+        break;
+      case 'smseagle':
+        if (empty($this->url)) {
+          $this->url = "https://%ip:%port/index.php/http_api/send_sms?login=%user&pass=%pass&to=%to&message=%msg";
+        }
+        $this->send_template = "";
+        $this->method = "GET";
+        $this->encoding = "UTF";
+        $this->status_success = "20";
+        $this->content_success = "OK";
         $this->no_double_zero = FALSE;
         $this->international_format = FALSE;
         $this->basic_auth = FALSE;
         $this->content_encoding = "";
         $this->header = "";
-
-        $this->encode_ampersand = FALSE;
-    }
-
-
-    function setNoDoubleZero($value)
-    {
-        $this->no_double_zero = (TRUE == $value);
-    }
-
-
-    function getNoDoubleZero()
-    {
-        return (TRUE == $this->no_double_zero);
-    }
-
-
-    function setInternationalFormat($value)
-    {
-        $this->international_format = (TRUE == $value);
-    }
-
-
-    function getInternationalFormat()
-    {
-        return (TRUE == $this->international_format);
-    }
-
-
-    function setEncoding($encoding)
-    {
-        $this->encoding = mb_strtoupper(mb_substr($encoding, 0, 3),'UTF-8');
-    }
-
-
-    function getEncoding()
-    {
-        $encoding = "UTF-8";
-        if ('UTF' == mb_strtoupper(mb_substr($this->encoding, 0, 3),'UTF-8')) {
-            $encoding = "UTF-8";
-        } elseif ('ISO' == mb_strtoupper(mb_substr($this->encoding, 0, 3),'UTF-8')) {
-            $encoding = "ISO-8859-1";
+        break;
+      case 'smsgateway':
+        if (empty($this->url)) {
+          $this->url = "https://%ip:%port/smsgateway/index.php?id=%api_id&h=%pass&to=%to&message=%msg";
         }
-        return $encoding;
-    }
-
-
-    function setProvider($provider)
-    {
-        switch ($provider) {
-            case 'afilnet':
-                $this->url = "https://www.afilnet.com/api/http/?class=sms&method=sendsms&user=%user&password=%pass&from=%from&to=%to&sms=%msg";
-                $this->send_template = "";
-                $this->method = "GET";
-                $this->encoding = "UTF";
-                $this->status_success = "20";
-                $this->content_success = "\"status\":\"SUCCESS\"";
-                $this->no_double_zero = TRUE;
-                $this->international_format = FALSE;
-                $this->basic_auth = FALSE;
-                $this->content_encoding = "URL";
-                $this->header = "";
-                break;
-            case 'aspsms':
-                $this->url = "https://xml3.aspsms.com/xmlsvr.asp https://xml4.aspsms.com/xmlsvr.asp";
-                $this->send_template = "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\r\n".
-                                       "<aspsms>\r\n".
-                                       "  <Userkey>%user</Userkey>\r\n".
-                                       "  <Password>%pass</Password>\r\n".
-                                       "  <AffiliateId>208355</AffiliateId>\r\n".
-		                               "  <Recipient>\r\n".
-                                       "    <PhoneNumber>%to</PhoneNumber>\r\n".
-                                       "  </Recipient>\r\n".
-                                       "  <Originator>%from</Originator>\r\n".
-                                       "  <MessageData>%msg</MessageData>\r\n".
-                                       "  <Action>SendTextSMS</Action>\r\n".
-                                       "</aspsms>\r\n";
-                $this->method = "POST-XML";
-                $this->encoding = "ISO";
-                $this->status_success = "20";
-                $this->content_success = "<ErrorCode>1</ErrorCode>";
-                $this->no_double_zero = FALSE;
-                $this->basic_auth = FALSE;
-                $this->content_encoding = "HTML";
-                break;
-            case 'aspsms-ucs2':
-                $this->url = "https://xml3.aspsms.com/xmlsvr.asp https://xml4.aspsms.com/xmlsvr.asp";
-                $this->send_template = "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\r\n".
-                                       "<aspsms>\r\n".
-                                       "  <Userkey>%user</Userkey>\r\n".
-                                       "  <Password>%pass</Password>\r\n".
-                                       "  <AffiliateId>208355</AffiliateId>\r\n".
-                                       "  <Recipient>\r\n".
-                                       "    <PhoneNumber>%to</PhoneNumber>\r\n".
-                                       "  </Recipient>\r\n".
-                                       "  <Originator>%from</Originator>\r\n".
-                                       "  <XSer>020108</XSer>\r\n".
-                                       "  <MessageData>%ucs2msg</MessageData>\r\n".
-                                       "  <Action>SendBinaryData</Action>\r\n".
-                                       "</aspsms>\r\n";
-                $this->method = "POST-XML";
-                $this->encoding = "ISO";
-                $this->status_success = "20";
-                $this->content_success = "<ErrorCode>1</ErrorCode>";
-                $this->no_double_zero = FALSE;
-                $this->international_format = FALSE;
-                $this->basic_auth = FALSE;
-                $this->content_encoding = "HTML";
-                $this->header = "";
-                break;
-            case 'clickatell':
-                $this->url = "https://api.clickatell.com/xml/xml http://api.clickatell.com/xml/xml";
-                $this->send_template = "data=<clickAPI>".
-                                         "<sendMsg>".
-                                           "<api_id>%api_id</api_id>".
-                                           "<user>%user</user>".
-                                           "<password>%pass</password>".
-                                           "<to>%to</to>".
-                                           "<from>%from</from>".
-                                           "<text><![CDATA[%msg]]></text>".
-                                         "</sendMsg>".
-                                       "</clickAPI>";
-                $this->method = "POST";
-                $this->encoding = "UTF";
-                $this->status_success = "20";
-                $this->content_success = "<apiMsgId>";
-                $this->no_double_zero = TRUE;
-                $this->international_format = FALSE;
-                $this->basic_auth = FALSE;
-                $this->content_encoding = "";
-                $this->header = "";
-                break;
-            case 'clickatell2':
-                $this->url = "https://platform.clickatell.com/messages/http/send?apiKey=%api_id&to=%to&content=%msg";
-                $this->send_template = "";
-                $this->method = "GET";
-                $this->encoding = "UTF";
-                $this->status_success = "20";
-                $this->content_success = "\"accepted\":true";
-                $this->no_double_zero = TRUE;
-                $this->international_format = FALSE;
-                $this->basic_auth = FALSE;
-                $this->content_encoding = "URL";
-                $this->header = "";
-                break;
-            case 'ecall':
-                $this->url = "https://url.ecall.ch/api/sms?username=%user&password=%pass&address=%to&message=%msg";
-                $this->send_template = "";
-                $this->method = "GET";
-                $this->encoding = "UTF";
-                $this->status_success = "20";
-                $this->content_success = "0";
-                $this->no_double_zero = FALSE;
-                $this->international_format = FALSE;
-                $this->basic_auth = FALSE;
-                $this->content_encoding = "URL";
-                $this->header = "";
-                break;
-            case 'intellisms':
-                $this->url = "https://www.intellisoftware.co.uk/smsgateway/sendmsg.aspx https://www.intellisoftware2.co.uk/smsgateway/sendmsg.aspx";
-                $this->send_template = "username=%user&password=%pass&originator=%from&to=%to&text=%msg&type=1";
-                $this->method = "POST";
-                $this->encoding = "ISO";
-                $this->status_success = "20";
-                $this->content_success = "ID:";
-                $this->no_double_zero = TRUE;
-                $this->international_format = FALSE;
-                $this->basic_auth = FALSE;
-                $this->content_encoding = "URL";
-                $this->header = "";
-                break;
-            case 'nexmo':
-                $this->url = "https://rest.nexmo.com/sms/json";
-                $this->send_template = "api_key=%api_id&api_secret=%pass&from=%from&to=%to&text=%msg";
-                $this->method = "POST";
-                $this->encoding = "UTF";
-                $this->status_success = "20";
-                $this->content_success = "\"status\": \"0\"";
-                $this->no_double_zero = TRUE;
-                $this->international_format = FALSE;
-                $this->basic_auth = FALSE;
-                $this->content_encoding = "URL";
-                $this->header = "";
-                break;
-            case 'nowsms':
-                if (empty($this->url)) {
-                  $this->url = "http://%ip:%port/?PhoneNumber=%to&Text=%msg";
-                }
-                $this->send_template = "";
-                $this->method = "GET";
-                $this->encoding = "UTF";
-                $this->status_success = "20";
-                $this->content_success = "Message Submitted";
-                $this->no_double_zero = FALSE;
-                $this->international_format = FALSE;
-                $this->basic_auth = TRUE;
-                $this->content_encoding = "";
-                $this->header = "";
-                break;
-            case 'smseagle':
-                if (empty($this->url)) {
-                  $this->url = "https://%ip:%port/index.php/http_api/send_sms?login=%user&pass=%pass&to=%to&message=%msg";
-                }
-                $this->send_template = "";
-                $this->method = "GET";
-                $this->encoding = "UTF";
-                $this->status_success = "20";
-                $this->content_success = "OK";
-                $this->no_double_zero = FALSE;
-                $this->international_format = FALSE;
-                $this->basic_auth = FALSE;
-                $this->content_encoding = "";
-                $this->header = "";
-                break;
-            case 'smsgateway':
-                if (empty($this->url)) {
-                  $this->url = "https://%ip:%port/smsgateway/index.php?id=%api_id&h=%pass&to=%to&message=%msg";
-                }
-                $this->send_template = "";
-                $this->method = "GET";
-                $this->encoding = "UTF";
-                $this->status_success = "20";
-                $this->content_success = "\"X-SMSGateway-State\" content=\"NEW\"";
-                $this->no_double_zero = FALSE;
-                $this->international_format = FALSE;
-                $this->basic_auth = FALSE;
-                $this->content_encoding = "";
-                $this->header = "";
-                break;
-            case 'swisscom':
-                $this->url = "https://messagingproxy.swisscom.ch:4300/rest/1.0.0/submit_sm/%api_id";
-                $this->send_template = "{\n".
-                                       "\"source_addr_ton\": 5,\n".
-                                       "\"source_addr_npi\": 0,\n".
-                                       "\"source_addr\": \"%from\",\n".
-                                       "\"destination_addr\": \"%to\",\n".
-                                       "\"short_message\": \"%msg\"\n".
-                                       "}";
-                $this->method = "POST-JSON";
-                $this->encoding = "UTF";
-                $this->status_success = "20";
-                $this->content_success = "\"command_status\":0";
-                $this->no_double_zero = TRUE;
-                $this->international_format = FALSE;
-                $this->basic_auth = TRUE;
-                $this->content_encoding = "QUOTES";
-                $this->header = "";
-                break;
-            case 'telnyx':
-                $this->url = "https://api.telnyx.com/v2/messages";
-                $this->send_template = "{\n".
-                                       "\"from\": \"%from\",\n".
-                                       "\"to\": \"%to\",\n".
-                                       "\"text\": \"%msg\"\n".
-                                       "}";
-                $this->method = "POST-JSON";
-                $this->encoding = "UTF";
-                $this->status_success = "20";
-                $this->content_success = "\"errors\": []";
-                $this->no_double_zero = FALSE;
-                $this->international_format = TRUE;
-                $this->basic_auth = FALSE;
-                $this->content_encoding = "QUOTES";
-                $this->header = "Authorization: Bearer %api_id\r\n";
-                break;
-            default:
-                break;
-        }
-    }
-
-
-    function getCustomValues()
-    {
-        return array('url'                  => $this->url,
-                     'ip'                   => $this->ip,
-                     'port'                 => $this->port,
-                     'send_template'        => $this->send_template,
-                     'method'               => $this->method,
-                     'encoding'             => $this->encoding,
-                     'status_success'       => $this->status_success,
-                     'content_success'      => $this->content_success,
-                     'no_double_zero'       => $this->no_double_zero,
-                     'international_format' => $this->international_format,
-                     'basic_auth'           => $this->basic_auth,
-                     'content_encoding'     => $this->content_encoding,
-                     'header'               => $this->header,
-                    );
-    }
-
-
-    function setCustomValues(
-        $custom_array = array()
-    ) {
-        if (isset($custom_array['url']))                  { $this->url = $custom_array['url']; }
-        if (isset($custom_array['ip']))                   { $this->ip = $custom_array['ip']; }
-        if (isset($custom_array['port']))                 { $this->port = $custom_array['port']; }
-        if (isset($custom_array['send_template']))        { $this->send_template = $custom_array['send_template']; }
-        if (isset($custom_array['method']))               { $this->method = $custom_array['method']; }
-        if (isset($custom_array['encoding']))             { $this->encoding = $custom_array['encoding']; }
-        if (isset($custom_array['status_success']))       { $this->status_success = $custom_array['status_success']; }
-        if (isset($custom_array['content_success']))      { $this->content_success = $custom_array['content_success']; }
-        if (isset($custom_array['no_double_zero']))       { $this->no_double_zero = $custom_array['no_double_zero']; }
-        if (isset($custom_array['international_format'])) { $this->international_format = $custom_array['international_format']; }
-        if (isset($custom_array['basic_auth']))           { $this->basic_auth = $custom_array['basic_auth']; }
-        if (isset($custom_array['content_encoding']))     { $this->content_encoding = $custom_array['content_encoding']; }
-        if (isset($custom_array['header']))               { $this->header = $custom_array['header']; }
-    }
-
-
-    function getReplyStatus()
-    {
-        return $this->reply_status;
-    }
-
-
-    function getReplyContent()
-    {
-        return $this->reply_content;
-    }
-
-
-    function getLastReplyInfo()
-    {
-        $result = preg_replace('!\s+!', ' ', str_replace(chr(10), ' ', (str_replace(chr(13), ' ', $this->reply_content))));
-        
-        return (($this->reply_status != '') ? $this->reply_status.", " : '') . $result;
-    }
-
-
-    function getLastSendInfo()
-    {
-        $result = "provider: ".$this->provider."; ";
-        $result.= "api_id: ".$this->api_id."; ";
-        $result.= "username: ".$this->username."; ";
-        $result.= "password: ".$this->password."; ";
-        $result.= "from: ".$this->from."; ";
-        $result.= "to: ".$this->to."; ";
-        $result.= "msg: ".$this->msg."; ";
-
-        $result.= "url: ".$this->url."; ";
-        $result.= "send_template: ".$this->send_template."; ";
-        $result.= "method: ".$this->method."; ";
-        $result.= "encoding: ".$this->encoding."; ";
-        $result.= "status_success: ".$this->status_success."; ";
-        $result.= "content_success: ".$this->content_success."; ";
-        $result.= "no_double_zero: ".$this->no_double_zero."; ";
-        $result.= "international_format: ".$this->international_format."; ";
-        $result.= "basic_auth: ".$this->basic_auth."; ";
-        $result.= "content_encoding: ".$this->content_encoding."; ";
-        $result.= "header: ".$this->header."; ";
-
-        $result.= "encode_ampersand: ".$this->encode_ampersand."; ";
-
-        $result.= "timeout: ".$this->timeout."; ";
-        $result.= "debug: ".$this->debug."; ";
-        
-        $result = preg_replace('!\s+!', ' ', str_replace(chr(10), ' ', (str_replace(chr(13), ' ', $result))));
-        
-        return $result;
-    }
-
-
-    function setTimeout($timeout)
-    {
-        $this->timeout = $timeout;
-        if ($this->timeout < 1) {
-            $this->timeout = 5;
-        }
-    }
-
-
-    function setFrom($from)
-    {
-        $this->from = $from;
-    }
-
-
-    function setTo($to)
-    {
-        $this->to = $to;
-    }
-
-
-    function cleanTo($to = "")
-    {
-        if ("" != $to) {
-            $value = $to;
-        } else {
-            $value = $this->to;
-        }
-        $value = str_replace(' ','',$value);
-        $value = str_replace('(','',$value);
-        $value = str_replace(')','',$value);
-        $value = str_replace('+','00',$value);
-
-        if (('00' == substr($value,0,2)) && ($this->getInternationalFormat())) {
-            $value = "+" . substr($value,2);
-        } elseif ($this->getInternationalFormat()) {
-            $value = "+" . $value;
-        } elseif (('00' == substr($value,0,2)) && ($this->getNoDoubleZero())) {
-            $value = substr($value,2);
-        } else {
-        }
-        return $value;
-    }
-
-
-    function enableBasicAuth()
-    {
-        $this->basic_auth = TRUE;
-    }
-
-
-    function disableBasicAuth()
-    {
+        $this->send_template = "";
+        $this->method = "GET";
+        $this->encoding = "UTF";
+        $this->status_success = "20";
+        $this->content_success = "\"X-SMSGateway-State\" content=\"NEW\"";
+        $this->no_double_zero = FALSE;
+        $this->international_format = FALSE;
         $this->basic_auth = FALSE;
+        $this->content_encoding = "";
+        $this->header = "";
+        break;
+      case 'swisscom':
+        $this->url = "https://messagingproxy.swisscom.ch:4300/rest/1.0.0/submit_sm/%api_id";
+        $this->send_template = "{\n".
+                               "\"source_addr_ton\": 5,\n".
+                               "\"source_addr_npi\": 0,\n".
+                               "\"source_addr\": \"%from\",\n".
+                               "\"destination_addr\": \"%to\",\n".
+                               "\"short_message\": \"%msg\"\n".
+                               "}";
+        $this->method = "POST-JSON";
+        $this->encoding = "UTF";
+        $this->status_success = "20";
+        $this->content_success = "\"command_status\":0";
+        $this->no_double_zero = TRUE;
+        $this->international_format = FALSE;
+        $this->basic_auth = TRUE;
+        $this->content_encoding = "QUOTES";
+        $this->header = "";
+        break;
+      case 'telnyx':
+        $this->url = "https://api.telnyx.com/v2/messages";
+        $this->send_template = "{\n".
+                               "\"from\": \"%from\",\n".
+                               "\"to\": \"%to\",\n".
+                               "\"text\": \"%msg\"\n".
+                               "}";
+        $this->method = "POST-JSON";
+        $this->encoding = "UTF";
+        $this->status_success = "20";
+        $this->content_success = "\"errors\": []";
+        $this->no_double_zero = FALSE;
+        $this->international_format = TRUE;
+        $this->basic_auth = FALSE;
+        $this->content_encoding = "QUOTES";
+        $this->header = "Authorization: Bearer %api_id\r\n";
+        break;
+      default:
+        break;
     }
+  }
 
 
-    function enableDebug()
-    {
-        $this->debug = TRUE;
+  function getCustomValues()
+  {
+    return array('url'                  => $this->url,
+                 'ip'                   => $this->ip,
+                 'port'                 => $this->port,
+                 'send_template'        => $this->send_template,
+                 'method'               => $this->method,
+                 'encoding'             => $this->encoding,
+                 'status_success'       => $this->status_success,
+                 'content_success'      => $this->content_success,
+                 'no_double_zero'       => $this->no_double_zero,
+                 'international_format' => $this->international_format,
+                 'basic_auth'           => $this->basic_auth,
+                 'content_encoding'     => $this->content_encoding,
+                 'header'               => $this->header,
+                );
+  }
+
+
+  function setCustomValues(
+    $custom_array = array()
+  ) {
+    if (isset($custom_array['url']))                  { $this->url = $custom_array['url']; }
+    if (isset($custom_array['ip']))                   { $this->ip = $custom_array['ip']; }
+    if (isset($custom_array['port']))                 { $this->port = $custom_array['port']; }
+    if (isset($custom_array['send_template']))        { $this->send_template = $custom_array['send_template']; }
+    if (isset($custom_array['method']))               { $this->method = $custom_array['method']; }
+    if (isset($custom_array['encoding']))             { $this->encoding = $custom_array['encoding']; }
+    if (isset($custom_array['status_success']))       { $this->status_success = $custom_array['status_success']; }
+    if (isset($custom_array['content_success']))      { $this->content_success = $custom_array['content_success']; }
+    if (isset($custom_array['no_double_zero']))       { $this->no_double_zero = $custom_array['no_double_zero']; }
+    if (isset($custom_array['international_format'])) { $this->international_format = $custom_array['international_format']; }
+    if (isset($custom_array['basic_auth']))           { $this->basic_auth = $custom_array['basic_auth']; }
+    if (isset($custom_array['content_encoding']))     { $this->content_encoding = $custom_array['content_encoding']; }
+    if (isset($custom_array['header']))               { $this->header = $custom_array['header']; }
+  }
+
+
+  function getReplyStatus()
+  {
+    return $this->reply_status;
+  }
+
+
+  function getReplyContent()
+  {
+    return $this->reply_content;
+  }
+
+
+  function getLastReplyInfo()
+  {
+    $result = preg_replace('!\s+!', ' ', str_replace(chr(10), ' ', (str_replace(chr(13), ' ', $this->reply_content))));
+    return (($this->reply_status != '') ? $this->reply_status.", " : '') . $result;
+  }
+
+
+  function getLastSendInfo()
+  {
+    $result = "provider: ".$this->provider."; ";
+    $result.= "api_id: ".$this->api_id."; ";
+    $result.= "username: ".$this->username."; ";
+    $result.= "password: ".$this->password."; ";
+    $result.= "from: ".$this->from."; ";
+    $result.= "to: ".$this->to."; ";
+    $result.= "msg: ".$this->msg."; ";
+
+    $result.= "url: ".$this->url."; ";
+    $result.= "send_template: ".$this->send_template."; ";
+    $result.= "method: ".$this->method."; ";
+    $result.= "encoding: ".$this->encoding."; ";
+    $result.= "status_success: ".$this->status_success."; ";
+    $result.= "content_success: ".$this->content_success."; ";
+    $result.= "no_double_zero: ".$this->no_double_zero."; ";
+    $result.= "international_format: ".$this->international_format."; ";
+    $result.= "basic_auth: ".$this->basic_auth."; ";
+    $result.= "content_encoding: ".$this->content_encoding."; ";
+    $result.= "header: ".$this->header."; ";
+
+    $result.= "encode_ampersand: ".$this->encode_ampersand."; ";
+
+    $result.= "timeout: ".$this->timeout."; ";
+    $result.= "debug: ".$this->debug."; ";
+    
+    $result = preg_replace('!\s+!', ' ', str_replace(chr(10), ' ', (str_replace(chr(13), ' ', $result))));
+    
+    return $result;
+  }
+
+
+  function setTimeout(
+    $timeout
+  ) {
+    $this->timeout = $timeout;
+    if ($this->timeout < 1) {
+      $this->timeout = 5;
     }
+  }
 
 
-    function disableDebug()
-    {
-        $this->debug = FALSE;
+  function setFrom(
+    $from
+  ) {
+    $this->from = $from;
+  }
+
+
+  function setTo(
+    $to
+  ) {
+    $this->to = $to;
+  }
+
+
+  function cleanTo(
+    $to = ""
+  ) {
+    if ("" != $to) {
+      $value = $to;
+    } else {
+      $value = $this->to;
     }
+    $value = str_replace(' ','',$value);
+    $value = str_replace('(','',$value);
+    $value = str_replace(')','',$value);
+    $value = str_replace('+','00',$value);
+
+    if (('00' == substr($value,0,2)) && ($this->getInternationalFormat())) {
+      $value = "+" . substr($value,2);
+    } elseif ($this->getInternationalFormat()) {
+      $value = "+" . $value;
+    } elseif (('00' == substr($value,0,2)) && ($this->getNoDoubleZero())) {
+      $value = substr($value,2);
+    }
+    return $value;
+  }
 
 
-    function setMsg($msg)
+  function enableBasicAuth()
+  {
+    $this->basic_auth = TRUE;
+  }
+
+
+  function disableBasicAuth()
+  {
+    $this->basic_auth = FALSE;
+  }
+
+
+  function enableDebug()
+  {
+    $this->debug = TRUE;
+  }
+
+
+  function disableDebug()
+  {
+    $this->debug = FALSE;
+  }
+
+
+  function setMsg(
+    $msg
+  ) {
     /*
      * The msg is automatically converted from ISO to UTF-8 if needed
      */
-    {
-        $text = $msg;
-        $encoding = mb_detect_encoding($text . 'a' , 'UTF-8, ISO-8859-1');
-        if ("UTF-8" != $encoding) {
-            $text = utf8_encode($text);
-        }
-        $this->msg = $text;
+    $text = $msg;
+    $encoding = mb_detect_encoding($text . 'a' , 'UTF-8, ISO-8859-1');
+    if ("UTF-8" != $encoding) {
+      $text = utf8_encode($text);
     }
+    $this->msg = $text;
+  }
 
 
-    function setSendTemplate($send_template)
+  function setSendTemplate(
+    $send_template
+  ) {
     /*
      * The msg is automatically converted from ISO to UTF-8 if needed
      */
-    {
-        $text = $send_template;
-        $encoding = mb_detect_encoding($text . 'a' , 'UTF-8, ISO-8859-1');
-        if ("UTF-8" != $encoding) {
-            $text = utf8_encode($text);
-        }
-        $this->send_template = $text;
+    $text = $send_template;
+    $encoding = mb_detect_encoding($text . 'a' , 'UTF-8, ISO-8859-1');
+    if ("UTF-8" != $encoding) {
+      $text = utf8_encode($text);
+    }
+    $this->send_template = $text;
+  }
+
+
+  function encodeString(
+    $string,
+    $encoding = ""
+  ) {
+    $text = $string;
+
+    $encoding_to = $encoding;
+    if ('' == $encoding_to) {
+      $encoding_to = $this->getEncoding();
     }
 
+    $encoding_from = mb_detect_encoding($text . 'a' , 'UTF-8, ISO-8859-1');
 
-    function encodeString($string, $encoding = "")
-    {
-        $text = $string;
-
-        $encoding_to = $encoding;
-        if ('' == $encoding_to) {
-            $encoding_to = $this->getEncoding();
-        }
-
-        $encoding_from = mb_detect_encoding($text . 'a' , 'UTF-8, ISO-8859-1');
-
-        if ("UTF-8" != $encoding_from) {
-            if ('UTF' == strtoupper(substr($encoding_to, 0, 3))) {
-                $text = utf8_encode($text);
-            }
-        } else {
-            if ('UTF' != strtoupper(substr($encoding_to, 0, 3))) {
-                $text = utf8_decode($text);
-            }
-        }
-
-        return ($text);
-    }
-    
-    
-    function encodeHttp($string)
-    {
-        $text = $this->encodeString($string);
-        if ("UTF" != strtoupper(substr($this->getEncoding(),0,3))) {
-            $charset = 'ISO-8859-1';
-        } else {
-            $charset = 'UTF-8';
-        }
-        
-        if ('HTML' == strtoupper($this->content_encoding)) {
-            $text = htmlspecialchars($text, ENT_QUOTES | ENT_HTML401, $charset);
-        } elseif ('URL' == strtoupper($this->content_encoding)) {
-            $text = urlencode($text);
-        } elseif ('QUOTES' == strtoupper($this->content_encoding)) {
-            $text = str_replace('"', '\"', $text);
-        }
-        return $text;
+    if ("UTF-8" != $encoding_from) {
+      if ('UTF' == strtoupper(substr($encoding_to, 0, 3))) {
+        $text = utf8_encode($text);
+      }
+    } else {
+      if ('UTF' != strtoupper(substr($encoding_to, 0, 3))) {
+        $text = utf8_decode($text);
+      }
     }
 
+    return ($text);
+  }
+  
+  
+  function encodeHttp(
+    $string
+  ) {
+    $text = $this->encodeString($string);
+    if ("UTF" != strtoupper(substr($this->getEncoding(),0,3))) {
+      $charset = 'ISO-8859-1';
+    } else {
+      $charset = 'UTF-8';
+    }
     
-    function encodeUrl($string)
-    {
-        $text = $this->encodeString($string);
-        $text = urlencode($text);
-        return $text;
+    if ('HTML' == strtoupper($this->content_encoding)) {
+      $text = htmlspecialchars($text, ENT_QUOTES | ENT_HTML401, $charset);
+    } elseif ('URL' == strtoupper($this->content_encoding)) {
+      $text = urlencode($text);
+    } elseif ('QUOTES' == strtoupper($this->content_encoding)) {
+      $text = str_replace('"', '\"', $text);
+    }
+    return $text;
+  }
+
+  
+  function encodeUrl(
+    $string
+  ) {
+    $text = $this->encodeString($string);
+    $text = urlencode($text);
+    return $text;
+  }
+
+  
+  function sendSMS(
+    $msg = ""
+  ) {
+    $result = FALSE;
+
+    if ('' != $msg) {
+      $this->setMsg($msg);
+    }
+    
+    /* Payload replacement */
+    $payload = $this->send_template;
+    $payload = $this->encodeString($payload);
+    
+    $payload_msg = $this->msg;
+    $ucs2_msg = bin2hex(mb_convert_encoding($this->msg, 'UCS-2', 'auto'));
+
+    if (FALSE !== mb_strpos($payload, "![CDATA[", 0, mb_detect_encoding($payload . 'a' , 'UTF-8, ISO-8859-1'))) {
+      $this->encode_ampersand = TRUE;
+    }
+    
+    if ($this->encode_ampersand) {
+      $payload_msg = str_replace('&', '%26', $payload_msg);
     }
 
-    
-    function sendSMS($msg = "")
-    {
-        $result = FALSE;
+    $payload = str_replace('%ip',       $this->ip,                                    $payload);
+    if (intval($this->port) <= 0) {
+      $payload = str_replace(':%port',  '',                                           $payload);
+    } else {
+      $payload = str_replace('%port',   $this->port,                                  $payload);
+    }
+    $payload = str_replace('%msg',      $this->encodeHttp($payload_msg),              $payload);
+    $payload = str_replace('%ucs2msg',  $ucs2_msg,                                    $payload);
+    $payload = str_replace('%api_id',   $this->encodeHttp($this->api_id),             $payload);
+    $payload = str_replace('%username', $this->encodeHttp($this->username),           $payload);
+    $payload = str_replace('%user',     $this->encodeHttp($this->username),           $payload);
+    $payload = str_replace('%password', $this->encodeHttp($this->password),           $payload);
+    $payload = str_replace('%pass',     $this->encodeHttp($this->password),           $payload);
+    $payload = str_replace('%to',       $this->encodeHttp($this->cleanTo($this->to)), $payload);
+    $payload = str_replace('%from',     $this->encodeHttp($this->from),               $payload);
 
-        if ('' != $msg) {
-            $this->setMsg($msg);
-        }
-        
-        /* Payload replacement */
-        $payload = $this->send_template;
-        $payload = $this->encodeString($payload);
-        
-        $payload_msg = $this->msg;
-        $ucs2_msg = bin2hex(mb_convert_encoding($this->msg, 'UCS-2', 'auto'));
+    /* Header replacement */
+    $header = $this->header;
+    $header = str_replace('%ip',       $this->ip,                                    $header);
+    if (intval($this->port) <= 0) {
+      $header = str_replace(':%port',  '',                                           $header);
+    } else {
+      $header = str_replace('%port',   $this->port,                                  $header);
+    }
+    $header = str_replace('%msg',      $this->encodeHttp($this->msg),                $header);
+    $header = str_replace('%api_id',   $this->encodeHttp($this->api_id),             $header);
+    $header = str_replace('%username', $this->encodeHttp($this->username),           $header);
+    $header = str_replace('%user',     $this->encodeHttp($this->username),           $header);
+    $header = str_replace('%password', $this->encodeHttp($this->password),           $header);
+    $header = str_replace('%pass',     $this->encodeHttp($this->password),           $header);
+    $header = str_replace('%to',       $this->encodeHttp($this->cleanTo($this->to)), $header);
+    $header = str_replace('%from',     $this->encodeHttp($this->from),               $header);
 
-        if (FALSE !== mb_strpos($payload, "![CDATA[", 0, mb_detect_encoding($payload . 'a' , 'UTF-8, ISO-8859-1'))) {
-            $this->encode_ampersand = TRUE;
-        }
-        
-        if ($this->encode_ampersand) {
-            $payload_msg = str_replace('&', '%26', $payload_msg);
-        }
+    /* Url replacement */
+    $url_array = explode(' ', $this->url);
 
-        $payload = str_replace('%ip',       $this->ip,                                    $payload);
-        if (intval($this->port) <= 0) {
-            $payload = str_replace(':%port', '', $payload);
+    foreach ($url_array as $one_url) {
+      
+      $one_url = str_replace('%ip',       $this->ip,                                   $one_url);
+      if (intval($this->port) <= 0) {
+        $one_url = str_replace(':%port',  '',                                          $one_url);
+      } else {
+        $one_url = str_replace('%port',   $this->port,                                 $one_url);
+      }
+      $one_url = str_replace('%msg',      $this->encodeUrl($this->msg),                $one_url);
+      $one_url = str_replace('%api_id',   $this->encodeUrl($this->api_id),             $one_url);
+      $one_url = str_replace('%username', $this->encodeUrl($this->username),           $one_url);
+      $one_url = str_replace('%user',     $this->encodeUrl($this->username),           $one_url);
+      $one_url = str_replace('%password', $this->encodeUrl($this->password),           $one_url);
+      $one_url = str_replace('%pass',     $this->encodeUrl($this->password),           $one_url);
+      $one_url = str_replace('%to',       $this->encodeUrl($this->cleanTo($this->to)), $one_url);
+      $one_url = str_replace('%from',     $this->encodeUrl($this->from),               $one_url);
+
+      $server_port = 80;
+
+      $pos = mb_strpos($one_url, '://');
+      if (FALSE === $pos) {
+        $protocol = '';
+      } else {
+        switch (mb_strtolower(substr($one_url,0,$pos),'UTF-8')) {
+          case 'https':
+          case 'ssl':
+            $protocol = 'ssl://';
+            $server_port = 443;
+            break;
+          case 'tls':
+            $protocol = 'tls://';
+            $server_port = 443;
+            break;
+          default:
+            $protocol = '';
+            break;
+        }
+        $one_url = substr($one_url,$pos+3);
+      }
+
+      $pos = mb_strpos($one_url, '/');
+      if (FALSE === $pos) {
+        $host = $one_url;
+        $url = '/';
+      } else {
+        $host = substr($one_url,0,$pos);
+        $url = substr($one_url,$pos); // And not +1 as we want the / at the beginning
+      }
+
+      $pos = mb_strpos($host, ':');
+      if (FALSE !== $pos) {
+        $server_port = substr($host,$pos+1);
+        $host = substr($host,0,$pos);
+      }
+
+      if (function_exists("stream_socket_client")) {
+        $sslContext = stream_context_create(
+          array('ssl' => array(
+                'verify_peer'         => false,
+                'verify_peer_name'    => false,
+                'disable_compression' => true,
+                'ciphers'             => 'ALL!EXPORT!EXPORT40!EXPORT56!aNULL!LOW!RC4')));
+        $fp = @stream_socket_client($protocol.$host.":".$server_port, $errno, $errdesc, $this->timeout, STREAM_CLIENT_CONNECT, $sslContext);
+      } else {
+        $fp = @fsockopen($protocol.$host, $server_port, $errno, $errdesc, $this->timeout);
+      }
+
+      if (FALSE !== $fp) {
+        $info['timed_out'] = FALSE;
+        $output = "";
+        if ('GET' == strtoupper(substr($this->method, 0, 3))) {
+          $output.= "GET";
+        } elseif ('POST' == strtoupper(substr($this->method, 0, 4))) {
+          $output.= "POST";
         } else {
-            $payload = str_replace('%port', $this->port,                                  $payload);
+          $output.= "POST";
         }
-        $payload = str_replace('%msg',      $this->encodeHttp($payload_msg),              $payload);
-        $payload = str_replace('%ucs2msg',  $ucs2_msg,                                    $payload);
-        $payload = str_replace('%api_id',   $this->encodeHttp($this->api_id),             $payload);
-        $payload = str_replace('%username', $this->encodeHttp($this->username),           $payload);
-        $payload = str_replace('%user',     $this->encodeHttp($this->username),           $payload);
-        $payload = str_replace('%password', $this->encodeHttp($this->password),           $payload);
-        $payload = str_replace('%pass',     $this->encodeHttp($this->password),           $payload);
-        $payload = str_replace('%to',       $this->encodeHttp($this->cleanTo($this->to)), $payload);
-        $payload = str_replace('%from',     $this->encodeHttp($this->from),               $payload);
-
-        /* Header replacement */
-        $header = $this->header;
-        $header = str_replace('%ip',       $this->ip,                                    $header);
-        if (intval($this->port) <= 0) {
-            $header = str_replace(':%port', '', $header);
+        $output.= " ".$url." HTTP/1.0\r\n";
+        if ('XML' == strtoupper(substr($this->method, -3))) {
+          $output.= "Content-Type: text/xml\r\n";
+        } elseif ('JSON' == strtoupper(substr($this->method, -4))) {
+          $output.= "Content-Type: application/json\r\n";
         } else {
-            $header = str_replace('%port', $this->port,                                  $header);
+          $output.= "Content-Type: application/x-www-form-urlencoded\r\n";
         }
-        $header = str_replace('%msg',      $this->encodeHttp($this->msg),                $header);
-        $header = str_replace('%api_id',   $this->encodeHttp($this->api_id),             $header);
-        $header = str_replace('%username', $this->encodeHttp($this->username),           $header);
-        $header = str_replace('%user',     $this->encodeHttp($this->username),           $header);
-        $header = str_replace('%password', $this->encodeHttp($this->password),           $header);
-        $header = str_replace('%pass',     $this->encodeHttp($this->password),           $header);
-        $header = str_replace('%to',       $this->encodeHttp($this->cleanTo($this->to)), $header);
-        $header = str_replace('%from',     $this->encodeHttp($this->from),               $header);
+        $output.= $header;
 
-        /* Url replacement */
-        $url_array = explode(' ', $this->url);
+        if ($this->basic_auth) {
+          $auth_user = (('' != $this->username) ? $this->username : $this->api_id);
+          $output.= "Authorization: Basic ".base64_encode($auth_user.":".$this->password)."\r\n";
+        }
+        $output.= "Content-Length: ".strlen($payload)."\r\n";
+        $output.= "User-Agent: multiOTP SMS\r\n";
+        $output.= "Host: ".$host."\r\n";
 
-        foreach ($url_array as $one_url) {
-            
-            $one_url = str_replace('%ip',       $this->ip,                                   $one_url);
-            if (intval($this->port) <= 0) {
-                $one_url = str_replace(':%port', '', $one_url);
-            } else {
-                $one_url = str_replace('%port', $this->port,                                 $one_url);
+        $output.= "\r\n";
+
+        if (0 != strlen($payload)) {
+          $output.= $payload;
+          $output.= "\r\n";
+        }
+
+        fputs($fp, $output);
+        $stream_timeout = $this->timeout;
+        stream_set_blocking($fp, TRUE);
+        stream_set_timeout($fp, $stream_timeout);
+        $info = stream_get_meta_data($fp); 
+
+        $reply = '';
+        $last_length = 0;
+        while ((!feof($fp)) && ((!$info['timed_out']) || ($last_length != strlen($reply)))) {
+          $last_length = strlen($reply);
+          $reply.= @fgets($fp, 1024);
+          $info = stream_get_meta_data($fp);
+          // @ob_flush(); // Avoid notice if any (if the buffer is empty and therefore cannot be flushed)
+          // flush(); 
+        }
+        fclose($fp);
+
+        if ($info['timed_out']) {
+          $result = FALSE;
+          $this->reply_status = "408";
+          $this->reply_content = "Timeout after $stream_timeout seconds for $protocol$host:$server_port with a result code of $errno ($errdesc)";
+        } else {
+          $pos = mb_strpos(mb_strtolower($reply,'UTF-8'), "\r\n\r\n");
+          $header = substr($reply, 0, $pos);
+          $answer = substr($reply, $pos + 4);
+          $header_array = explode(" ", $header."   ");
+          $this->reply_status = intval($header_array[1]);
+          $this->reply_content = $answer;
+          $result_status = false;
+          $result_content = false;
+          if (intval(trim($this->status_success)) > 0) {
+            if (trim($this->status_success) == substr(trim($this->reply_status), 0, strlen($this->status_success))) {
+              $result_status = TRUE;
             }
-            $one_url = str_replace('%msg',      $this->encodeUrl($this->msg),                $one_url);
-            $one_url = str_replace('%api_id',   $this->encodeUrl($this->api_id),             $one_url);
-            $one_url = str_replace('%username', $this->encodeUrl($this->username),           $one_url);
-            $one_url = str_replace('%user',     $this->encodeUrl($this->username),           $one_url);
-            $one_url = str_replace('%password', $this->encodeUrl($this->password),           $one_url);
-            $one_url = str_replace('%pass',     $this->encodeUrl($this->password),           $one_url);
-            $one_url = str_replace('%to',       $this->encodeUrl($this->cleanTo($this->to)), $one_url);
-            $one_url = str_replace('%from',     $this->encodeUrl($this->from),               $one_url);
-
-            $server_port = 80;
-
-            $pos = mb_strpos($one_url, '://');
-            if (FALSE === $pos) {
-                $protocol = '';
-            } else {
-                switch (mb_strtolower(substr($one_url,0,$pos),'UTF-8')) {
-                    case 'https':
-                    case 'ssl':
-                        $protocol = 'ssl://';
-                        $server_port = 443;
-                        break;
-                    case 'tls':
-                        $protocol = 'tls://';
-                        $server_port = 443;
-                        break;
-                    default:
-                        $protocol = '';
-                        break;
-                }
-                $one_url = substr($one_url,$pos+3);
-            }
-
-            $pos = mb_strpos($one_url, '/');
-            if (FALSE === $pos) {
-                $host = $one_url;
-                $url = '/';
-            } else {
-                $host = substr($one_url,0,$pos);
-                $url = substr($one_url,$pos); // And not +1 as we want the / at the beginning
-            }
-
-            $pos = mb_strpos($host, ':');
-            if (FALSE !== $pos) {
-                $server_port = substr($host,$pos+1);
-                $host = substr($host,0,$pos);
-            }
-
-            if (function_exists("stream_socket_client")) {
-                $sslContext = stream_context_create(
-                    array('ssl' => array(
-                          'verify_peer'         => false,
-                          'verify_peer_name'    => false,
-                          'disable_compression' => true,
-                          'ciphers'             => 'ALL!EXPORT!EXPORT40!EXPORT56!aNULL!LOW!RC4')));
-                $fp = @stream_socket_client($protocol.$host.":".$server_port, $errno, $errdesc, $this->timeout, STREAM_CLIENT_CONNECT, $sslContext);
-            } else {
-                $fp = @fsockopen($protocol.$host, $server_port, $errno, $errdesc, $this->timeout);
-            }
-
-            if (FALSE !== $fp) {
-                $info['timed_out'] = FALSE;
-                $output = "";
-                if ('GET' == strtoupper(substr($this->method, 0, 3))) {
-                    $output.= "GET";
-                } elseif ('POST' == strtoupper(substr($this->method, 0, 4))) {
-                    $output.= "POST";
-                } else {
-                    $output.= "POST";
-                }
-                $output.= " ".$url." HTTP/1.0\r\n";
-                if ('XML' == strtoupper(substr($this->method, -3))) {
-                    $output.= "Content-Type: text/xml\r\n";
-                } elseif ('JSON' == strtoupper(substr($this->method, -4))) {
-                    $output.= "Content-Type: application/json\r\n";
-                } else {
-                    $output.= "Content-Type: application/x-www-form-urlencoded\r\n";
-                }
-                $output.= $header;
-
-                if ($this->basic_auth) {
-                    $auth_user = (('' != $this->username) ? $this->username : $this->api_id);
-                    $output.= "Authorization: Basic ".base64_encode($auth_user.":".$this->password)."\r\n";
-                }
-                $output.= "Content-Length: ".strlen($payload)."\r\n";
-                $output.= "User-Agent: multiOTP SMS\r\n";
-                $output.= "Host: ".$host."\r\n";
-
-                $output.= "\r\n";
-
-                if (0 != strlen($payload)) {
-                  $output.= $payload;
-                  $output.= "\r\n";
-                }
-
-                fputs($fp, $output);
-                $stream_timeout = $this->timeout;
-                stream_set_blocking($fp, TRUE);
-                stream_set_timeout($fp, $stream_timeout);
-                $info = stream_get_meta_data($fp); 
-
-                $reply = '';
-                $last_length = 0;
-                while ((!feof($fp)) && ((!$info['timed_out']) || ($last_length != strlen($reply)))) {
-                    $last_length = strlen($reply);
-                    $reply.= @fgets($fp, 1024);
-                    $info = stream_get_meta_data($fp);
-                    // @ob_flush(); // Avoid notice if any (if the buffer is empty and therefore cannot be flushed)
-                    // flush(); 
-                }
-                fclose($fp);
-
-                if ($info['timed_out']) {
-                    $result = FALSE;
-                    $this->reply_status = "408";
-                    $this->reply_content = "Timeout after $stream_timeout seconds for $protocol$host:$server_port with a result code of $errno ($errdesc)";
-                } else {
-                    $pos = mb_strpos(mb_strtolower($reply,'UTF-8'), "\r\n\r\n");
-                    $header = substr($reply, 0, $pos);
-                    $answer = substr($reply, $pos + 4);
-                    $header_array = explode(" ", $header."   ");
-                    $this->reply_status = intval($header_array[1]);
-                    $this->reply_content = $answer;
-                    $result_status = false;
-                    $result_content = false;
-                    if (intval(trim($this->status_success)) > 0) {
-                        if (trim($this->status_success) == substr(trim($this->reply_status), 0, strlen($this->status_success))) {
-                            $result_status = TRUE;
-                        }
-                    } else {
-                        $result_status = TRUE;
-                    }
-                    if ('' != $this->content_success) {
-                        if (FALSE !== mb_strpos($this->reply_content, $this->content_success)) {
-                            $result_content = TRUE;
-                        }
-                    } else {
-                        $result_content = TRUE;
-                    }
-                }
-                $result = $result_status && $result_content;
-
-                if (TRUE == $this->debug) {
-                    echo "DEBUG ONE_URL: $one_url<br />\n)";
-                    echo "DEBUG URL: $url<br />\n)";
-                    echo "DEBUG SENT: $output<br />\n)";
-                    echo "DEBUG REPLY: $reply<br />\n)";
-                }
+          } else {
+            $result_status = TRUE;
           }
-
-            if (TRUE == $this->debug) {
-                echo "DEBUG LAST ONE_URL: $one_url<br />\n)";
-                echo "DEBUG LAST URL: $url<br />\n)";
+          if ('' != $this->content_success) {
+            if (FALSE !== mb_strpos($this->reply_content, $this->content_success)) {
+              $result_content = TRUE;
             }
-
-            if (TRUE == $this->debug) {
-                echo "DEBUG payload: $payload<br />\n)";
-                echo "DEBUG reply_status : ".$this->reply_status."<br />\n";
-                echo "DEBUG reply_content : ".$this->reply_content."<br />\n";
-                echo "DEBUG status_success : ".$this->status_success."<br />\n";
-                echo "DEBUG content_success : ".$this->content_success."<br />\n";
-            }
-
-            if ($result) {
-                return $result;
-            }
+          } else {
+            $result_content = TRUE;
+          }
         }
+        $result = $result_status && $result_content;
+
         if (TRUE == $this->debug) {
-            echo "DEBUG result_status: " . (isset($result_status) ? ($result_status ? "TRUE" : "FALSE") : "") . "<br />\n)";
-            echo "DEBUG result_content: " . (isset($result_content) ? ($result_content ? "TRUE" : "FALSE") : "") . "<br />\n)";
+          echo "DEBUG ONE_URL: $one_url<br />\n)";
+          echo "DEBUG URL: $url<br />\n)";
+          echo "DEBUG SENT: $output<br />\n)";
+          echo "DEBUG REPLY: $reply<br />\n)";
         }
+      }
+
+      if (TRUE == $this->debug) {
+        echo "DEBUG LAST ONE_URL: $one_url<br />\n)";
+        echo "DEBUG LAST URL: $url<br />\n)";
+      }
+
+      if (TRUE == $this->debug) {
+        echo "DEBUG payload: $payload<br />\n)";
+        echo "DEBUG reply_status : ".$this->reply_status."<br />\n";
+        echo "DEBUG reply_content : ".$this->reply_content."<br />\n";
+        echo "DEBUG status_success : ".$this->status_success."<br />\n";
+        echo "DEBUG content_success : ".$this->content_success."<br />\n";
+      }
+
+      if ($result) {
         return $result;
+      }
+    } // foreach
+    if (TRUE == $this->debug) {
+      echo "DEBUG result_status: " . (isset($result_status) ? ($result_status ? "TRUE" : "FALSE") : "") . "<br />\n)";
+      echo "DEBUG result_content: " . (isset($result_content) ? ($result_content ? "TRUE" : "FALSE") : "") . "<br />\n)";
     }
+    return $result;
+  }
 }
 
 
@@ -74520,6 +74763,8 @@ for ($arg_loop=$loop_start; $arg_loop < $argc; $arg_loop++) {
         $command = "fastcreatenopin";
     } elseif ("-fastcreatewithpin" == mb_strtolower($current_arg,'UTF-8')) {
         $command = "fastcreatewithpin";
+    } elseif ("-hardware" == mb_strtolower($current_arg,'UTF-8')) {
+        $command = "hardware";
     } elseif ("-help" == mb_strtolower($current_arg,'UTF-8')) {
         $command = "help";
     } elseif ("-import" == mb_strtolower($current_arg,'UTF-8')) {
@@ -74572,6 +74817,8 @@ for ($arg_loop=$loop_start; $arg_loop < $argc; $arg_loop++) {
         $command = "purge-ldap-cache-folder";
     } elseif ("-qrcode" == mb_strtolower($current_arg,'UTF-8')) {
         $command = "qrcode";
+    } elseif ("-htmlinfo" == mb_strtolower($current_arg,'UTF-8')) {
+        $command = "htmlinfo";
     } elseif ("-requiresms" == mb_strtolower($current_arg,'UTF-8')) {
         $command = "requiresms";
     } elseif ("-remove-token" == mb_strtolower($current_arg,'UTF-8')) {
@@ -74606,6 +74853,10 @@ for ($arg_loop=$loop_start; $arg_loop < $argc; $arg_loop++) {
         $command = "version";
     } elseif ("-version-only" == mb_strtolower($current_arg,'UTF-8')) {
         $command = "version-only";
+    } elseif ("-log-error" == mb_strtolower($current_arg,'UTF-8')) {
+        $command = "log-error";
+    } elseif ("-log-info" == mb_strtolower($current_arg,'UTF-8')) {
+        $command = "log-info";
     } else {
         // The current argument is not a command
         $not_a_command = TRUE;
@@ -74764,11 +75015,6 @@ for ($arg_loop=$loop_start; $arg_loop < $argc; $arg_loop++) {
 }
 
 
-// Be sure that non-existent parameters are empty
-for ($i = ($param_count+1); $i <= $all_args_size; $i++) {
-    $all_args[$i] = '';
-}
-
 // if not enough parameters, display error message
 //  and indicate how to display the help page
 if (($param_count < 1) &&
@@ -74778,22 +75024,23 @@ if (($param_count < 1) &&
     ($command != "clearlog") &&
     ($command != "customfunction") &&
     ($command != "custominfo") &&
-    ($command != "network-info") &&
+    ($command != "hardware") &&
     ($command != "help") &&
     ($command != "initialize-backend") &&
     ($command != "ldap-check") &&
     ($command != "ldap-users-list") &&
     ($command != "ldap-users-sync") &&
     ($command != "libhash") &&
+    ($command != "lockeduserslist") &&
+    ($command != "network-info") &&
+    ($command != "php-version") &&
     ($command != "phpinfo") &&
+    ($command != "purge-ldap-cache-folder") &&
+    ($command != "purge-lock-folder") &&
     ($command != "showlog") &&
     ($command != "tokenslist")&&
     ($command != "userslist") &&
-    ($command != "lockeduserslist") &&
     ($command != "version") &&
-    ($command != "php-version") &&
-    ($command != "purge-ldap-cache-folder") &&
-    ($command != "purge-lock-folder") &&
     ($command != "version-only"))
 {
     $command = "noparam";
@@ -74839,9 +75086,12 @@ if (false === mb_strpos(getcwd(), '/')) {
   $config_folder = '';
 }
 
-if (($command == "libhash") || ($command == "help") || ($command == "version") || ($command == "php-version")) {
+if (($command == "libhash") || ($command == "help") || ($command == "hardware") || ($command == "version") || ($command == "php-version")) {
   if (!isset($multiotp)) {
     $multiotp = new Multiotp('DefaultCliEncryptionKey', false, $folder_path, $config_folder);
+    if ($verbose_log) {
+      $multiotp->EnableVerboseLog();
+    }
     $multiotp->SetCredentialProviderMode($cp_mode);
     $multiotp->SetCliMode($cli_mode);
     $multiotp->SetCliProxyMode(!$cli_mode); // The CLI proxy mode is *NOT* the CLI mode
@@ -74849,6 +75099,9 @@ if (($command == "libhash") || ($command == "help") || ($command == "version") |
 } else {
   if (!isset($multiotp)) {
     $multiotp = new Multiotp('DefaultCliEncryptionKey', $initialize_backend, $folder_path, $config_folder);
+    if ($verbose_log) {
+      $multiotp->EnableVerboseLog();
+    }
     $multiotp->SetCredentialProviderMode($cp_mode);
     $multiotp->SetCliMode($cli_mode);
     $multiotp->SetCliProxyMode(!$cli_mode); // The CLI proxy mode is *NOT* the CLI mode
@@ -74932,17 +75185,18 @@ if (($multiotp->IsDeveloperMode())) {
 
 
 // Initialize multiOTP options
+
 if ($enable_log) {
-    $multiotp->EnableLog();
+  $multiotp->EnableLog();
 }
 if ($verbose_log) {
-    $multiotp->EnableVerboseLog();
+  $multiotp->EnableVerboseLog();
 }
 if ($display_log) {
-    $multiotp->EnableDisplayLog();
+  $multiotp->EnableDisplayLog();
 }
 if ($keep_local) {
-    $multiotp->EnableKeepLocal();
+  $multiotp->EnableKeepLocal();
 }
 
 
@@ -74994,6 +75248,11 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
         $all_args[$i] = $full_args[$param_pos + $i - 1];
     }
     for ($i = ($param_count + 1); $i <= $all_args_size; $i++) {
+        $all_args[$i] = '';
+    }
+
+    // Be sure that non-existent parameters are empty
+    for ($i = ($param_count+1); $i <= $all_args_size; $i++) {
         $all_args[$i] = '';
     }
 
@@ -75061,6 +75320,30 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 }
             }
             break;
+        case "hardware":
+            $version_info = $multiotp->GetClassName()." ".$multiotp->GetVersion()." (".$multiotp->GetDate().")";
+            $hardware_array = $multiotp->GetHardwareType(true);
+            if ($multiotp->GetCliProxyMode()) {
+                $version_info.= " [CLI PROXY]";
+            } elseif ($multiotp->GetCliMode()) {
+                $version_info.= " [CLI]";
+            }
+            if ($multiotp->GetCredentialProviderMode()) {
+                $version_info.= " [CP]";
+            }
+            $hardware_info = "      Version: " . $version_info . $crlf;
+            $hardware_info.= "  Detailed OS: " . $hardware_array['os_running'] . $crlf;
+            $hardware_info.= "         Type: " . $hardware_array['type'] . $crlf;
+            $hardware_info.= "       Family: " . $hardware_array['family'] . $crlf;
+            $hardware_info.= "        Model: " . $hardware_array['model'] . $crlf;
+            $hardware_info.= "     Hardware: " . $hardware_array['hardware'] . $crlf;
+            $hardware_info.= "    CPU speed: " . $hardware_array['cpu_speed'] . $crlf;
+            $hardware_info.= "       Uptime: " . $multiotp->GetUptime() . $crlf;
+      
+            $hardware_info.= $crlf;
+            echo $hardware_info;
+            $result = 19;
+            break;
         case "version":
             $version_info = $multiotp->GetClassName()." ".$multiotp->GetVersion()." (".$multiotp->GetDate().")";
             if ($multiotp->GetCliProxyMode()) {
@@ -75118,27 +75401,37 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
             }
             break;
         case "call-method";
+            $call_result = '';
             if (method_exists($multiotp, $call_method)) {
-                if ('' != $all_args[4]) {
-                  $call_result = $multiotp->$call_method($all_args[1], $all_args[2], $all_args[3], $all_args[4]);
-                } elseif ('' != $all_args[3]) {
-                  $call_result = $multiotp->$call_method($all_args[1], $all_args[2], $all_args[3]);
-                } elseif ('' != $all_args[2]) {
-                  $call_result = $multiotp->$call_method($all_args[1], $all_args[2]);
-                } elseif ('' != $all_args[1]) {
-                  $call_result = $multiotp->$call_method($all_args[1]);
-                } else {
-                  $call_result = $multiotp->$call_method();
-                }
-                if ($multiotp->GetVerboseFlag()) {
-                    $multiotp->WriteLog('Debug: *Method '.$call_method.' returned the following result: '.print_r($call_result, true), false, false, 8888, 'Debug', '');
-                }
-                $result = 19;
+              if ('' != $all_args[7]) {
+                $call_result = $multiotp->$call_method($all_args[1], $all_args[2], $all_args[3], $all_args[4], $all_args[5], $all_args[6], $all_args[7]);
+              } elseif ('' != $all_args[6]) {
+                $call_result = $multiotp->$call_method($all_args[1], $all_args[2], $all_args[3], $all_args[4], $all_args[5], $all_args[6]);
+              } elseif ('' != $all_args[5]) {
+                $call_result = $multiotp->$call_method($all_args[1], $all_args[2], $all_args[3], $all_args[4], $all_args[5]);
+              } elseif ('' != $all_args[4]) {
+                $call_result = $multiotp->$call_method($all_args[1], $all_args[2], $all_args[3], $all_args[4]);
+              } elseif ('' != $all_args[3]) {
+                $call_result = $multiotp->$call_method($all_args[1], $all_args[2], $all_args[3]);
+              } elseif ('' != $all_args[2]) {
+                $call_result = $multiotp->$call_method($all_args[1], $all_args[2]);
+              } elseif ('' != $all_args[1]) {
+                $call_result = $multiotp->$call_method($all_args[1]);
+              } else {
+                $call_result = $multiotp->$call_method();
+              }
+              if ($multiotp->GetVerboseFlag()) {
+                $multiotp->WriteLog('Debug: *Method '.$call_method.' returned the following result: '.print_r($call_result, true), false, false, 8888, 'Debug', '');
+              }
+              $result = 19;
             } else {
-                if ($multiotp->GetVerboseFlag()) {
-                    $multiotp->WriteLog("Debug: *Method $call_method doesn't exist", false, false, 8888, 'Debug', '');
-                }
-                $result = 99;
+              if ($multiotp->GetVerboseFlag()) {
+                $multiotp->WriteLog("Debug: *Method $call_method doesn't exist", false, false, 8888, 'Debug', '');
+              }
+              $result = 99;
+            }
+            if ((!is_bool($call_result)) && (!is_null($call_result)) && (!empty($call_result))) {
+              echo $call_result;
             }
             break;
         case "check";
@@ -75221,87 +75514,93 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
         case "create":
         case "update":
             if (("create" == $command) && $multiotp->ReadUserData($all_args[1], true, true)) {
-                $result = 22; // ERROR: user already exists.
+              $result = 22; // ERROR: user already exists.
             } elseif (("update" == $command) && (!$multiotp->ReadUserData($all_args[1], false, true))) {
-                $result = 21; // ERROR: user doesn't exist.
-            } elseif  ($param_count < 3) {
-                $result = 30; // ERROR: At least one parameter is missing
+              $result = 21; // ERROR: user doesn't exist.
+            } elseif ($param_count < 2) {
+              $result = 30; // ERROR: At least one parameter is missing
+            } elseif (($param_count < 3) && ("WITHOUT2FA" != mb_strtoupper($all_args[2],'UTF-8'))) {
+              $result = 30; // ERROR: At least one parameter is missing
             } else {
-                $multiotp->SetUser($all_args[1]);
-                $multiotp->SetUserPrefixPin($prefix_pin?1:0);
-                
-                if ($token_id_creation) {
-                    $key_id = $all_args[2];
-                    if (!$multiotp->ReadTokenData($key_id)) {
-                        $result = 29; // ERROR: token doesn't exist.
-                    } else {
-                        $multiotp->SetUserKeyId($key_id);
-                        $multiotp->SetUserTokenSerialNumber($multiotp->GetTokenSerialNumber());
-                        if (!$multiotp->SetUserAlgorithm($multiotp->GetTokenAlgorithm())) {
-                            $result = 23; // ERROR: invalid algorithm
-                        } else {
-                            $multiotp->SetUserTokenSeed($multiotp->GetTokenSeed());
-                            $multiotp->SetUserTokenNumberOfDigits($multiotp->GetTokenNumberOfDigits());
-                            $multiotp->SetUserTokenTimeInterval($multiotp->GetTokenTimeInterval());
-                            $multiotp->SetUserTokenLastEvent($multiotp->GetTokenLastEvent());
-                            $multiotp->SetUserTokenAlgoSuite($multiotp->GetTokenAlgoSuite());
-                            
-                            $multiotp->SetUserPin($all_args[3]);
-                            
-                            if ($multiotp->WriteUserData()) {
-                                $result = 11; // INFO: user successfully created or updated
-                            } else {
-                                $result = 28; // ERROR: Unable to write the changes in the file
-                            }
-                        }
-                    }
-                }
-                elseif (!$multiotp->SetUserAlgorithm($all_args[2])) {
-                    $result = 23; // ERROR: invalid algorithm
+              $multiotp->SetUser($all_args[1]);
+              $multiotp->SetUserPrefixPin($prefix_pin?1:0);
+              
+              if ($token_id_creation) {
+                $key_id = $all_args[2];
+                if (!$multiotp->ReadTokenData($key_id)) {
+                  $result = 29; // ERROR: token doesn't exist.
                 } else {
-                    $multiotp->SetUserTokenSeed($all_args[3]);
+                  $multiotp->SetUserKeyId($key_id);
+                  $multiotp->SetUserTokenSerialNumber($multiotp->GetTokenSerialNumber());
+                  if (!$multiotp->SetUserAlgorithm($multiotp->GetTokenAlgorithm())) {
+                    $result = 23; // ERROR: invalid algorithm
+                  } else {
+                    $multiotp->SetUserTokenSeed($multiotp->GetTokenSeed());
+                    $multiotp->SetUserTokenNumberOfDigits($multiotp->GetTokenNumberOfDigits());
+                    $multiotp->SetUserTokenTimeInterval($multiotp->GetTokenTimeInterval());
+                    $multiotp->SetUserTokenLastEvent($multiotp->GetTokenLastEvent());
+                    $multiotp->SetUserTokenAlgoSuite($multiotp->GetTokenAlgoSuite());
                     
-                    if  ($param_count < 4) {
-                        $result = 30; // ERROR: At least one parameter is missing
+                    $multiotp->SetUserPin($all_args[3]);
+                    
+                    if ($multiotp->WriteUserData()) {
+                      $result = 11; // INFO: user successfully created or updated
                     } else {
-                        $multiotp->SetUserPin($all_args[4]);
-                        if ('' == $all_args[5]) {
-                            $all_args[5] = 6; // Default number of digits is set to 6
-                        }
-                        $multiotp->SetUserTokenNumberOfDigits($all_args[5]);
-                        switch (mb_strtoupper($all_args[2],'UTF-8'))
-                        {
-                            // This is the time interval for mOTP
-                            case "MOTP":
-                                if ('' == $all_args[6]) {
-                                    $all_args[6] = 10; // Default windows value interval for mOTP
-                                }
-                                $multiotp->SetUserTokenTimeInterval($all_args[6]);
-                                break;
-                            // This is the time interval for TOTP
-                            case "TOTP":
-                                if ('' == $all_args[6]) {
-                                    $all_args[6] = 30; // Default windows value interval for TOTP
-                                }
-                                $multiotp->SetUserTokenTimeInterval($all_args[6]);
-                                break;
-                            // This is the next event for HOTP
-                            case "HOTP":
-                            default:
-                                if ('' == $all_args[6]) {
-                                    $all_args[6] = 0; // Default next event
-                                }
-                                $multiotp->SetUserTokenLastEvent($all_args[6]-1);
-                                // -1 because we are saving the last event in the user file database
-                                break;
-                        }
-                        if ($multiotp->WriteUserData()) {
-                            $result = 11; // INFO: user successfully created or updated
-                        } else {
-                            $result = 28; // ERROR: Unable to write the changes in the file
-                        }
+                      $result = 28; // ERROR: Unable to write the changes in the file
                     }
+                  }
                 }
+              } elseif (!$multiotp->SetUserAlgorithm($all_args[2])) {
+                $result = 23; // ERROR: invalid algorithm
+              } elseif ("WITHOUT2FA" == mb_strtoupper($all_args[2],'UTF-8')) {
+                if ($multiotp->WriteUserData()) {
+                  $result = 11; // INFO: user successfully created or updated
+                } else {
+                  $result = 28; // ERROR: Unable to write the changes in the file
+                }
+              } else {
+                $multiotp->SetUserTokenSeed($all_args[3]);
+                
+                if  ($param_count < 4) {
+                  $result = 30; // ERROR: At least one parameter is missing
+                } else {
+                  $multiotp->SetUserPin($all_args[4]);
+                  if ('' == $all_args[5]) {
+                      $all_args[5] = 6; // Default number of digits is set to 6
+                  }
+                  $multiotp->SetUserTokenNumberOfDigits($all_args[5]);
+                  switch (mb_strtoupper($all_args[2],'UTF-8')) {
+                    // This is the time interval for mOTP
+                    case "MOTP":
+                      if ('' == $all_args[6]) {
+                          $all_args[6] = 10; // Default windows value interval for mOTP
+                      }
+                      $multiotp->SetUserTokenTimeInterval($all_args[6]);
+                      break;
+                    // This is the time interval for TOTP
+                    case "TOTP":
+                      if ('' == $all_args[6]) {
+                          $all_args[6] = 30; // Default windows value interval for TOTP
+                      }
+                      $multiotp->SetUserTokenTimeInterval($all_args[6]);
+                      break;
+                    // This is the next event for HOTP
+                    case "HOTP":
+                    default:
+                      if ('' == $all_args[6]) {
+                          $all_args[6] = 0; // Default next event
+                      }
+                      $multiotp->SetUserTokenLastEvent($all_args[6]-1);
+                      // -1 because we are saving the last event in the user file database
+                      break;
+                  }
+                  if ($multiotp->WriteUserData()) {
+                    $result = 11; // INFO: user successfully created or updated
+                  } else {
+                    $result = 28; // ERROR: Unable to write the changes in the file
+                  }
+                }
+              }
             }
             break;
         case "delete":
@@ -75584,6 +75883,10 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                                 $verbose_prefix = $multiotp->GetVerboseLogPrefix();
                                 $write_config_data = true;
                                 break;
+                            case 'default-pin-digits':
+                                $multiotp->SetDefaultPinDigits(intval($actual_array[1]));
+                                $write_config_data = true;
+                                break;
                             case 'default-request-prefix-pin':
                                 $multiotp->SetDefaultRequestPrefixPin(intval($actual_array[1]));
                                 $write_config_data = true;
@@ -75722,6 +76025,10 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                                 break;
                             case 'sms-api-id':
                                 $multiotp->SetSmsApiId($actual_array[1]);
+                                $write_config_data = true;
+                                break;
+                            case 'sms-digits':
+                                $multiotp->SetSmsDigits(intval($actual_array[1]));
                                 $write_config_data = true;
                                 break;
                             case 'sms-message':
@@ -76040,6 +76347,40 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 }
             }
             break;
+        case "htmlinfo":
+            if  ($param_count < 2) {
+              if  ($param_count < 1) {
+                $result = 30; // ERROR: At least one parameter is missing
+              } elseif (is_dir($all_args[1])) {
+                $user_list = nullable_trim($multiotp->GetUsersList());
+                $users_array = explode("\t", $user_list);
+                if (("" != $user_list) && (count($users_array) > 0)) {
+                  foreach ($users_array as $user) {
+                    $content = $multiotp->GenerateHtmlQrCode($user);
+                    if (FALSE !== file_put_contents(realpath($all_args[1]) . DIRECTORY_SEPARATOR . $user . '.html', $content)) {
+                      $result = 16; // INFO: HTML info successfully created.
+                    } else {
+                      $result = 52; // INFO: HTML info not created.
+                      break;
+                    }
+                  }
+                } else {
+                  $result = 21; // ERROR: user doesn't exist.
+                }
+              } else {
+                $result = 30; // ERROR: At least one parameter is missing
+              }
+            } elseif (!$multiotp->CheckUserExists($all_args[1])) {
+                $result = 21; // ERROR: user doesn't exist.
+            } else {
+                $content = $multiotp->GenerateHtmlQrCode($all_args[1]);
+                if (FALSE !== file_put_contents($all_args[2], $content)) {
+                  $result = 16; // INFO: HTML info successfully created.
+                } else {
+                  $result = 52; // INFO: HTML info not created.
+                }
+            }
+            break;
         case "urllink":
             if  ($param_count < 1) {
                 $result = 30; // ERROR: At least one parameter is missing
@@ -76122,6 +76463,14 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
             break;
         case "clearlog":
             $multiotp->ClearLog();
+            $result = 19;
+            break;
+        case "log-error":
+            $multiotp->WriteLog("Error: " . $all_args[1], FALSE, FALSE, 39, 'System', '', 3);
+            $result = 19;
+            break;
+        case "log-info":
+            $multiotp->WriteLog("Info: " . $all_args[1], FALSE, FALSE, 19, 'System', '', 6);
             $result = 19;
             break;
         case "ldap-check":
@@ -76245,9 +76594,9 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo "and OATH/TOTP (RFC 6238) are implemented). PSKC format supported (RFC 6030).".$crlf;
                 echo "Supported encryption methods are PAP and CHAP.".$crlf;
                 echo "Yubico OTP format supported (44 bytes long, with prefixed serial number).".$crlf;
-                echo "SMS-code are supported (current providers: aspsms,clickatell,clickatell2,".$crlf;
-                echo "                        intellisms,nexmo,nowsms,smseagle,swisscom,telnyx,".$crlf;
-                echo "                        custom,exec).".$crlf;
+                echo "SMS-code are supported (current providers: afilnet,aspsms,clickatell,".$crlf;
+                echo "                        clickatell2,ecall,intellisms,nexmo,nowsms,smseagle,".$crlf;
+                echo "                        smsgateway,swisscom,telnyx,custom,exec).".$crlf;
                 echo "Specific SMS sender program supported by specifying exec as SMS provider.".$crlf;
                 echo $crlf;
                 echo "Google Authenticator base32_seed tokens must be of n*8 characters.".$crlf;
@@ -76329,6 +76678,8 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo $crlf;
                 echo " multiotp -qrcode user png_file_name.png (only for TOTP and HOTP)".$crlf;
                 echo " multiotp -urllink user (only for TOTP and HOTP, generate provisioning URL)".$crlf;
+                echo " multiotp -htmlinfo user htlm_file_name.html (create file for one user) or ".$crlf;
+                echo " multiotp -htmlinfo htlm_file_folder (to create all files)".$crlf;
                 echo $crlf;
                 echo " multiotp -scratchlist user (generate & display scratch passwords for the user)".$crlf;
                 echo $crlf;
@@ -76362,6 +76713,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo "                             (code result are also displayed on the console)".$crlf;
                 echo "               debug-prefix: add a prefix when using the debug mode".$crlf;
                 echo "                             (for example 'Reply-Message := ' for FreeRADIUS)".$crlf;
+                echo "         default-pin-digits: [4-32] set the default amount of PIN digits".$crlf;
                 echo " default-request-prefix-pin: [0|1] prefix PIN enabled/disabled by default".$crlf;
                 echo "   default-request-ldap-pwd: [0|1] LDAP/AD password enabled/disabled by default".$crlf;
                 echo "                display-log: [0|1] enable/disable log display on the console".$crlf;
@@ -76417,6 +76769,7 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo "                 sms-api-id: SMS API id (if any, give your REST/XML API id)".$crlf;
                 echo "                             with exec as provider, define the script to call".$crlf;
                 echo "                               (available variables: %from, %to, %msg)".$crlf;
+                echo "                 sms-digits: [6-32] set the default amount of SMS digits".$crlf;
                 echo "                     sms-ip: IP address of the SMS server (for inhouse server)".$crlf;
                 echo "      sms-challenge-enabled: [0|1] enable/disable SMS challenge".$crlf;
                 echo "                sms-message: SMS message to display before the OTP".$crlf;
@@ -76548,6 +76901,12 @@ for ($every_command = 0; $every_command < count($command_array); $every_command+
                 echo "   This will delete the .cache files in the AD/LDAP cache folder.".$crlf;
                 echo "   .cache files are used to speed up the AD/LDAP synchronizsation process.".$crlf;
                 echo "   They are valid by default for 60 minutes.".$crlf;
+                echo $crlf;
+                echo " multiotp -log-error \"log information\"".$crlf;
+                echo "   This will write \"log information\" error in the default log storage.".$crlf;
+                echo $crlf;
+                echo " multiotp -log-info \"log information\"".$crlf;
+                echo "   This will write \"log information\" info in the default log storage.".$crlf;
                 echo $crlf;
                 echo $crlf;
                 echo "Other parameters:".$crlf;

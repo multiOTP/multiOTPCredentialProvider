@@ -2,8 +2,8 @@
  * multiOTP Credential Provider
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.6.1
- * @date      2023-05-10
+ * @version   5.9.7.1
+ * @date      2023-12-03
  * @since     2013
  * @copyright (c) 2016-2023 SysCo systemes de communication sa
  * @copyright (c) 2015-2016 ArcadeJust ("RDP only" enhancement)
@@ -86,7 +86,7 @@ VOID writeRegistryValueString(_In_ CONF_VALUE conf_value, _In_ PWSTR writeValue)
 	if (hr == S_OK) {
 		if (DEVELOP_MODE) PrintLn(L"hr is OK");
 		wcscpy_s(confKeyNameCLSID, 1024, confKeyName);
-		if (confKeyName == (PWSTR)MULTIOTP_SETTINGS) {
+		if (wcscmp(confKeyName, (PWSTR)MULTIOTP_SETTINGS) == 0) {
 			wcscat_s(confKeyNameCLSID, 1024, clsid);
 		}
 		CoTaskMemFree(clsid); //not needed
@@ -129,7 +129,7 @@ DWORD readKeyValueInMultiOTPRegistry(_In_ HKEY rootKeyValue, _In_ PWSTR keyName,
 
 		CoTaskMemFree(clsid);//not needed
 
-		if (DEVELOP_MODE) PrintLn(L"Reading REGISTRY Key: ", confKeyNameCLSID, L"\\", valueName);
+		if (DEVELOP_MODE) PrintLn(L"Reading REGISTRY Key 132: ", confKeyNameCLSID, L"\\", valueName);
 
 		DWORD keyType = 0;
 		DWORD dataSize = 0;
@@ -172,7 +172,7 @@ DWORD readKeyValueInMultiOTPRegistry(_In_ HKEY rootKeyValue, _In_ PWSTR keyName,
 
 	dwSize = DWORD(wcslen(defaultValue));
 	*data = (PWSTR)CoTaskMemAlloc(sizeof(wchar_t) * (dwSize + 1));
-	wcscpy_s(*data, 1024, defaultValue);
+	wcscpy_s(*data, (sizeof(wchar_t) * (dwSize + 1)), defaultValue);
 	return dwSize;
 }
 
@@ -192,14 +192,13 @@ DWORD readRegistryValueString(_In_ CONF_VALUE conf_value, _Outptr_result_nullonf
 
 	if (hr == S_OK) {
 		wcscpy_s(confKeyNameCLSID, 1024, confKeyName);
-		if (confKeyName == (PWSTR)MULTIOTP_SETTINGS) {
+		if (wcscmp(confKeyName, (PWSTR)MULTIOTP_SETTINGS) == 0) {
 			wcscat_s(confKeyNameCLSID, 1024, clsid);
 		}
 
 		CoTaskMemFree(clsid);//not needed
 
-		if (DEVELOP_MODE) PrintLn(L"Reading REGISTRY Key: ", confKeyNameCLSID, L"\\", confValueName);
-
+		if (DEVELOP_MODE) PrintLn(L"Reading REGISTRY Key 201: ", confKeyNameCLSID, L"\\", confValueName);		
 		DWORD keyType = 0;
 		DWORD dataSize = 0;
 		const DWORD flags = RRF_RT_REG_SZ; // Only read strings (REG_SZ)
@@ -241,7 +240,7 @@ DWORD readRegistryValueString(_In_ CONF_VALUE conf_value, _Outptr_result_nullonf
 
 	dwSize = DWORD(wcslen(defaultValue));
 	*data = (PWSTR)CoTaskMemAlloc(sizeof(wchar_t) * (dwSize + 1));
-	wcscpy_s(*data, 1024, defaultValue);
+	wcscpy_s(*data, (sizeof(wchar_t) * (dwSize + 1)), defaultValue);
 	return dwSize;
 }
 
@@ -261,13 +260,13 @@ DWORD readRegistryValueInteger(_In_ CONF_VALUE conf_value, _In_ DWORD defaultVal
 
 	if (hr == S_OK) {
 		wcscpy_s(confKeyNameCLSID, 1024, confKeyName);
-		if (confKeyName == (PWSTR)MULTIOTP_SETTINGS) {
+		if (wcscmp(confKeyName, (PWSTR)MULTIOTP_SETTINGS) == 0) {
 			wcscat_s(confKeyNameCLSID, 1024, clsid);
 		}
 
 		CoTaskMemFree(clsid); //not needed
 
-		if (DEVELOP_MODE) PrintLn(L"Reading REGISTRY Key:", confKeyNameCLSID, L"\\", confValueName);
+		if (DEVELOP_MODE) PrintLn(L"Reading REGISTRY Key 270:", confKeyNameCLSID, L"\\", confValueName);
 
 		dataSize = sizeof(DWORD);
 
@@ -313,7 +312,7 @@ VOID writeRegistryValueInteger(_In_ CONF_VALUE conf_value, _In_ DWORD writeValue
 	if (hr == S_OK) {
 		if (DEVELOP_MODE) PrintLn(L"hr is OK");
 		wcscpy_s(confKeyNameCLSID, 1024, confKeyName);
-		if (confKeyName == (PWSTR)MULTIOTP_SETTINGS) {
+		if (wcscmp(confKeyName, (PWSTR)MULTIOTP_SETTINGS) == 0) {
 			wcscat_s(confKeyNameCLSID, 1024, clsid);
 		}
 		CoTaskMemFree(clsid); //not needed
@@ -329,10 +328,10 @@ VOID writeRegistryValueInteger(_In_ CONF_VALUE conf_value, _In_ DWORD writeValue
 				REG_DWORD,
 				(const BYTE*)&writeValue,
 				sizeof(writeValue));
-			PrintLn(L"Writing REGISTRY Key: Line 332 %d", writeValue);
-			PrintLn(L"Writing REGISTRY Key: Line 333 %d", result);
+			if (DEVELOP_MODE) PrintLn(L"Writing REGISTRY Key: Line 332 %d", writeValue);
+			if (DEVELOP_MODE) PrintLn(L"Writing REGISTRY Key: Line 333 %d", result);
 		}
-		PrintLn(L"Writing REGISTRY Key: Line 334");
+		if (DEVELOP_MODE) PrintLn(L"Writing REGISTRY Key: Line 334");
 	}
 	else {
 		if (DEVELOP_MODE) PrintLn(L"hr is KO");
@@ -399,7 +398,7 @@ DWORD readKeyValueInMultiOTPRegistryInteger(_In_ HKEY rootKeyValue, _In_ PWSTR k
 
 		CoTaskMemFree(clsid);//not needed
 
-		if (DEVELOP_MODE) PrintLn(L"Reading REGISTRY Key: ", confKeyNameCLSID, L"\\", valueName);
+		if (DEVELOP_MODE) PrintLn(L"Reading REGISTRY Key 402: ", confKeyNameCLSID, L"\\", valueName);
 		
 		LONG result = ::RegGetValue(
 			rootKeyValue,

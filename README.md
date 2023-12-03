@@ -7,7 +7,7 @@ multiOTP Credential Provider for multiOTP is a free and open source implementati
 (c) 2015-2016 ArcadeJust ("RDP only" enhancement)  
 (c) 2013-2015 Last Squirrel IT  
 
-Current build: 5.9.6.1 (2023-05-10)  
+Current build: 5.9.7.1 (2023-12-03)  
 
 The binary download page is available here : https://download.multiotp.net/credential-provider/ (download link are at the bottom of the page)
 
@@ -178,7 +178,10 @@ Report if you have any problems or questions regarding this app.
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
-
+2023-12-03 5.9.7.1 FIX: Using domain prefix for windows authentication in addition to using it during multiOTP authentication
+                   FIX: Third party VPN client works on the login page when credential provider is active
+                   FIX: Comparing pointer content instead of pointer address during registry readings
+                   ENH: nlohmann JSON for Modern C++ update to 3.11.2
 2023-05-10 5.9.6.1 ENH: PHP 8.2 x64 integration (don't need x86 MSVC++ redistribuable files anymore)
                    ENH: x86 edition of multiOTP Credential Provider can now be created/compiled from the source on GitHub
 2023-02-10 5.9.5.6 ENH: New option to enable NumLock during published apps authentication

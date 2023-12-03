@@ -4,8 +4,8 @@
  * Extra code provided "as is" for the multiOTP open source project
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.6.1
- * @date      2023-05-10
+ * @version   5.9.7.1
+ * @date      2023-12-03
  * @since     2013
  * @copyright (c) 2016-2023 SysCo systemes de communication sa
  * @copyright (c) 2015-2016 ArcadeJust ("RDP only" enhancement)
@@ -945,17 +945,17 @@ HRESULT SplitDomainAndUsername(_In_ PCWSTR pszQualifiedUserName, _Outptr_result_
     PWSTR pszUsername;
     const wchar_t* pchWhack = wcschr(pszQualifiedUserName, L'\\');
     const wchar_t* pchEnd = pszQualifiedUserName + wcslen(pszQualifiedUserName) - 1;
-    
+
     // Begin extra code (UPN support)
     const wchar_t* pchWhatSign = wcschr(pszQualifiedUserName, L'@');
     // End extra code (UPN support)
 
     if (pchWhack != nullptr && pchWhatSign != nullptr) // for example login with RDP like abc@domain.ch => domain.ch\abcd@domain.ch
     {
-        const wchar_t* pchUsernameBegin = pchWhack+1;
+        const wchar_t* pchUsernameBegin = pchWhack + 1;
         const wchar_t* pchUsernameEnd = pchWhatSign - 1;
         const wchar_t* pchDomainBegin = pszQualifiedUserName;
-        const wchar_t* pchDomainEnd = pchWhack-1;
+        const wchar_t* pchDomainEnd = pchWhack - 1;
 
         size_t lenDomain = pchDomainEnd - pchDomainBegin + 1; // number of actual chars, NOT INCLUDING null terminated string
         pszDomain = static_cast<PWSTR>(CoTaskMemAlloc(sizeof(wchar_t) * (lenDomain + 1)));
@@ -1216,7 +1216,7 @@ HRESULT multiotp_request(_In_ std::wstring username,
     size_t len;
     PWSTR path;
 
-    
+
     len = username.length();
     if (PREV_OTP.length() > 0) {
         len += PREV_OTP.length();
@@ -1282,7 +1282,7 @@ HRESULT multiotp_request(_In_ std::wstring username,
     si.dwFlags |= STARTF_USESTDHANDLES;
 
     hr = MULTIOTP_UNKNOWN_ERROR;
-    
+
 
     if (readRegistryValueString(CONF_PATH, &path, L"c:\\multiotp\\") > 1) {
         DWORD timeout = 60;
@@ -1525,21 +1525,21 @@ std::wstring getCleanUsername(const std::wstring username, const std::wstring do
     dwDefaultPrefixSize = readRegistryValueString(CONF_DEFAULT_PREFIX, &pszDefaultPrefix, L"");
     dwDomainSize = readRegistryValueString(CONF_DOMAIN_NAME, &pszDomain, L"");
 
-    const wchar_t* pchWhack = wcschr(username.c_str(), L'\\'); // retourne un pointeur vers la premi?re occurence du backslahs Recherche s'il y a un backslahs
-    const wchar_t* pchWatSign = wcschr(username.c_str(), L'@'); // retourne un pointeur vers la premi?re occurence du @ Recherche s'il y a un @
+    const wchar_t* pchWhack = wcschr(username.c_str(), L'\\'); // return a pointer to the first occurence of a backslash
+    const wchar_t* pchWatSign = wcschr(username.c_str(), L'@'); // return a pointer to the first occurence of an @
 
-    // S'il y a un domain prefix stock? dans la registry et le nom d'utilisateur ne contient pas de \\ ni de @ (Pour forcer le login en local ou dans un domaine particulier)
+    // If there is a domain prefix in the registry and if the username doesn't contains any \\ nor @ (to force a local or a specific domain authentication)
     if ((dwDefaultPrefixSize > 1) && (pchWatSign == nullptr) && (pchWhack == nullptr)) {
-        wcscpy_s(fullname, 1024, pszDefaultPrefix); // Mettre le prefix dans la variable fullname
-        wcscat_s(fullname, 1024, L"\\"); // Ajouter un backslash
-        wcscat_s(fullname, 1024, username.c_str()); // Ajouter le nom d'utilisateur
+        wcscpy_s(fullname, 1024, pszDefaultPrefix); // Add prefix to the fullname
+        wcscat_s(fullname, 1024, L"\\"); // Add a backslash
+        wcscat_s(fullname, 1024, username.c_str()); // Add the username
         pchWhack = wcschr(fullname, L'\\'); // Chercher s'il y a un backslash
     }
     else {
-        wcscpy_s(fullname, 1024, username.c_str()); // Mettre le prefix dans la variable fullname
+        wcscpy_s(fullname, 1024, username.c_str()); // Add username in fullname
     }
 
-    // Est-ce que le domain est renseign? dans la base de registre tcpip de Windows (l'ordinateur est en domain)?
+    // Is the domain in the registry tcpip of Windows (computer is in domain) ?
     if (dwDomainSize > 1) {
         DOMAIN_CONTROLLER_INFO* pDCI;
         if (DsGetDcNameW(NULL, pszDomain, NULL, NULL, DS_IS_DNS_NAME | DS_RETURN_FLAT_NAME, &pDCI) == ERROR_SUCCESS) { // Est-ce possible de r?cup?rer le domaine ?
@@ -1609,7 +1609,7 @@ std::wstring getCleanUsername(const std::wstring username, const std::wstring do
             }
         } else {
             PWSTR tempStr = L"";
-            if (readKeyValueInMultiOTPRegistry(HKEY_CLASSES_ROOT, L"LEGACYcache", fullname, &tempStr, L"") >1) {
+            if (readKeyValueInMultiOTPRegistry(HKEY_CLASSES_ROOT, L"LEGACYcache", fullname, &tempStr, L"") > 1) {
                 wcscpy_s(legacyname, 1024, tempStr);
                 pchWhack = wcschr(legacyname, L'\\');
                 writeKeyValueInMultiOTPRegistry(HKEY_CLASSES_ROOT, L"", L"currentOfflineUser", legacyname);
@@ -1729,7 +1729,7 @@ HRESULT multiotp_request_command(_In_ std::wstring command, _In_ std::wstring pa
     wchar_t options[2048];
     size_t len;
     PWSTR path;
-    
+
     // Set the params
     wcscpy_s(cmd, 2048, params.c_str());
     wcscat_s(cmd, 2048, L" ");
@@ -1746,7 +1746,7 @@ HRESULT multiotp_request_command(_In_ std::wstring command, _In_ std::wstring pa
 
     if (DEVELOP_MODE) PrintLn("command len:%d", int(len));
     if (DEVELOP_MODE) PrintLn(cmd);
-    
+
     saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
     saAttr.bInheritHandle = TRUE;
     saAttr.lpSecurityDescriptor = NULL;
@@ -1800,7 +1800,7 @@ HRESULT multiotp_request_command(_In_ std::wstring command, _In_ std::wstring pa
 
         if (readRegistryValueString(CONF_SHARED_SECRET, &shared_secret, L"ClientServerSecret") > 1) {
             wcscat_s(options, 2048, L"\"");
-            wcscat_s(options, 2048, L"-server-secret=");            
+            wcscat_s(options, 2048, L"-server-secret=");
             shared_secret_escaped = shared_secret;
             replaceAll(shared_secret_escaped, L"\"", L"\\\"");
             wcscat_s(options, 2048, shared_secret_escaped.c_str());
@@ -1880,7 +1880,7 @@ void replaceAll(std::wstring& str, const std::wstring& from, const std::wstring&
     PrintLn(L"Looking for ", from.c_str());
     PrintLn(L" IN ", str.c_str());
     while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
-        PrintLn(L"We found a ",from.c_str());
+        PrintLn(L"We found a ", from.c_str());
         str.replace(start_pos, from.length(), to);
         start_pos += to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
     }

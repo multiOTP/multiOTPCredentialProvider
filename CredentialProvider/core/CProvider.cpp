@@ -450,7 +450,7 @@ HRESULT CProvider::GetCredentialAt(
 				if (!NetGetJoinInformation(
 					nullptr,
 					&serializedDomain,
-					&join_status) == NERR_Success || join_status == NetSetupUnjoined || join_status == NetSetupUnknownStatus)
+					&join_status) == NERR_Success || join_status == NetSetupUnjoined || join_status == NetSetupUnknownStatus || join_status == NetSetupWorkgroupName)
 				{
 					serializedDomain = nullptr;
 				}

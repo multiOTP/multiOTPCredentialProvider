@@ -2,7 +2,7 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
   <?include $(sys.CURRENTDIR)\Config.wxi?>
   
-  <Product Id="f8150f03-5671-4ff1-9f3b-edc54e050809" Name="$(var.ProductName)" Language="1033" Version="$(var.Version)" Manufacturer="$(var.Manufacturer)" UpgradeCode="f63c1c8c-ce58-4add-b7ba-4e2dca872b50">
+  <Product Id="50e16f29-3915-4ef2-ab60-841c9d9471a5" Name="$(var.ProductName)" Language="1033" Version="$(var.Version)" Manufacturer="$(var.Manufacturer)" UpgradeCode="f63c1c8c-ce58-4add-b7ba-4e2dca872b50">
     
     <Package Id='*' InstallerVersion="200" Compressed="yes" InstallScope="perMachine" Description="$(var.BaseProductName) Installer" Platform="$(var.Platform)"/>
 
