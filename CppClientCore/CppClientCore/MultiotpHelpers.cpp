@@ -4,10 +4,10 @@
  * Extra code provided "as is" for the multiOTP open source project
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.7.1
- * @date      2023-12-03
+ * @version   5.9.8.0
+ * @date      2024-08-26
  * @since     2013
- * @copyright (c) 2016-2023 SysCo systemes de communication sa
+ * @copyright (c) 2016-2024 SysCo systemes de communication sa
  * @copyright (c) 2015-2016 ArcadeJust ("RDP only" enhancement)
  * @copyright (c) 2013-2015 Last Squirrel IT
  * @copyright (c) 2012 Dominik Pretzsch
@@ -1884,4 +1884,94 @@ void replaceAll(std::wstring& str, const std::wstring& from, const std::wstring&
         str.replace(start_pos, from.length(), to);
         start_pos += to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
     }
+}
+
+std::wstring getErrorMessage(HRESULT code) {
+    PWSTR tempStr = L"";
+
+    std::wstring msg = L"";
+    // Load default message
+    if (readRegistryValueString(CONF_ERROR_MESSAGE, &tempStr, L"") > 1) {
+        msg = tempStr;
+    }
+
+    // Initialization of the array
+    std::wstring texts[100] = { L"" };
+
+    texts[20] = L"User blacklisted";
+    texts[21] = L"User doesn't exist";
+    texts[22] = L"User already exists";
+    texts[23] = L"Invalid algorithm";
+    texts[24] = L"User locked (too many tries)";
+    texts[25] = L"User delayed (too many tries, but still a hope in a few minutes)";
+    texts[26] = L"This token has already been used";
+    texts[27] = L"Resynchronization of the token has failed";
+    texts[28] = L"Unable to write the changes in the file";
+    texts[29] = L"Token doesn't exist";
+
+    texts[30] = L"At least one parameter is missing";
+    texts[31] = L"Tokens definition file doesn't exist";
+    texts[32] = L"Tokens definition file not successfully imported";
+    texts[33] = L"Encryption hash error, encryption key is not matching";
+    texts[34] = L"Linked user doesn't exist";
+    texts[35] = L"User not created";
+    texts[36] = L"Token doesn't exist";
+    texts[37] = L"Token already attributed";
+    texts[38] = L"User is desactivated";
+    texts[39] = L"Requested operation aborted";
+
+    texts[40] = L"SQL query error";
+    texts[41] = L"SQL error";
+    texts[42] = L"They key is not in the table schema";
+    texts[43] = L"SQL entry cannot be updated";
+
+    texts[50] = L"QRcode not created";
+    texts[51] = L"UrlLink not created (no provisionable client for this protocol)";
+    texts[52] = L"HTML info not created";
+    texts[58] = L"File is missing";
+    texts[59] = L"Bad restore configuration password";
+
+    texts[60] = L"No information on where to send SMS code";
+    texts[61] = L"SMS code request received, but an error occurred during transmission";
+    texts[62] = L"SMS provider not supported";
+    texts[63] = L"This SMS code has expired";
+    texts[64] = L"Cannot resent an SMS code right now";
+    texts[65] = L"SMS code request not allowed";
+    texts[66] = L"Email code request not allowed";
+    texts[67] = L"No information on where to send Email code";
+    texts[68] = L"Email code request received, but an error occurred during transmission";
+    texts[69] = L"Failed to send email";
+
+    texts[70] = L"Server authentication error";
+    texts[71] = L"Server request is not correctly formatted";
+    texts[72] = L"Server answer is not correctly formatted";
+    texts[73] = L"Email SMTP server not defined";
+    texts[79] = L"AD/LDAP connection error";
+
+    texts[80] = L"Server cache error";
+    texts[81] = L"Cache too old for this user, account autolocked";
+    texts[82] = L"User not allowed for this device";
+    texts[88] = L"Device is not defined as a HA slave";
+    texts[89] = L"Device is not defined as a HA master";
+
+    texts[91] = L"Authentication failed (without2fa token not authorized here)";
+    texts[92] = L"Authentication failed (bad password)";
+    texts[93] = L"Authentication failed (time based token probably out of sync)";
+    texts[94] = L"API request error";
+    texts[95] = L"API authentication failed";
+    texts[96] = L"Authentication failed (CRC error)";
+    texts[97] = L"Authentication failed (wrong private id)";
+    texts[98] = L"Authentication failed (wrong token length)";
+    texts[99] = L"Authentication failed (and other possible unknown errors)";
+    if (code >= 0 && code < 100) {
+        // Replace %S by multiOTP error message
+        replaceAll(msg, L"%s", texts[code]);
+        replaceAll(msg, L"%S", texts[code]);
+    }
+    else {
+        // Remove %S
+        replaceAll(msg, L"%s", std::to_wstring(code));
+        replaceAll(msg, L"%S", std::to_wstring(code));
+    }
+    return msg;
 }

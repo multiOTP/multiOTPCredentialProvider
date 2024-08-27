@@ -2,10 +2,10 @@
  * multiOTP Credential Provider
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.7.1
- * @date      2023-12-03
+ * @version   5.9.8.0
+ * @date      2024-08-26
  * @since     2013
- * @copyright (c) 2016-2023 SysCo systemes de communication sa
+ * @copyright (c) 2016-2024 SysCo systemes de communication sa
  * @copyright (c) 2015-2016 ArcadeJust ("RDP only" enhancement)
  * @copyright (c) 2013-2015 Last Squirrel IT
  * @copyright Apache License, Version 2.0
@@ -13,20 +13,7 @@
  *
  * Change Log
  *
- *   2022-05-20 5.9.0.2 SysCo/yj ENH: Added two method to be able to read and write in a subkey of the multiOTP Settings. When active directory server is available UPN username is stored in the sub-key UPNcache
- *   2020-08-31 5.8.0.0 SysCo/al ENH: Retarget to the last SDK 10.0.19041.1
- *   2019-10-23 5.6.1.5 SysCo/al FIX: Prefix password parameter was buggy (better handling of parameters in debug mode)
- *                               FIX: swprintf_s problem with special chars (thanks to anekix)
- *   2019-01-25 5.4.1.6 SysCo/al FIX: Username with space are now supported
- *                               ENH: Added integrated Visual C++ 2017 Redistributable installation
- *   2018-09-14 5.4.0.1 SysCo/al FIX: Better domain name and hostname detection
- *                               FIX: The cache lifetime check process was buggy since 5.3.0.3
- *                               ENH: multiOTP Credential Provider files and objects have been reorganized
- *   2018-08-26 5.3.0.3 SysCo/al FIX: Users without 2FA token are now supported
- *   2018-08-21 5.3.0.0 SysCo/yj FIX: Save flat domain name in the registry. While offline, use this value instead of asking the DC
- *                      SysCo/al ENH: The multiOTP timeout (how long the Credential Provider wait a response from
- *                                    the multiOTP process) is now 60 seconds by default (instead of 10)
- *   2018-03-11 5.2.0.0 SysCo/al New implementation from scratch
+ * Please check the README.md for the full change log
  *
  *********************************************************************/
 
@@ -55,6 +42,7 @@
 #define MULTIOTP_LAST_USER_AUTHENTICATED   L"lastUserAuthenticated"
 #define MULTIOTP_LAST_USER_TIMESTAMP   L"lastUserTimestamp"
 #define MULTIOTP_NUMLOCK_ON   L"numlockOn"
+#define MULTIOTP_OTP_FAIL_TEXT   L"otp_fail_text"
 
 
 #define RDP_SETTINGS                L"SYSTEM\\CurrentControlSet\\Control\\Terminal Server\\WinStations\\RDP-Tcp"
@@ -94,7 +82,8 @@ enum CONF_VALUE
 	LAST_USER_AUTHENTICATED = 18,
 	LAST_USER_TIMESTAMP = 19,
 	CONF_NUMLOCK_ON = 20,
-	CONF_NUM_VALUES = 21	
+	CONF_NUM_VALUES = 21,
+	CONF_ERROR_MESSAGE = 22
 };
 
 static const REGISTRY_KEY s_CONF_VALUES[] =
@@ -120,6 +109,8 @@ static const REGISTRY_KEY s_CONF_VALUES[] =
 	{ HKEY_CLASSES_ROOT, MULTIOTP_SETTINGS, MULTIOTP_LAST_USER_AUTHENTICATED}, // 18
 	{ HKEY_CLASSES_ROOT, MULTIOTP_SETTINGS, MULTIOTP_LAST_USER_TIMESTAMP}, // 19
 	{ HKEY_CLASSES_ROOT, MULTIOTP_SETTINGS, MULTIOTP_NUMLOCK_ON}, // 20
+	{ HKEY_CLASSES_ROOT, MULTIOTP_SETTINGS, MULTIOTP_NUMLOCK_ON}, // 21 no more used
+	{ HKEY_CLASSES_ROOT, MULTIOTP_SETTINGS, MULTIOTP_OTP_FAIL_TEXT}, // 22
 };
 VOID writeKeyValueInMultiOTPRegistry(_In_ HKEY rootKeyValue, _In_ PWSTR keyName, _In_ PWSTR valueName, _In_ PWSTR writeValue);
 VOID writeRegistryValueString(_In_ CONF_VALUE conf_value, _In_ PWSTR writeValue);

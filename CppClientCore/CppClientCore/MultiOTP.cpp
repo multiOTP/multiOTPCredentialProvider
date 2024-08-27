@@ -2,10 +2,10 @@
  * multiOTP Credential Provider, extends privacyIdea
  *
  * @author    Yann Jeanrenaud, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.7.1
- * @date      2023-12-03
+ * @version   5.9.8.0
+ * @date      2024-08-26
  * @since     2021
- * @copyright (c) 2016-2023 SysCo systemes de communication sa
+ * @copyright (c) 2016-2024 SysCo systemes de communication sa
  * @copyright (c) 2015-2016 ArcadeJust ("RDP only" enhancement)
  * @copyright (c) 2013-2015 Last Squirrel IT
  * @copyright Apache License, Version 2.0
@@ -37,20 +37,19 @@ MultiOTP::MultiOTP(PICONFIG conf):PrivacyIDEA(conf)
 {
 }
 
-HRESULT MultiOTP::validateCheck(const std::wstring& username, const std::wstring& domain, const SecureWString& otp, const std::string& transaction_id)
+HRESULT MultiOTP::validateCheck(const std::wstring& username, const std::wstring& domain, const SecureWString& otp, const std::string& transaction_id, HRESULT& error_code)
 {
 	HRESULT hr = E_UNEXPECTED;
 
 	hr = multiotp_request(getCleanUsername(username, domain), L"", otp);
-
+    error_code = hr;
 	// Gérer le prev OTP
-
 	if ((hr == MULTIOTP_SUCCESS)) {
-		if (DEVELOP_MODE) PrintLn("MultiotpCredential::multiOTP Success, value ", hr);//OTP ok
+		if (DEVELOP_MODE) PrintLn("MultiotpCredential::multiOTP Success, value  %d", hr);//OTP ok
 		return PI_AUTH_SUCCESS;
 	}
 	else {
-		if (DEVELOP_MODE) PrintLn("MultiotpCredential::multiOTP Error, value ", hr);//OTP ok
+		if (DEVELOP_MODE) PrintLn("MultiotpCredential::multiOTP Error, value  %d", hr);//OTP ok
 		return PI_AUTH_FAILURE;
 	}
 }

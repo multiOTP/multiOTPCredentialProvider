@@ -2,7 +2,7 @@
 **
 ** Copyright	2012 Dominik Pretzsch
 **				2017 NetKnights GmbH
-**				2020-2023 SysCo systemes de communication sa
+**				2020-2024 SysCo systemes de communication sa
 **
 ** Author		Dominik Pretzsch
 **				Nils Behlen
@@ -1054,6 +1054,7 @@ HRESULT CCredential::Connect(__in IQueryContinueWithStatus* pqcws)
 		storeLastConnectedUserIfNeeded(); 
 		return S_OK;
 	}
+	HRESULT error_code;
 
 	if (_config->twoStepHideOTP && !_config->isSecondStep)
 	{
@@ -1076,7 +1077,7 @@ HRESULT CCredential::Connect(__in IQueryContinueWithStatus* pqcws)
 			SecureWString toSend = L"sms";
 			if (!_config->twoStepSendEmptyPassword && _config->twoStepSendPassword)
 				toSend = _config->credential.password;
-			_piStatus = _privacyIDEA.validateCheck(_config->credential.username, _config->credential.domain, toSend);
+			_piStatus = _privacyIDEA.validateCheck(_config->credential.username, _config->credential.domain, toSend, "", error_code);
 			if (_piStatus == PI_TRIGGERED_CHALLENGE)
 			{
 				Challenge c = _privacyIDEA.getCurrentChallenge();
@@ -1110,11 +1111,14 @@ HRESULT CCredential::Connect(__in IQueryContinueWithStatus* pqcws)
 			_config->credential.username,
 			_config->credential.domain,
 			SecureWString(_config->credential.otp.c_str()),
-			"");
+			"", error_code);
 		PWSTR tempStr = L"";
 		if (_piStatus == PI_AUTH_SUCCESS)
 		{
 			storeLastConnectedUserIfNeeded();
+		}
+		else {
+			_config->defaultOTPFailureText = getErrorMessage(error_code);
 		}
 		if (readKeyValueInMultiOTPRegistry(HKEY_CLASSES_ROOT, L"", L"currentOfflineUser", &tempStr, L"") > 1) {
 			PWSTR pszDomain;
@@ -1132,13 +1136,16 @@ HRESULT CCredential::Connect(__in IQueryContinueWithStatus* pqcws)
 			_config->credential.username,
 			_config->credential.domain,
 			SecureWString(_config->credential.otp.c_str()),
-			"");
+			"", error_code);
 		PWSTR tempStr = L"";
 		if (_piStatus == PI_AUTH_SUCCESS) {
 			if (readKeyValueInMultiOTPRegistry(HKEY_CLASSES_ROOT, L"", L"currentOfflineUser", &tempStr, L"") > 1) {
 				_config->credential.username = tempStr;
 			}
 			storeLastConnectedUserIfNeeded();
+		}
+		else {
+			_config->defaultOTPFailureText = getErrorMessage(error_code);
 		}
 	}
 	DebugPrint("Connect - END");

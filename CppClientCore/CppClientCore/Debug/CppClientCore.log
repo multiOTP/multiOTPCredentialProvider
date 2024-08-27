@@ -1,0 +1,42 @@
+﻿  Challenge.cpp
+  Endpoint.cpp
+C:\data\projects\multiotp\multiOTPCredentialProviderPrivacyIdea\CppClientCore\CppClientCore\Endpoint.cpp(149,2): warning C4996: 'GetVersionExW': a été déclaré déconseillé
+  Logger.cpp
+  OfflineData.cpp
+  OfflineHandler.cpp
+  PrivacyIDEA.cpp
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29910\include\algorithm(3372,24): warning C4244: '=' : conversion de 'int' en 'wchar_t', perte possible de données
+C:\data\projects\multiotp\multiOTPCredentialProviderPrivacyIdea\CppClientCore\CppClientCore\PrivacyIDEA.cpp(321): message : voir la référence à l'instanciation de la fonction modèle '_OutIt std::transform<std::_String_iterator<std::_String_val<std::_Simple_types<_Elem>>>,std::_String_iterator<std::_String_val<std::_Simple_types<_Elem>>>,int(__cdecl *)(int)>(const _InIt,const _InIt,_OutIt,_Fn)' en cours de compilation
+          with
+          [
+              _OutIt=std::_String_iterator<std::_String_val<std::_Simple_types<wchar_t>>>,
+              _Elem=wchar_t,
+              _InIt=std::_String_iterator<std::_String_val<std::_Simple_types<wchar_t>>>,
+              _Fn=int (__cdecl *)(int)
+          ]
+  RegistryReader.cpp
+  guid.cpp
+  MultiOTP.cpp
+C:\data\projects\multiotp\multiOTPCredentialProviderPrivacyIdea\CppClientCore\CppClientCore\MultiOTP.cpp(40,136): warning C4100: 'transaction_id' : paramètre formel non référencé
+  MultiotpHelpers.cpp
+C:\data\projects\multiotp\multiOTPCredentialProviderPrivacyIdea\CppClientCore\CppClientCore\MultiotpHelpers.cpp(1514,13): warning C4101: 'otp_name' : variable locale non référencée
+C:\data\projects\multiotp\multiOTPCredentialProviderPrivacyIdea\CppClientCore\CppClientCore\MultiotpHelpers.cpp(1712,19): warning C4244: 'return' : conversion de 'time_t' en 'int', perte possible de données
+  MultiotpRegistry.cpp
+C:\data\projects\multiotp\multiOTPCredentialProviderPrivacyIdea\CppClientCore\CppClientCore\MultiotpRegistry.cpp(50,21): warning C4130: '!=' : opération logique sur l'adresse d'une constante de chaîne
+C:\data\projects\multiotp\multiOTPCredentialProviderPrivacyIdea\CppClientCore\CppClientCore\MultiotpRegistry.cpp(125,21): warning C4130: '!=' : opération logique sur l'adresse d'une constante de chaîne
+C:\data\projects\multiotp\multiOTPCredentialProviderPrivacyIdea\CppClientCore\CppClientCore\MultiotpRegistry.cpp(355,21): warning C4130: '!=' : opération logique sur l'adresse d'une constante de chaîne
+C:\data\projects\multiotp\multiOTPCredentialProviderPrivacyIdea\CppClientCore\CppClientCore\MultiotpRegistry.cpp(395,21): warning C4130: '!=' : opération logique sur l'adresse d'une constante de chaîne
+  MultiOTPRegistryReader.cpp
+  Génération de code en cours...
+LINK : warning LNK4075: ' /INCREMENTAL' ignoré à cause de la spécification '/OPT:ICF'
+MultiotpHelpers.obj : error LNK2019: symbole externe non résolu _LsaLookupAuthenticationPackage@12 référencé dans la fonction "long __cdecl MultiOTPRetrieveNegotiateAuthPackage(unsigned long *)" (?MultiOTPRetrieveNegotiateAuthPackage@@YAJPAK@Z)
+MultiotpHelpers.obj : error LNK2019: symbole externe non résolu _LsaDeregisterLogonProcess@4 référencé dans la fonction "long __cdecl MultiOTPRetrieveNegotiateAuthPackage(unsigned long *)" (?MultiOTPRetrieveNegotiateAuthPackage@@YAJPAK@Z)
+MultiotpHelpers.obj : error LNK2019: symbole externe non résolu _LsaConnectUntrusted@4 référencé dans la fonction "long __cdecl MultiOTPRetrieveNegotiateAuthPackage(unsigned long *)" (?MultiOTPRetrieveNegotiateAuthPackage@@YAJPAK@Z)
+MultiotpHelpers.obj : error LNK2019: symbole externe non résolu _TranslateNameW@20 référencé dans la fonction "class std::basic_string<wchar_t,struct std::char_traits<wchar_t>,class std::allocator<wchar_t> > __cdecl getCleanUsername(class std::basic_string<wchar_t,struct std::char_traits<wchar_t>,class std::allocator<wchar_t> >,class std::basic_string<wchar_t,struct std::char_traits<wchar_t>,class std::allocator<wchar_t> >)" (?getCleanUsername@@YA?AV?$basic_string@_WU?$char_traits@_W@std@@V?$allocator@_W@2@@std@@V12@0@Z)
+MultiotpHelpers.obj : error LNK2019: symbole externe non résolu __imp__CredUnPackAuthenticationBufferW@36 référencé dans la fonction "long __cdecl MultiOTPKerbInteractiveUnlockLogonRepackNative(unsigned char *,unsigned long,unsigned char * *,unsigned long *)" (?MultiOTPKerbInteractiveUnlockLogonRepackNative@@YAJPAEKPAPAEPAK@Z)
+MultiotpHelpers.obj : error LNK2019: symbole externe non résolu __imp__CredPackAuthenticationBufferW@20 référencé dans la fonction "long __cdecl MultiOTPKerbInteractiveUnlockLogonRepackNative(unsigned char *,unsigned long,unsigned char * *,unsigned long *)" (?MultiOTPKerbInteractiveUnlockLogonRepackNative@@YAJPAEKPAPAEPAK@Z)
+MultiotpHelpers.obj : error LNK2019: symbole externe non résolu _WTSQuerySessionInformationW@20 référencé dans la fonction "int __cdecl IsRemoteSession(void)" (?IsRemoteSession@@YAHXZ)
+MultiotpHelpers.obj : error LNK2019: symbole externe non résolu _WTSFreeMemory@4 référencé dans la fonction "int __cdecl IsRemoteSession(void)" (?IsRemoteSession@@YAHXZ)
+MultiotpHelpers.obj : error LNK2019: symbole externe non résolu __imp__DsGetDcNameW@24 référencé dans la fonction "class std::basic_string<wchar_t,struct std::char_traits<wchar_t>,class std::allocator<wchar_t> > __cdecl getCleanUsername(class std::basic_string<wchar_t,struct std::char_traits<wchar_t>,class std::allocator<wchar_t> >,class std::basic_string<wchar_t,struct std::char_traits<wchar_t>,class std::allocator<wchar_t> >)" (?getCleanUsername@@YA?AV?$basic_string@_WU?$char_traits@_W@std@@V?$allocator@_W@2@@std@@V12@0@Z)
+LIBCMTD.lib(exe_main.obj) : error LNK2019: symbole externe non résolu _main référencé dans la fonction "int __cdecl invoke_main(void)" (?invoke_main@@YAHXZ)
+C:\data\projects\multiotp\multiOTPCredentialProviderPrivacyIdea\Debug\CppClientCore.exe : fatal error LNK1120: 10 externes non résolus

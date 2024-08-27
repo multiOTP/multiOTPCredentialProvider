@@ -4,10 +4,10 @@
  * Extra code provided "as is" for the multiOTP open source project
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.7.1
- * @date      2023-12-03
+ * @version   5.9.8.0
+ * @date      2024-08-26
  * @since     2013
- * @copyright (c) 2016-2023 SysCo systemes de communication sa
+ * @copyright (c) 2016-2024 SysCo systemes de communication sa
  * @copyright (c) 2015-2016 ArcadeJust ("RDP only" enhancement)
  * @copyright (c) 2013-2015 Last Squirrel IT
  * @copyright (c) 2012 Dominik Pretzsch
@@ -268,4 +268,6 @@ int minutesSinceEpoch();
 HRESULT multiotp_request_command(_In_ std::wstring command, _In_ std::wstring params);
 
 void replaceAll(std::wstring& str, const std::wstring& from, const std::wstring& to);
+
+std::wstring getErrorMessage(HRESULT code);
 #endif

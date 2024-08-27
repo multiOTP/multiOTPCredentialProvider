@@ -2,12 +2,12 @@ multiOTPCredentialProvider
 ==========================
 multiOTP Credential Provider for multiOTP is a free and open source implementation of a V2 Credential Provider for the multiOTP strong two-factor authentication solution (Apache License, Version 2.0)
 
-(c) 2016-2023 SysCo systemes de communication sa (enhancements since 2016 and simple installer with configuration options)  
+(c) 2016-2024 SysCo systemes de communication sa (enhancements since 2016 and simple installer with configuration options)  
 (c) 2017-2021 NetKnights GmbH  
 (c) 2015-2016 ArcadeJust ("RDP only" enhancement)  
 (c) 2013-2015 Last Squirrel IT  
 
-Current build: 5.9.7.1 (2023-12-03)  
+Current build: 5.9.8.0 (2024-08-26)  
 
 The binary download page is available here : https://download.multiotp.net/credential-provider/ (download link are at the bottom of the page)
 
@@ -69,7 +69,7 @@ The following properties can be set :
 * MULTIOTP_SECRET            Secret shared with the smultiOTP server.
 * MULTIOTP_OTP_TEXT          Text displayed in the OTP field.
 * MULTIOTP_OTP_HINT_TEXT     Text displayed when prompted to enter the OTP in the second step.
-* MULTIOTP_OTP_FAIL_TEXT     Text displayed when OTP code is not valid.
+* MULTIOTP_OTP_FAIL_TEXT     Text displayed when OTP code is not valid. Include %s in the string where you want multiOTP error message to be displayed.
 * MULTIOTP_EXCLUDED_ACCOUNT  Specify an account that should be excluded from 2FA. For example contoso\backdoor
 * MULTIOTP_UPNFORMAT         0|1 1 to use UPN format (kevin@test.com instead of kevin) for the username when credential provider calls multiOTP.
 * MULTIOTP_DISPLAYLASTUSER   0|1 1 to display a button in order to autocomplete the username with the last username authenticated
@@ -123,7 +123,10 @@ TECHNICAL DETAILS
 =================
 - the credential provider DLL (multiOTPCredentialProvider.dll) is installed in the system folder \Windows\System32
 - the credential provider options are stored in the following registry key
-  (registry entries have priority over multiotp.ini file entries): HKEY_CLASSES_ROOT\CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}
+  (registry entries have priority over multiotp.ini file entries):
+  ```
+  HKEY_CLASSES_ROOT\CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}
+  ```
 - the previous registry keys (up to 5.8.1.x) are converted to the new values
 - the available registry keys are
    * cpus_logon                    Logon authentication type [0|1|2|3][e|d]
@@ -157,7 +160,7 @@ TECHNICAL DETAILS
    * otp_text                      Speficy the text that is displayed in the OTP input field. Usually this is "One-Time Password", but you can change it
                                    to any other value you like.
    * otp_hint_text                 Speficy the text that is displayed when prompted to enter the OTP in the second step.
-   * otp_fail_text                 Specify a custom text that is shown when the OTP verification failed.
+   * otp_fail_text                 Specify a custom text that is shown when the OTP verification failed. Include %s in the string where you want multiOTP error message to be displayed.
    * v1_bitmap_path                The complete path and filename of a bitmap image. This is a customized login image. The image must be a version 3
                                    Windows BMP file with a resolution of 128x128 pixels.
    * multiOTPTimeoutUnlock		   Timeout (in minutes) before asking 2FA again on unlock (0 means always ask)
@@ -178,6 +181,7 @@ Report if you have any problems or questions regarding this app.
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
+2024-08-26 5.9.8.0 ENH: Detailed error messages available when authentication is refused
 2023-12-03 5.9.7.1 FIX: Using domain prefix for windows authentication in addition to using it during multiOTP authentication
                    FIX: Third party VPN client works on the login page when credential provider is active
                    FIX: Comparing pointer content instead of pointer address during registry readings
