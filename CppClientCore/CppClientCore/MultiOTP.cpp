@@ -2,10 +2,10 @@
  * multiOTP Credential Provider, extends privacyIdea
  *
  * @author    Yann Jeanrenaud, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.8.0
- * @date      2024-08-26
+ * @version   5.9.9.2
+ * @date      2025-01-31
  * @since     2021
- * @copyright (c) 2016-2024 SysCo systemes de communication sa
+ * @copyright (c) 2016-2025 SysCo systemes de communication sa
  * @copyright (c) 2015-2016 ArcadeJust ("RDP only" enhancement)
  * @copyright (c) 2013-2015 Last Squirrel IT
  * @copyright Apache License, Version 2.0
@@ -37,11 +37,11 @@ MultiOTP::MultiOTP(PICONFIG conf):PrivacyIDEA(conf)
 {
 }
 
-HRESULT MultiOTP::validateCheck(const std::wstring& username, const std::wstring& domain, const SecureWString& otp, const std::string& transaction_id, HRESULT& error_code)
+HRESULT MultiOTP::validateCheck(const std::wstring& username, const std::wstring& domain, const SecureWString& otp, const std::string& transaction_id, HRESULT& error_code, const std::wstring& usersid)
 {
 	HRESULT hr = E_UNEXPECTED;
 
-	hr = multiotp_request(getCleanUsername(username, domain), L"", otp);
+	hr = multiotp_request(getCleanUsername(username, domain), L"", otp, usersid);
     error_code = hr;
 	// Gérer le prev OTP
 	if ((hr == MULTIOTP_SUCCESS)) {
@@ -54,10 +54,10 @@ HRESULT MultiOTP::validateCheck(const std::wstring& username, const std::wstring
 	}
 }
 
-bool MultiOTP::isWithout2FA(const std::wstring& username, const std::wstring& domain)
+bool MultiOTP::isWithout2FA(const std::wstring& username, const std::wstring& domain, const std::wstring& usersid)
 {
 	HRESULT hr = E_UNEXPECTED;
-	hr = multiotp_request_command(L"-iswithout2fa", L"\""+getCleanUsername(username, domain)+ L"\"");
+	hr = multiotp_request_command(L"-iswithout2fa", L"\""+getCleanUsername(username, domain)+ L"\"", usersid);
 	if ((hr == MULTIOTP_IS_WITHOUT2FA)) {
 		if (DEVELOP_MODE) PrintLn("MultiotpCredential::multiOTP user is without2FA", hr);
 		return true;

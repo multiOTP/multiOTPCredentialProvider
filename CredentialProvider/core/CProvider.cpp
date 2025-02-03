@@ -301,16 +301,24 @@ HRESULT CProvider::GetFieldDescriptorAt(
 		switch (dwIndex)
 		{
 		case FID_USERNAME:
-			label = Utilities::GetTranslatedText(TEXT_USERNAME);
+			label = _config->usernameFieldText;
+			if (label.empty())
+				label = Utilities::GetTranslatedText(TEXT_USERNAME);
 			break;
 		case FID_LDAP_PASS:
-			label = Utilities::GetTranslatedText(TEXT_PASSWORD);
+			label = _config->passFieldText;
+			if (label.empty())
+				label = Utilities::GetTranslatedText(TEXT_PASSWORD);
 			break;
 		case FID_NEW_PASS_1:
-			label = Utilities::GetTranslatedText(TEXT_NEW_PASSWORD);
+			label = _config->newPassFieldText;
+			if (label.empty())
+				label = Utilities::GetTranslatedText(TEXT_NEW_PASSWORD);
 			break;
 		case FID_NEW_PASS_2:
-			label = Utilities::GetTranslatedText(TEXT_CONFIRM_PASSWORD);
+			label = _config->newConfirmPassFieldText;
+			if (label.empty())
+				label = Utilities::GetTranslatedText(TEXT_CONFIRM_PASSWORD);
 			break;
 		case FID_OTP:
 			label = _config->otpFieldText;

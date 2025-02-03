@@ -1,7 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * *
 **
 ** Copyright 2019 NetKnights GmbH
-**           2020-2024 SysCo systemes de communication sa
+**           2020-2025 SysCo systemes de communication sa
 ** Author: Nils Behlen
 **         Yann Jeanrenaud, Andre Liechti
 **
@@ -54,6 +54,10 @@ Configuration::Configuration()
 	loginText = tmp.empty() ? L"privacyIDEA Login" : tmp;
 
 	otpFieldText = rr.getRegistry(L"otp_text");
+	newConfirmPassFieldText = rr.getRegistry(L"confirm_new_password_text");
+	newPassFieldText = rr.getRegistry(L"new_password_text");
+	passFieldText = rr.getRegistry(L"password_text");
+	usernameFieldText = rr.getRegistry(L"username_text");
 
 	tmp = rr.getRegistry(L"otp_fail_text");
 	defaultOTPFailureText = tmp.empty() ? Utilities::GetTranslatedText(TEXT_WRONG_OTP) : tmp;

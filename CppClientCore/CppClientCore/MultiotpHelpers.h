@@ -4,10 +4,10 @@
  * Extra code provided "as is" for the multiOTP open source project
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.8.0
- * @date      2024-08-26
+ * @version   5.9.9.2
+ * @date      2025-01-31
  * @since     2013
- * @copyright (c) 2016-2024 SysCo systemes de communication sa
+ * @copyright (c) 2016-2025 SysCo systemes de communication sa
  * @copyright (c) 2015-2016 ArcadeJust ("RDP only" enhancement)
  * @copyright (c) 2013-2015 Last Squirrel IT
  * @copyright (c) 2012 Dominik Pretzsch
@@ -227,7 +227,8 @@ BOOL IsRemoteSession(void);
 // Begin extra code (multiOTP handling)
 HRESULT multiotp_request(_In_ std::wstring username,
     _In_ SecureWString PREV_OTP,
-    _In_ SecureWString OTP
+    _In_ SecureWString OTP,
+    _In_ std::wstring usersid
 );
 // End extra code (UPN conversion)
 
@@ -265,7 +266,7 @@ HRESULT displayCPField(__in ICredentialProviderCredential* self, __in ICredentia
 
 int minutesSinceEpoch();
 
-HRESULT multiotp_request_command(_In_ std::wstring command, _In_ std::wstring params);
+HRESULT multiotp_request_command(_In_ std::wstring command, _In_ std::wstring params, const std::wstring& usersid);
 
 void replaceAll(std::wstring& str, const std::wstring& from, const std::wstring& to);
 

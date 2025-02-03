@@ -5,7 +5,7 @@ C:\data\projects\multiotp\multiOTPCredentialProviderPrivacyIdea\CppClientCore\Cp
   OfflineData.cpp
   OfflineHandler.cpp
   PrivacyIDEA.cpp
-C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29910\include\algorithm(3372,24): warning C4244: '=' : conversion de 'int' en 'wchar_t', perte possible de données
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\algorithm(2650,24): warning C4244: '=' : conversion de 'int' en 'wchar_t', perte possible de données
 C:\data\projects\multiotp\multiOTPCredentialProviderPrivacyIdea\CppClientCore\CppClientCore\PrivacyIDEA.cpp(321): message : voir la référence à l'instanciation de la fonction modèle '_OutIt std::transform<std::_String_iterator<std::_String_val<std::_Simple_types<_Elem>>>,std::_String_iterator<std::_String_val<std::_Simple_types<_Elem>>>,int(__cdecl *)(int)>(const _InIt,const _InIt,_OutIt,_Fn)' en cours de compilation
           with
           [
@@ -19,12 +19,12 @@ C:\data\projects\multiotp\multiOTPCredentialProviderPrivacyIdea\CppClientCore\Cp
   MultiOTP.cpp
 C:\data\projects\multiotp\multiOTPCredentialProviderPrivacyIdea\CppClientCore\CppClientCore\MultiOTP.cpp(40,136): warning C4100: 'transaction_id' : paramètre formel non référencé
   MultiotpHelpers.cpp
-C:\data\projects\multiotp\multiOTPCredentialProviderPrivacyIdea\CppClientCore\CppClientCore\MultiotpHelpers.cpp(1514,13): warning C4101: 'otp_name' : variable locale non référencée
-C:\data\projects\multiotp\multiOTPCredentialProviderPrivacyIdea\CppClientCore\CppClientCore\MultiotpHelpers.cpp(1712,19): warning C4244: 'return' : conversion de 'time_t' en 'int', perte possible de données
+C:\data\projects\multiotp\multiOTPCredentialProviderPrivacyIdea\CppClientCore\CppClientCore\MultiotpHelpers.cpp(1521,13): warning C4101: 'otp_name' : variable locale non référencée
+C:\data\projects\multiotp\multiOTPCredentialProviderPrivacyIdea\CppClientCore\CppClientCore\MultiotpHelpers.cpp(1719,19): warning C4244: 'return' : conversion de 'time_t' en 'int', perte possible de données
   MultiotpRegistry.cpp
 C:\data\projects\multiotp\multiOTPCredentialProviderPrivacyIdea\CppClientCore\CppClientCore\MultiotpRegistry.cpp(50,21): warning C4130: '!=' : opération logique sur l'adresse d'une constante de chaîne
 C:\data\projects\multiotp\multiOTPCredentialProviderPrivacyIdea\CppClientCore\CppClientCore\MultiotpRegistry.cpp(125,21): warning C4130: '!=' : opération logique sur l'adresse d'une constante de chaîne
-C:\data\projects\multiotp\multiOTPCredentialProviderPrivacyIdea\CppClientCore\CppClientCore\MultiotpRegistry.cpp(355,21): warning C4130: '!=' : opération logique sur l'adresse d'une constante de chaîne
-C:\data\projects\multiotp\multiOTPCredentialProviderPrivacyIdea\CppClientCore\CppClientCore\MultiotpRegistry.cpp(395,21): warning C4130: '!=' : opération logique sur l'adresse d'une constante de chaîne
+C:\data\projects\multiotp\multiOTPCredentialProviderPrivacyIdea\CppClientCore\CppClientCore\MultiotpRegistry.cpp(354,21): warning C4130: '!=' : opération logique sur l'adresse d'une constante de chaîne
+C:\data\projects\multiotp\multiOTPCredentialProviderPrivacyIdea\CppClientCore\CppClientCore\MultiotpRegistry.cpp(394,21): warning C4130: '!=' : opération logique sur l'adresse d'une constante de chaîne
   MultiOTPRegistryReader.cpp
   CppClientCore.vcxproj -> C:\data\projects\multiotp\multiOTPCredentialProviderPrivacyIdea\CppClientCore\CppClientCore\Win32\Release\CppClientCore.lib

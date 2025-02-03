@@ -2,7 +2,7 @@
 **
 ** Copyright	2012 Dominik Pretzsch
 **				2017 NetKnights GmbH
-**				2020-2024 SysCo systemes de communication sa
+**				2020-2025 SysCo systemes de communication sa
 **
 ** Author		Dominik Pretzsch
 **				Nils Behlen
@@ -160,4 +160,5 @@ private:
 	HRESULT getSid(LPCWSTR wszAccName, PSID* ppSid);
 	HRESULT storeSidAndTimeStamp(PSID ppsid);
 	bool CCredential::hasloggedInRecently(LPTSTR userId);
+	LPTSTR getSidFromUsername(std::wstring username);
 };

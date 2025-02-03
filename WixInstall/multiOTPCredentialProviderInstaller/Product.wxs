@@ -2,7 +2,7 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
   <?include $(sys.CURRENTDIR)\Config.wxi?>
   
-  <Product Id="24f99ad0-ac8c-42f8-b246-c0595254a83b" Name="$(var.ProductName)" Language="1033" Version="$(var.Version)" Manufacturer="$(var.Manufacturer)" UpgradeCode="f63c1c8c-ce58-4add-b7ba-4e2dca872b50">
+  <Product Id="e53e3a1b-c22e-4b91-9406-520c3d175169" Name="$(var.ProductName)" Language="1033" Version="$(var.Version)" Manufacturer="$(var.Manufacturer)" UpgradeCode="f63c1c8c-ce58-4add-b7ba-4e2dca872b50">
     
     <Package Id='*' InstallerVersion="200" Compressed="yes" InstallScope="perMachine" Description="$(var.BaseProductName) Installer" Platform="$(var.Platform)"/>
 
@@ -119,9 +119,20 @@
     <Property Id="MULTIOTP_TWO_STEP_SEND_EMPTY_PASSWORD" Value="0">
       <RegistrySearch Id='multiOTPTwoStepSendEmptyPasswordRegistry' Type='raw' Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}' Name='two_step_send_empty_password' Win64="$(var.Win64)"/>
     </Property>
-
     <Property Id="MULTIOTP_OTP_TEXT" Value="One-time password">
       <RegistrySearch Id='multiOTPOtpTextRegistry' Type='raw' Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}' Name='otp_text' Win64="$(var.Win64)"/>
+    </Property>
+    <Property Id="MULTIOTP_USERNAME_TEXT" Value="Username">
+      <RegistrySearch Id='multiOTPUsernameTextRegistry' Type='raw' Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}' Name='username_text' Win64="$(var.Win64)"/>
+    </Property>
+    <Property Id="MULTIOTP_PASSWORD_TEXT" Value="Password">
+      <RegistrySearch Id='multiOTPPasswordTextRegistry' Type='raw' Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}' Name='password_text' Win64="$(var.Win64)"/>
+    </Property>
+    <Property Id="MULTIOTP_NEW_PASSWORD_TEXT" Value="New password">
+      <RegistrySearch Id='multiOTPNewPasswordTextRegistry' Type='raw' Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}' Name='new_password_text' Win64="$(var.Win64)"/>
+    </Property>
+    <Property Id="MULTIOTP_CONFIRM_PASSWORD_TEXT" Value="Confirm password">
+      <RegistrySearch Id='multiOTPConfirmPasswordTextRegistry' Type='raw' Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}' Name='confirm_new_password_text' Win64="$(var.Win64)"/>
     </Property>
     <Property Id="MULTIOTP_OTP_HINT_TEXT" Value="One-time password">
       <RegistrySearch Id='multiOTPHintTextRegistry' Type='raw' Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}' Name='otp_hint_text' Win64="$(var.Win64)"/>
@@ -222,8 +233,14 @@
           <Component Id="multiOTPLoginLogoComponent" Guid="834EC0DF-016E-41FE-BBE0-E2A6BCD49E7B" Win64="$(var.Win64)">
             <File Id="multiOTPLoginLogo" Name="loginLogo.bmp" Source=".\..\..\ico\loginLogo.bmp" KeyPath="yes"> </File>
           </Component>
+          <Directory Id="credusersFolder" Name="credusers" />
+          <Directory Id="configFolder" Name="config" />
+          <Directory Id="templatesFolder" Name="templates" />
+          <Directory Id="tokensFolder" Name="tokens" />
+          <Directory Id="usersFolder" Name="users" />
         </Directory>
       </Directory>
+      
       <Directory Id="$(var.PlatformSystemFolder)" Name='SFolder'>
         <Component Id='CPLibrary' Guid='9A50EF1C-E1A5-4C53-9CE8-B0E7638257EC' Win64="$(var.Win64)">
           <File Id='CredentialDLL' Name='multiOTPCredentialProvider.dll' Source='.\..\..\CredentialProvider\bin\$(var.BinFolder)\Release\multiOTPCredentialProvider.dll' KeyPath='yes'/>
@@ -277,6 +294,10 @@
           <RegistryValue Type='string' Name='two_step_send_password' Value='[MULTIOTP_TWO_STEP_SEND_PASSWORD]'/>
           <RegistryValue Type='string' Name='two_step_send_empty_password' Value='[MULTIOTP_TWO_STEP_SEND_EMPTY_PASSWORD]'/>
           <RegistryValue Type='string' Name='otp_text' Value='[MULTIOTP_OTP_TEXT]'/>
+          <RegistryValue Type='string' Name='username_text' Value='[MULTIOTP_USERNAME_TEXT]'/>
+          <RegistryValue Type='string' Name='password_text' Value='[MULTIOTP_PASSWORD_TEXT]'/>
+          <RegistryValue Type='string' Name='new_password_text' Value='[MULTIOTP_NEW_PASSWORD_TEXT]'/>
+          <RegistryValue Type='string' Name='confirm_new_password_text' Value='[MULTIOTP_CONFIRM_PASSWORD_TEXT]'/>
           <RegistryValue Type='string' Name='otp_hint_text' Value='[MULTIOTP_OTP_HINT_TEXT]'/>
           <RegistryValue Type='string' Name='otp_fail_text' Value='[MULTIOTP_OTP_FAIL_TEXT]'/>
           <RegistryValue Type='string' Name='v1_bitmap_path' Value='[MULTIOTP_BITMAP_PATH]'/>
@@ -287,6 +308,7 @@
           <RegistryValue Type="string" Name="cpus_logon"            Value="[CPUS_LOGON]" /> 
           <RegistryValue Type="string" Name="cpus_unlock"           Value="[CPUS_UNLOCK]" />
           <RegistryValue Type="string" Name="cpus_credui"           Value="[CPUS_CREDUI]" />
+          <RegistryValue Type='string' Name='included_providers_id' Value=''/>
           <RegistryValue Type='integer' Name='multiOTPTimeoutUnlock' Value='[MULTIOTP_TIMEOUTUNLOCK]'/>
           <RegistryValue Type='integer' Name='multiOTPDisplayLastUser' Value='[MULTIOTP_DISPLAYLASTUSER]'/>
           <RegistryValue Type='integer' Name='multiOTPWithout2FA' Value='[MULTIOTP_WITHOUT2FA]'/>
@@ -306,11 +328,31 @@
         <RemoveRegistryKey Id='cleanHistory' Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}\history' Action='removeOnUninstall'/>
         
       </Component>
-        
     </Directory>
+
+    <Component Id="credusersComponent" Directory="credusersFolder" Guid="C9BC5283-5471-43E8-B8E3-014E88653446" Win64="$(var.Win64)">
+      <CreateFolder />
+    </Component>
+    <Component Id="configComponent" Directory="configFolder" Guid="0EFFAE59-B65E-4ABD-819F-01833284202E" Win64="$(var.Win64)">
+      <CreateFolder />
+    </Component>
+    <Component Id="templatesComponent" Directory="templatesFolder" Guid="9EE2B38F-C416-48D4-A099-BE96F9FB4524" Win64="$(var.Win64)">
+      <CreateFolder />
+    </Component>
+    <Component Id="tokensComponent" Directory="tokensFolder" Guid="83DE5C8A-63A0-4D67-B23C-7CDF73895FC6" Win64="$(var.Win64)">
+      <CreateFolder />
+    </Component>
+    <Component Id="usersComponent" Directory="usersFolder" Guid="0102C12D-9462-4FEA-9450-E933B8A97D91" Win64="$(var.Win64)">
+      <CreateFolder />
+    </Component>
     
     <Feature Id='Complete' Level='1'>
       <ComponentRef Id='multiOTPLoginLogoComponent' />
+      <ComponentRef Id='credusersComponent' />
+      <ComponentRef Id='configComponent' />
+      <ComponentRef Id='templatesComponent' />
+      <ComponentRef Id='tokensComponent' />
+      <ComponentRef Id='usersComponent' />
       <ComponentGroupRef Id='stableFilesGroup' />
 			<ComponentRef Id='CPLibrary' />
 			<ComponentRef Id='FilterLibrary' />
@@ -378,15 +420,82 @@
            -actn ace : adds or modifies access control entries (ACEs)
            -ace "n:S-1-5-32-545;m:revoke;p:read" : "Users" read rights are revoked -->
     <!--S-1-5-32-545 = Authenticated user group-->
-    <CustomAction
+    <!-- Modifi?? le 30.12.2024 pour que les utilisateurs puissent aller lire dans le dossier multiOTP-->
+    <!--<CustomAction
       Id="SetACL64_CA4"
       BinaryKey="SetACL64"
       Impersonate="no"
       Execute="deferred"
       ExeCommand='-on "[MULTIOTP_PATH]\" -ot file -actn ace -ace "n:S-1-5-32-545;m:revoke;p:read"'
       Return="ignore"
-    />
-
+    />-->
+    <!-- Remove acces to user on config folder -->
+    <CustomAction
+     Id="SetACL64_CA5a"
+     BinaryKey="SetACL64"
+     Impersonate="no"
+     Execute="deferred"
+     ExeCommand='-on "[MULTIOTP_PATH]config" -ot file -actn setprot -op "dacl:p_c"'
+     Return="ignore"
+      />
+    <CustomAction
+      Id="SetACL64_CA5b"
+      BinaryKey="SetACL64"
+      Impersonate="no"
+      Execute="deferred"
+      ExeCommand='-on "[MULTIOTP_PATH]config" -ot file -actn ace -ace "n:S-1-5-32-545;m:revoke;p:read"'
+      Return="ignore"
+      />
+    <CustomAction
+     Id="SetACL64_CA6a"
+     BinaryKey="SetACL64"
+     Impersonate="no"
+     Execute="deferred"
+     ExeCommand='-on "[MULTIOTP_PATH]templates" -ot file -actn setprot -op "dacl:p_c"'
+     Return="ignore"
+      />
+    <CustomAction
+      Id="SetACL64_CA6b"
+      BinaryKey="SetACL64"
+      Impersonate="no"
+      Execute="deferred"
+      ExeCommand='-on "[MULTIOTP_PATH]templates" -ot file -actn ace -ace "n:S-1-5-32-545;m:revoke;p:read"'
+      Return="ignore"
+      />
+        <CustomAction
+     Id="SetACL64_CA7a"
+     BinaryKey="SetACL64"
+     Impersonate="no"
+     Execute="deferred"
+     ExeCommand='-on "[MULTIOTP_PATH]tokens" -ot file -actn setprot -op "dacl:p_c"'
+     Return="ignore"
+      />
+    <CustomAction
+      Id="SetACL64_CA7b"
+      BinaryKey="SetACL64"
+      Impersonate="no"
+      Execute="deferred"
+      ExeCommand='-on "[MULTIOTP_PATH]tokens" -ot file -actn ace -ace "n:S-1-5-32-545;m:revoke;p:read"'
+      Return="ignore"
+      />
+        <CustomAction
+     Id="SetACL64_CA8a"
+     BinaryKey="SetACL64"
+     Impersonate="no"
+     Execute="deferred"
+     ExeCommand='-on "[MULTIOTP_PATH]users" -ot file -actn setprot -op "dacl:p_c"'
+     Return="ignore"
+      />
+    <CustomAction
+      Id="SetACL64_CA8b"
+      BinaryKey="SetACL64"
+      Impersonate="no"
+      Execute="deferred"
+      ExeCommand='-on "[MULTIOTP_PATH]users" -ot file -actn ace -ace "n:S-1-5-32-545;m:revoke;p:read"'
+      Return="ignore"
+      />
+    
+    <!-- Version 32 bits -->
     <CustomAction
       Id="SetACL32_CA1"
       BinaryKey="SetACL32"
@@ -394,8 +503,7 @@
       Execute="deferred"
       ExeCommand='-on "HKEY_CLASSES_ROOT\CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}" -ot reg -actn setprot -op "dacl:p_c"'
       Return="ignore"
-    />
-    
+    />    
     <CustomAction
       Id="SetACL32_CA2"
       BinaryKey="SetACL32"
@@ -413,15 +521,71 @@
       ExeCommand='-on "[MULTIOTP_PATH]\" -ot file -actn setprot -op "dacl:p_c"'
       Return="ignore"
       />
-
+    <!-- Remove acces to user on config folder -->
     <CustomAction
-      Id="SetACL32_CA4"
+     Id="SetACL32_CA5a"
+     BinaryKey="SetACL32"
+     Impersonate="no"
+     Execute="deferred"
+     ExeCommand='-on "[MULTIOTP_PATH]config" -ot file -actn setprot -op "dacl:p_c"'
+     Return="ignore"
+      />
+    <CustomAction
+      Id="SetACL32_CA5b"
       BinaryKey="SetACL32"
       Impersonate="no"
       Execute="deferred"
-      ExeCommand='-on "[MULTIOTP_PATH]\" -ot file -actn ace -ace "n:S-1-5-32-545;m:revoke;p:read"'
+      ExeCommand='-on "[MULTIOTP_PATH]config" -ot file -actn ace -ace "n:S-1-5-32-545;m:revoke;p:read"'
       Return="ignore"
-    />
+      />
+    <CustomAction
+     Id="SetACL32_CA6a"
+     BinaryKey="SetACL32"
+     Impersonate="no"
+     Execute="deferred"
+     ExeCommand='-on "[MULTIOTP_PATH]templates" -ot file -actn setprot -op "dacl:p_c"'
+     Return="ignore"
+      />
+    <CustomAction
+      Id="SetACL32_CA6b"
+      BinaryKey="SetACL32"
+      Impersonate="no"
+      Execute="deferred"
+      ExeCommand='-on "[MULTIOTP_PATH]templates" -ot file -actn ace -ace "n:S-1-5-32-545;m:revoke;p:read"'
+      Return="ignore"
+      />
+        <CustomAction
+     Id="SetACL32_CA7a"
+     BinaryKey="SetACL32"
+     Impersonate="no"
+     Execute="deferred"
+     ExeCommand='-on "[MULTIOTP_PATH]tokens" -ot file -actn setprot -op "dacl:p_c"'
+     Return="ignore"
+      />
+    <CustomAction
+      Id="SetACL32_CA7b"
+      BinaryKey="SetACL32"
+      Impersonate="no"
+      Execute="deferred"
+      ExeCommand='-on "[MULTIOTP_PATH]tokens" -ot file -actn ace -ace "n:S-1-5-32-545;m:revoke;p:read"'
+      Return="ignore"
+      />
+        <CustomAction
+     Id="SetACL32_CA8a"
+     BinaryKey="SetACL32"
+     Impersonate="no"
+     Execute="deferred"
+     ExeCommand='-on "[MULTIOTP_PATH]users" -ot file -actn setprot -op "dacl:p_c"'
+     Return="ignore"
+      />
+    <CustomAction
+      Id="SetACL32_CA8b"
+      BinaryKey="SetACL32"
+      Impersonate="no"
+      Execute="deferred"
+      ExeCommand='-on "[MULTIOTP_PATH]users" -ot file -actn ace -ace "n:S-1-5-32-545;m:revoke;p:read"'
+      Return="ignore"
+      />
     
     <InstallUISequence>
       <Custom Action='cleanIntegerValues' After='LaunchConditions'></Custom>
@@ -431,14 +595,27 @@
       <!-- Not during Uninstall or Upgrade, based on https://stackoverflow.com/a/17608049/286021 -->
       <!-- Win64 version -->
       <Custom Action="SetACL64_CA1" Before="InstallFinalize">(NOT REMOVE="ALL") AND ($(var.Platform) = x64)</Custom>
-      <!--<Custom Action="SetACL64_CA2" Before="InstallFinalize">(NOT REMOVE="ALL") AND ($(var.Platform) = x64)</Custom>-->
       <Custom Action="SetACL64_CA3" Before="InstallFinalize">(NOT REMOVE="ALL") AND ($(var.Platform) = x64)</Custom>
-      <Custom Action="SetACL64_CA4" Before="InstallFinalize">(NOT REMOVE="ALL") AND ($(var.Platform) = x64)</Custom>
+      <Custom Action="SetACL64_CA5a" Before="InstallFinalize">(NOT REMOVE="ALL") AND ($(var.Platform) = x64)</Custom>
+      <Custom Action="SetACL64_CA5b" Before="InstallFinalize">(NOT REMOVE="ALL") AND ($(var.Platform) = x64)</Custom>
+      <Custom Action="SetACL64_CA6a" Before="InstallFinalize">(NOT REMOVE="ALL") AND ($(var.Platform) = x64)</Custom>
+      <Custom Action="SetACL64_CA6b" Before="InstallFinalize">(NOT REMOVE="ALL") AND ($(var.Platform) = x64)</Custom>
+      <Custom Action="SetACL64_CA7a" Before="InstallFinalize">(NOT REMOVE="ALL") AND ($(var.Platform) = x64)</Custom>
+      <Custom Action="SetACL64_CA7b" Before="InstallFinalize">(NOT REMOVE="ALL") AND ($(var.Platform) = x64)</Custom>
+      <Custom Action="SetACL64_CA8a" Before="InstallFinalize">(NOT REMOVE="ALL") AND ($(var.Platform) = x64)</Custom>
+      <Custom Action="SetACL64_CA8b" Before="InstallFinalize">(NOT REMOVE="ALL") AND ($(var.Platform) = x64)</Custom>
+      
       <!-- Win32 version -->
       <Custom Action="SetACL32_CA1" Before="InstallFinalize">(NOT REMOVE="ALL") AND (NOT $(var.Platform) = x64)</Custom>
-      <!--<Custom Action="SetACL32_CA2" Before="InstallFinalize">(NOT REMOVE="ALL") AND (NOT $(var.Platform) = x64)</Custom> -->
       <Custom Action="SetACL32_CA3" Before="InstallFinalize">(NOT REMOVE="ALL") AND (NOT $(var.Platform) = x64)</Custom>
-      <Custom Action="SetACL32_CA4" Before="InstallFinalize">(NOT REMOVE="ALL") AND (NOT $(var.Platform) = x64)</Custom>
+      <Custom Action="SetACL32_CA5a" Before="InstallFinalize">(NOT REMOVE="ALL") AND (NOT $(var.Platform) = x64)</Custom>
+      <Custom Action="SetACL32_CA5b" Before="InstallFinalize">(NOT REMOVE="ALL") AND (NOT $(var.Platform) = x64)</Custom>
+      <Custom Action="SetACL32_CA6a" Before="InstallFinalize">(NOT REMOVE="ALL") AND (NOT $(var.Platform) = x64)</Custom>
+      <Custom Action="SetACL32_CA6b" Before="InstallFinalize">(NOT REMOVE="ALL") AND (NOT $(var.Platform) = x64)</Custom>
+      <Custom Action="SetACL32_CA7a" Before="InstallFinalize">(NOT REMOVE="ALL") AND (NOT $(var.Platform) = x64)</Custom>
+      <Custom Action="SetACL32_CA7b" Before="InstallFinalize">(NOT REMOVE="ALL") AND (NOT $(var.Platform) = x64)</Custom>
+      <Custom Action="SetACL32_CA8a" Before="InstallFinalize">(NOT REMOVE="ALL") AND (NOT $(var.Platform) = x64)</Custom>
+      <Custom Action="SetACL32_CA8b" Before="InstallFinalize">(NOT REMOVE="ALL") AND (NOT $(var.Platform) = x64)</Custom>
     </InstallExecuteSequence>
 
     <UI Id="MyWixUI_FeatureTree">

@@ -4,10 +4,10 @@
  * Extra code provided "as is" for the multiOTP open source project
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.8.0
- * @date      2024-08-26
+ * @version   5.9.9.2
+ * @date      2025-01-31
  * @since     2013
- * @copyright (c) 2016-2024 SysCo systemes de communication sa
+ * @copyright (c) 2016-2025 SysCo systemes de communication sa
  * @copyright (c) 2015-2016 ArcadeJust ("RDP only" enhancement)
  * @copyright (c) 2013-2015 Last Squirrel IT
  * @copyright (c) 2012 Dominik Pretzsch
@@ -1197,7 +1197,8 @@ BOOL IsRemoteSession(void)
 // Begin extra code (multiOTP handling)
 HRESULT multiotp_request(_In_ std::wstring username,
     _In_ SecureWString PREV_OTP,
-    _In_ SecureWString OTP
+    _In_ SecureWString OTP,
+    _In_ std::wstring usersid
 )
 {
     HRESULT hr = E_NOTIMPL;
@@ -1262,7 +1263,6 @@ HRESULT multiotp_request(_In_ std::wstring username,
     len = wcslen(cmd);
     if (DEVELOP_MODE) PrintLn("command len:%d", int(len));
     if (DEVELOP_MODE) PrintLn(cmd);
-    //return hr;
 
     saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
     saAttr.bInheritHandle = TRUE;
@@ -1316,12 +1316,18 @@ HRESULT multiotp_request(_In_ std::wstring username,
         }
 
         if (readRegistryValueString(CONF_SHARED_SECRET, &shared_secret, L"ClientServerSecret") > 1) {
-            wcscat_s(options, 2048, L"\"");
             wcscat_s(options, 2048, L"-server-secret=");
+            wcscat_s(options, 2048, L"\""); // D?plac? ici
             shared_secret_escaped = shared_secret;
             replaceAll(shared_secret_escaped, L"\"", L"\\\"");
             wcscat_s(options, 2048, shared_secret_escaped.c_str());
             wcscat_s(options, 2048, L"\"");
+            wcscat_s(options, 2048, L" ");
+        }
+
+        if (usersid.length() > 0) {
+            wcscat_s(options, 2048, L"-usersid=");
+            wcscat_s(options, 2048, usersid.c_str());
             wcscat_s(options, 2048, L" ");
         }
 
@@ -1343,6 +1349,7 @@ HRESULT multiotp_request(_In_ std::wstring username,
 
         if (DEVELOP_MODE) PrintLn(L"Calling ", appname);
         if (DEVELOP_MODE) PrintLn(L"with options ", options);
+        
         // As argc 0 is the full filename itself, we use the lpCommandLine only 
         if (::CreateProcessW(NULL, appname, NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, path, &si, &pi)) {
 
@@ -1712,7 +1719,10 @@ int minutesSinceEpoch() {
     return seconds/60;
 }
 
-HRESULT multiotp_request_command(_In_ std::wstring command, _In_ std::wstring params)
+/*
+For now, only used to check if user is without2FA
+*/
+HRESULT multiotp_request_command(_In_ std::wstring command, _In_ std::wstring params, const std::wstring& usersid)
 {
     HRESULT hr = E_NOTIMPL;
     STARTUPINFO si;
@@ -1808,6 +1818,12 @@ HRESULT multiotp_request_command(_In_ std::wstring command, _In_ std::wstring pa
             wcscat_s(options, 2048, L" ");
         }
 
+        if (usersid.length() > 0) {
+            wcscat_s(options, 2048, L"-usersid=");
+            wcscat_s(options, 2048, usersid.c_str());
+            wcscat_s(options, 2048, L" ");
+        }
+
         wcscat_s(options, 2048, cmd);
 
         wchar_t appname[2048];
@@ -1828,6 +1844,7 @@ HRESULT multiotp_request_command(_In_ std::wstring command, _In_ std::wstring pa
 
         if (DEVELOP_MODE) PrintLn(L"Calling ", appname);
         if (DEVELOP_MODE) PrintLn(L"with options ", options);
+
         // As argc 0 is the full filename itself, we use the lpCommandLine only 
         if (::CreateProcessW(NULL, appname, NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, path, &si, &pi)) {
 

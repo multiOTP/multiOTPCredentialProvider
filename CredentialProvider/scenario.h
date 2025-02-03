@@ -163,7 +163,7 @@ static CREDENTIAL_PROVIDER_FIELD_DESCRIPTOR s_rgScenarioCredProvFieldDescriptors
 	{ FID_SMALL_TEXT, CPFT_SMALL_TEXT, L"SmallText" },
 	{ FID_USERNAME, CPFT_EDIT_TEXT, L"Username" },
 	{ FID_LDAP_PASS, CPFT_PASSWORD_TEXT, L"Password" },
-	{ FID_OTP, CPFT_PASSWORD_TEXT, L"One-Time Password" },
+	{ FID_OTP, CPFT_EDIT_TEXT, L"One-Time Password" },
 	{ FID_NEW_PASS_1, CPFT_PASSWORD_TEXT, L"New Password" },
 	{ FID_NEW_PASS_2, CPFT_PASSWORD_TEXT, L"Confirm password" },
 	{ FID_SUBMIT_BUTTON, CPFT_SUBMIT_BUTTON, L"Submit" },

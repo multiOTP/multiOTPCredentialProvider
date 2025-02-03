@@ -39,6 +39,10 @@ public:
 
 	std::wstring loginText = L"";
 	std::wstring otpFieldText = L"";
+	std::wstring newConfirmPassFieldText = L"";
+	std::wstring newPassFieldText = L"";
+	std::wstring passFieldText = L"";
+	std::wstring usernameFieldText = L"";
 	std::wstring bitmapPath = L"";
 
 	bool twoStepHideOTP = false;

@@ -2,10 +2,10 @@
  * multiOTP Credential Provider, extends privacyIdea RegistryReader
  *
  * @author    Yann Jeanrenaud, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.8.0
- * @date      2024-08-26
+ * @version   5.9.9.2
+ * @date      2025-01-31
  * @since     2021
- * @copyright (c) 2016-2024 SysCo systemes de communication sa
+ * @copyright (c) 2016-2025 SysCo systemes de communication sa
  * @copyright (c) 2015-2016 ArcadeJust ("RDP only" enhancement)
  * @copyright (c) 2013-2015 Last Squirrel IT
  * @copyright Apache License, Version 2.0
@@ -215,4 +215,8 @@ bool MultiOTPRegistryReader::getAll(const std::wstring& path, std::map<std::wstr
 	}
 	RegCloseKey(hKey);
 	return true;
+}
+
+void MultiOTPRegistryReader::setPath(const std::wstring& pathToKey) {
+	wpath = pathToKey;
 }

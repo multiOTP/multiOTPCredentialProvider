@@ -2,12 +2,12 @@ multiOTPCredentialProvider
 ==========================
 multiOTP Credential Provider for multiOTP is a free and open source implementation of a V2 Credential Provider for the multiOTP strong two-factor authentication solution (Apache License, Version 2.0)
 
-(c) 2016-2024 SysCo systemes de communication sa (enhancements since 2016 and simple installer with configuration options)  
+(c) 2016-2025 SysCo systemes de communication sa (enhancements since 2016 and simple installer with configuration options)  
 (c) 2017-2021 NetKnights GmbH  
 (c) 2015-2016 ArcadeJust ("RDP only" enhancement)  
 (c) 2013-2015 Last Squirrel IT  
 
-Current build: 5.9.8.0 (2024-08-26)  
+Current build: 5.9.9.2 (2025-01-31)  
 
 The binary download page is available here : https://download.multiotp.net/credential-provider/ (download link are at the bottom of the page)
 
@@ -68,6 +68,10 @@ The following properties can be set :
 * MULTIOTP_URL               FQDN of the multiOTP server for example https://192.168.1.188
 * MULTIOTP_SECRET            Secret shared with the smultiOTP server.
 * MULTIOTP_OTP_TEXT          Text displayed in the OTP field.
+* MULTIOTP_USERNAME_TEXT     Text displayed in the Username field.
+* MULTIOTP_PASSWORD_TEXT     Text displayed in the Password field.
+* MULTIOTP_NEW_PASSWORD_TEXT Text displayed in the New password field.
+* MULTIOTP_CONFIRM_PASSWORD_TEXT Text displayed in the Confirm password field.
 * MULTIOTP_OTP_HINT_TEXT     Text displayed when prompted to enter the OTP in the second step.
 * MULTIOTP_OTP_FAIL_TEXT     Text displayed when OTP code is not valid. Include %s in the string where you want multiOTP error message to be displayed.
 * MULTIOTP_EXCLUDED_ACCOUNT  Specify an account that should be excluded from 2FA. For example contoso\backdoor
@@ -157,6 +161,10 @@ TECHNICAL DETAILS
                                    user will only be asked for the password.
    * two_step_send_password        [0|1] Set to 1 if the Credential Provider should send the user's password to the multiOTP server
    * two_step_send_empty_password  [0|1] Set to 1 if the Credential Provider should send an empty password to the multiOTP server
+   * username_text                 Speficy the text that is displayed in the username input field. Usually this is "Username", but you can change it
+   * password_text                 Speficy the text that is displayed in the password input field. Usually this is "Password", but you can change it
+   * new_password_text             Speficy the text that is displayed in the new password input field.
+   * confirm_new_password_text     Speficy the text that is displayed in the confirm new password input field.
    * otp_text                      Speficy the text that is displayed in the OTP input field. Usually this is "One-Time Password", but you can change it
                                    to any other value you like.
    * otp_hint_text                 Speficy the text that is displayed when prompted to enter the OTP in the second step.
@@ -166,6 +174,7 @@ TECHNICAL DETAILS
    * multiOTPTimeoutUnlock		   Timeout (in minutes) before asking 2FA again on unlock (0 means always ask)
    * multiOTPDisplayLastUser       [0|1] Set to 1 to display a button in order to autocomplete the username with the last username authenticated
    * multiOTPWithout2FA            [0|1] Set to 1 to disable 2FA prompt for multiTOP without2FA users
+   * included_providers_id		   [?|Credential providers GUIDs] Set ? to write providers guid in the log file c:\PICredentialProviderLog.txt. Set GUIDs (semicolon separated) to display in addition to multiOTP
 
 THANKS TO
 =========
@@ -181,6 +190,12 @@ Report if you have any problems or questions regarding this app.
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
+2025-01-31 5.9.9.2 FIX: Support CPUSCREDUI with right restriction on multiOTP system folders
+                   FIX: Clear OTP field on error
+                   ENH: OTP field is in clear mode. Code is displayed while typing
+                   ENH: Registry key included_providers_id used to include other providers than multiOTP on login screen
+                   ENH: Username and Password text can be customized
+                   ENH: Embedded Windows PHP edition updated to version 8.3.16
 2024-08-26 5.9.8.0 ENH: Detailed error messages available when authentication is refused
 2023-12-03 5.9.7.1 FIX: Using domain prefix for windows authentication in addition to using it during multiOTP authentication
                    FIX: Third party VPN client works on the login page when credential provider is active

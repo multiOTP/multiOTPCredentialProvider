@@ -2,7 +2,7 @@
 **
 ** Copyright	2012 Dominik Pretzsch
 **				2017 NetKnights GmbH
-**				2020-2024 SysCo systemes de communication sa
+**				2020-2025 SysCo systemes de communication sa
 **
 ** Author		Dominik Pretzsch
 **				Nils Behlen
@@ -346,7 +346,8 @@ HRESULT Utilities::SetScenario(
 {
 	//DebugPrint(__FUNCTION__);
 	HRESULT hr = S_OK;
-	
+	wstring label = L"";
+
 	switch (scenario)
 	{
 	case SCENARIO::LOGON_BASE:
@@ -360,8 +361,8 @@ HRESULT Utilities::SetScenario(
 	case SCENARIO::SECOND_STEP:
 		DebugPrint("SetScenario: SECOND_STEP");
 		// Set the submit button next to the OTP field for the second step
-		_config->provider.pCredProvCredentialEvents->SetFieldSubmitButton(_config->provider.pCredProvCredential,
-			FID_SUBMIT_BUTTON, FID_OTP);
+		_config->provider.pCredProvCredentialEvents->SetFieldSubmitButton(_config->provider.pCredProvCredential,FID_SUBMIT_BUTTON, FID_OTP);
+		_config->provider.pCredProvCredentialEvents->SetFieldString(pCredential, FID_OTP, L"");
 		hr = SetFieldStatePairBatch(pCredential, pCPCE, s_rgScenarioSecondStepOTP);
 		break;
 	case SCENARIO::CHANGE_PASSWORD:
@@ -384,7 +385,6 @@ HRESULT Utilities::SetScenario(
 	default:
 		break;
 	}
-
 
 	if (_config->credential.passwordMustChange)
 	{

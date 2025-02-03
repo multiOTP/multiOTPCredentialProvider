@@ -29,6 +29,7 @@
 #include "Logger.h"
 #include "Shared.h"
 #include <unknwn.h>
+#include "MultiOTPRegistryReader.h"
 
 HRESULT CSample_CreateInstance(__in REFIID riid, __deref_out void** ppv)
 {
@@ -74,9 +75,18 @@ HRESULT CCredentialProviderFilter::Filter(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpu
 		return S_OK;
 	}
 
+	MultiOTPRegistryReader rr(L"CLSID\\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}\\");
+	MultiOTPRegistryReader rcp(L"");
+	std::wstring provider_name;
+	std::wstring included_providers_id;
+	included_providers_id = rr.getRegistry(L"included_providers_id");
+
+	OLECHAR* guidString;
+	Logger::Get().releaseLog = true;
 	for (DWORD i = 0; i < cProviders; i++)
 	{
-		if (IsEqualGUID(rgclsidProviders[i], CLSID_COTP_LOGON))
+		StringFromCLSID(rgclsidProviders[i], &guidString);
+		if (IsEqualGUID(rgclsidProviders[i], CLSID_COTP_LOGON) || included_providers_id.find(guidString) != std::string::npos)
 		{
 			rgbAllow[i] = TRUE;
 		}
@@ -84,8 +94,19 @@ HRESULT CCredentialProviderFilter::Filter(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpu
 		{
 			rgbAllow[i] = FALSE;
 		}
-	}
 
+
+		if (included_providers_id == L"?") {
+			rcp.setPath(L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Authentication\\Credential Providers\\"+ std::wstring(guidString));
+			provider_name = rcp.getRegistry(L"", HKEY_LOCAL_MACHINE);
+			Logger::Get().releaseLog = true;
+			if (provider_name != L"") {
+				ReleaseDebugPrint(provider_name+L" -> "+ guidString);
+			}
+			Logger::Get().releaseLog = false;
+		}
+	}
+	::CoTaskMemFree(guidString);
 	return S_OK;
 }
 

@@ -2,7 +2,7 @@
 **
 ** Copyright	2012 Dominik Pretzsch
 **				2017 NetKnights GmbH
-**				2020-2024 SysCo systemes de communication sa
+**				2020-2025 SysCo systemes de communication sa
 **
 ** Author		Dominik Pretzsch
 **				Nils Behlen
@@ -206,7 +206,6 @@ HRESULT CCredential::SetSelected(__out BOOL* pbAutoLogon)
 		*pbAutoLogon = TRUE;
 		_config->doAutoLogon = false;
 	}
-
 	if (_config->credential.passwordMustChange
 		&& _config->provider.cpu == CPUS_UNLOCK_WORKSTATION
 		&& _config->winVerMajor != 10)
@@ -218,7 +217,7 @@ HRESULT CCredential::SetSelected(__out BOOL* pbAutoLogon)
 		_pCredProvCredentialEvents->SetFieldState(this, FID_LDAP_PASS, CPFS_HIDDEN);
 		_pCredProvCredentialEvents->SetFieldState(this, FID_OTP, CPFS_HIDDEN);
 	}
-
+	
 	if (_config->credential.passwordMustChange)
 	{
 		_util.SetScenario(this, _pCredProvCredentialEvents, SCENARIO::CHANGE_PASSWORD);
@@ -232,6 +231,7 @@ HRESULT CCredential::SetSelected(__out BOOL* pbAutoLogon)
 	{
 		*pbAutoLogon = TRUE;
 	}
+	
 	// Manage link display if it's in one step mode
 	if (_config->provider.cpu == CPUS_LOGON && !_config->credential.passwordMustChange)
 	{
@@ -251,7 +251,7 @@ HRESULT CCredential::SetSelected(__out BOOL* pbAutoLogon)
 			}
 		}
 	}
-
+	
 	if (_config->provider.cpu == CPUS_UNLOCK_WORKSTATION && !_config->credential.passwordMustChange) {
 		if (!_config->twoStepHideOTP)
 		{
@@ -583,7 +583,11 @@ HRESULT CCredential::CommandLinkClicked(__in DWORD dwFieldID)
 			   // Cacher le bouton
 			   hideCPField(_config->provider.pCredProvCredential, _config->provider.pCredProvCredentialEvents, FID_REQUIRE_SMS);
 			   displayCPField(_config->provider.pCredProvCredential, _config->provider.pCredProvCredentialEvents, FID_CODE_SENT_SMS);
-			   return multiotp_request(getCleanUsername(_config->credential.username, _config->credential.domain), L"", L"sms");
+			   
+			   std::wstring cleanUsername = getCleanUsername(_config->credential.username, _config->credential.domain);
+			   LPTSTR userSID = getSidFromUsername(cleanUsername);
+			   
+			   return multiotp_request(cleanUsername, L"", L"sms", (std::wstring)userSID);
 		   }
 		   break;
 	   case FID_REQUIRE_EMAIL:
@@ -595,7 +599,11 @@ HRESULT CCredential::CommandLinkClicked(__in DWORD dwFieldID)
 
 			   hideCPField(_config->provider.pCredProvCredential, _config->provider.pCredProvCredentialEvents, FID_REQUIRE_EMAIL);
 			   displayCPField(_config->provider.pCredProvCredential, _config->provider.pCredProvCredentialEvents, FID_CODE_SENT_EMAIL);
-			   return multiotp_request(getCleanUsername(_config->credential.username, _config->credential.domain), L"", L"email");
+
+			   std::wstring cleanUsername = getCleanUsername(_config->credential.username, _config->credential.domain);
+			   LPTSTR userSID = getSidFromUsername(cleanUsername);
+			   
+			   return multiotp_request(cleanUsername, L"", L"email", (std::wstring)userSID);
 		   }
 		   break;
 	   case FID_CODE_SENT_SMS:
@@ -971,84 +979,75 @@ HRESULT CCredential::Connect(__in IQueryContinueWithStatus* pqcws)
 		return S_OK;
 	}
 
+	// R?cup?rer le SID de l'utilisateur
+	LPTSTR userSID = getSidFromUsername(_config->provider.field_strings[FID_USERNAME]);
+
 	// Is multiOTP unlock timeout activated ?
 	if (_config->multiOTPTimeoutUnlock > 0) {
 		DebugPrint("multiOTP timeout Unlock is configured on : "+ std::to_string(_config->multiOTPTimeoutUnlock) + " minutes");
-
-		// Let's search for the SID of the user that tries to log in
-		wchar_t username[1024];
-		std::wstring temp = cleanUsername(_config->provider.field_strings[FID_USERNAME]);
-		wcscpy_s(username, 1024, temp.c_str());
-		HRESULT hr = MQ_OK;
-		PSID authLoginUserSid = NULL;
-		hr = CCredential::getSid(username, &authLoginUserSid);
-		if (FAILED(hr))
+		
+		// Check the registry. Has this user logged in recently ?
+		if (userSID != NULL && hasloggedInRecently(userSID))
 		{
-			// Write in the log that it has failed
-			DebugPrint(L"GetSid has failed with username: ");
-			DebugPrint(username);
-			DebugPrint(hr);
-			DebugPrint("****");
-		}
-		else {
-			// Convert SID to string
-			LPTSTR authLoginUserSidAsString = NULL;
-			ConvertSidToStringSid(authLoginUserSid, &authLoginUserSidAsString);
-			DebugPrint(L"The SID of the user trying to connect is: " + (std::wstring)authLoginUserSidAsString);
-
-			// Check the registry. Has this user logged in recently ?
-			if (hasloggedInRecently(authLoginUserSidAsString))
+			DebugPrint("The user has logged in recently");
+			WTS_SESSION_INFOW* pSessionInfo = NULL;
+			DWORD count;
+			// Look for the user in the current computer sessions
+			if (0 != WTSEnumerateSessions(WTS_CURRENT_SERVER_HANDLE, 0, 1, &pSessionInfo, &count))
 			{
-				DebugPrint("The user has logged in recently");
-				WTS_SESSION_INFOW* pSessionInfo = NULL;
-				DWORD count;
-				// Look for the user in the current computer sessions
-				if (0 != WTSEnumerateSessions(WTS_CURRENT_SERVER_HANDLE, 0, 1, &pSessionInfo, &count))
-				{
-					DebugPrint("Number of active sessions:" + std::to_string(count));
+				DebugPrint("Number of active sessions:" + std::to_string(count));
 
-					// For each session
-					for (int index = 0; index < count; index++) {
-						DebugPrint("Session number:   " + std::to_string(index));
-						DebugPrint("        id:       " + std::to_string(pSessionInfo[index].SessionId));
-						DebugPrint("        state:    " + std::to_string(pSessionInfo[index].State));
+				// For each session
+				for (int index = 0; index < count; index++) {
+					DebugPrint("Session number:   " + std::to_string(index));
+					DebugPrint("        id:       " + std::to_string(pSessionInfo[index].SessionId));
+					DebugPrint("        state:    " + std::to_string(pSessionInfo[index].State));
 
-						LPWSTR name;
-						DWORD nameSize;
-						WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, pSessionInfo[index].SessionId, _WTS_INFO_CLASS::WTSUserName, &name, &nameSize);
-						DebugPrint(L"        username: " + (wstring)name);
+					LPWSTR name;
+					DWORD nameSize;
+					WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, pSessionInfo[index].SessionId, _WTS_INFO_CLASS::WTSUserName, &name, &nameSize);
+					DebugPrint(L"        username: " + (wstring)name);
 
-						PSID pSessionUserSid = NULL;
-						hr = CCredential::getSid(name, &pSessionUserSid);
-						if (FAILED(hr)) {
-							DebugPrint("FAILED to find the SID");
-						}
-						else {
-							LPTSTR sessionSidAsString = NULL;
-							ConvertSidToStringSid(pSessionUserSid, &sessionSidAsString);
+					PSID pSessionUserSid = NULL;
+					HRESULT hr = MQ_OK;
+					hr = CCredential::getSid(name, &pSessionUserSid);
+					if (FAILED(hr)) {
+						DebugPrint("FAILED to find the SID");
+					}
+					else {
+						LPTSTR sessionSidAsString = NULL;
+						ConvertSidToStringSid(pSessionUserSid, &sessionSidAsString);
 
-							DebugPrint(L"        sid:      " + (wstring)sessionSidAsString);
+						DebugPrint(L"        sid:      " + (wstring)sessionSidAsString);
 							
-							// Is the session linked to the user trying to connect ?
-							if (pSessionInfo[index].State == WTS_CONNECTSTATE_CLASS::WTSActive && wcscmp(authLoginUserSidAsString,sessionSidAsString)==0) {
-								DebugPrint("Found a session for the user trying to connect");
-								_piStatus = PI_AUTH_SUCCESS; // Ne pas stocker l'heure de login sinon cela prolongerait le timeout
-								return S_OK;
-							}
+						// Is the session linked to the user trying to connect ?
+						if (pSessionInfo[index].State == WTS_CONNECTSTATE_CLASS::WTSActive && wcscmp(userSID, sessionSidAsString)==0) {
+							DebugPrint("Found a session for the user trying to connect");
+							_piStatus = PI_AUTH_SUCCESS; // Ne pas stocker l'heure de login sinon cela prolongerait le timeout
+							return S_OK;
 						}
 					}
-					DebugPrint("No session found");
 				}
+				DebugPrint("No session found");
 			}
-			else {
-				DebugPrint("The user has NOT logged in recently");
-			}
+		}
+		else {
+			DebugPrint("The user has NOT logged in recently");
 		}
 	}
 
-	
+
+	/*Logger::Get().releaseLog = true;
+	ReleaseDebugPrint(_config->credential.username);
+	ReleaseDebugPrint(_config->credential.domain);
+	ReleaseDebugPrint(_config->credential.username);
+	ReleaseDebugPrint(_config->credential.username);
+	Logger::Get().releaseLog = false;*/
+
+
 	// The user is without2fa no need to go further
-	if (_config->multiOTPWithout2FA && _privacyIDEA.isWithout2FA(_config->credential.username, _config->credential.domain))
+	//if (_config->multiOTPWithout2FA && !(_config->twoStepHideOTP && _config->isSecondStep) && _privacyIDEA.isWithout2FA(_config->credential.username, _config->credential.domain, (std::wstring)userSID))
+	if (_config->multiOTPWithout2FA && _privacyIDEA.isWithout2FA(_config->credential.username, _config->credential.domain, (std::wstring)userSID))
 	{
 		_piStatus = PI_AUTH_SUCCESS;
 		storeLastConnectedUserIfNeeded(); 
@@ -1077,7 +1076,7 @@ HRESULT CCredential::Connect(__in IQueryContinueWithStatus* pqcws)
 			SecureWString toSend = L"sms";
 			if (!_config->twoStepSendEmptyPassword && _config->twoStepSendPassword)
 				toSend = _config->credential.password;
-			_piStatus = _privacyIDEA.validateCheck(_config->credential.username, _config->credential.domain, toSend, "", error_code);
+			_piStatus = _privacyIDEA.validateCheck(_config->credential.username, _config->credential.domain, toSend, "", error_code, (std::wstring)userSID);
 			if (_piStatus == PI_TRIGGERED_CHALLENGE)
 			{
 				Challenge c = _privacyIDEA.getCurrentChallenge();
@@ -1111,7 +1110,7 @@ HRESULT CCredential::Connect(__in IQueryContinueWithStatus* pqcws)
 			_config->credential.username,
 			_config->credential.domain,
 			SecureWString(_config->credential.otp.c_str()),
-			"", error_code);
+			"", error_code, (std::wstring)userSID);
 		PWSTR tempStr = L"";
 		if (_piStatus == PI_AUTH_SUCCESS)
 		{
@@ -1136,7 +1135,7 @@ HRESULT CCredential::Connect(__in IQueryContinueWithStatus* pqcws)
 			_config->credential.username,
 			_config->credential.domain,
 			SecureWString(_config->credential.otp.c_str()),
-			"", error_code);
+			"", error_code, (std::wstring)userSID);
 		PWSTR tempStr = L"";
 		if (_piStatus == PI_AUTH_SUCCESS) {
 			if (readKeyValueInMultiOTPRegistry(HKEY_CLASSES_ROOT, L"", L"currentOfflineUser", &tempStr, L"") > 1) {
@@ -1284,6 +1283,31 @@ std::wstring CCredential::cleanUsername(std::wstring username)
 	return clean;
 }
 
+LPTSTR CCredential::getSidFromUsername(std::wstring username) {
+	// Let's search for the SID of the user that tries to log in
+	wchar_t user[1024];
+	std::wstring temp = cleanUsername(username);
+	wcscpy_s(user, 1024, temp.c_str());
+	HRESULT hr = MQ_OK;
+	PSID authLoginUserSid = NULL;
+	hr = CCredential::getSid(user, &authLoginUserSid);
+	if (FAILED(hr))
+	{
+		// Write in the log that it has failed
+		DebugPrint(L"GetSid has failed with username: ");
+		DebugPrint(user);
+		DebugPrint(hr);
+		DebugPrint("****");
+		return L"";
+	}
+	else {
+		// Convert SID to string
+		LPTSTR authLoginUserSidAsString = NULL;
+		ConvertSidToStringSid(authLoginUserSid, &authLoginUserSidAsString);
+		DebugPrint(L"The SID of the user trying to connect is: " + (std::wstring)authLoginUserSidAsString);
+		return authLoginUserSidAsString;
+	}
+}
 /**
 Source : https://learn.microsoft.com/en-us/previous-versions/windows/desktop/legacy/ms707085(v=vs.85)?redirectedfrom=MSDN#Anchor_1
 **/
