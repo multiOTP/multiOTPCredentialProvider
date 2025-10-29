@@ -4,8 +4,8 @@
  * Extra code provided "as is" for the multiOTP open source project
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.9.2
- * @date      2025-01-31
+ * @version   5.10.0.1
+ * @date      2025-10-28
  * @since     2013
  * @copyright (c) 2016-2025 SysCo systemes de communication sa
  * @copyright (c) 2015-2016 ArcadeJust ("RDP only" enhancement)
@@ -17,6 +17,7 @@
  *
  * Change Log
  *
+ *   2025-08-25 5.9.0.x SysCo/yj ENH: In UPN mode, .\username and computername\username are sent to multiotp as username@computername
  *   2022-05-20 5.9.0.2 SysCo/yj ENH: Once SMS or EMAIL link is clicked, the link is hidden and a message is displayed to let the user know that the token was sent.
  *   2022-05-20 5.9.0.2 SysCo/yj FIX: When active directory server is available UPN username is stored in the registry UPNcache
  *   2020-08-31 5.8.0.0 SysCo/al ENH: Retarget to the last SDK 10.0.19041.1
@@ -54,6 +55,8 @@
 #include "Security.h"
 // DsGetDcNameW
 #include "DsGetDC.h"
+
+#include "PrivacyIDEA.h"
 
 // Begin extra code (debug tools)
 
@@ -1575,7 +1578,7 @@ std::wstring getCleanUsername(const std::wstring username, const std::wstring do
 
     writeKeyValueInMultiOTPRegistry(HKEY_CLASSES_ROOT, L"", L"currentOfflineUser", L"");
 
-    if (pchWatSign != nullptr) {
+    if (pchWatSign != nullptr) { // Le nom contient un @
         ULONG size = 1024;
         wchar_t buffer[1024];
         wcscpy_s(fullname, 1024, username.c_str());
@@ -1622,9 +1625,20 @@ std::wstring getCleanUsername(const std::wstring username, const std::wstring do
                 writeKeyValueInMultiOTPRegistry(HKEY_CLASSES_ROOT, L"", L"currentOfflineUser", legacyname);
             }
         }
-    } else {
+    } else { // Le nom ne contient pas de @
         ULONG size = 1024;
         wchar_t buffer[1024];
+
+        WCHAR wsz[64];
+        DWORD cch = ARRAYSIZE(wsz);
+        GetComputerName(wsz, &cch);
+
+        if (readRegistryValueInteger(CONF_UPN_FORMAT, 0) && ( domain == L"." || PrivacyIDEA::toUpperCase(std::wstring(wsz, cch)) == PrivacyIDEA::toUpperCase(domain))) { // Si on est en mode UPN et que le domain est le nom de la machine alors utiliser username@computername
+            wcscpy_s(upn_name, 1024, username.c_str());
+            wcscat_s(upn_name, 1024, L"@");
+            wcscat_s(upn_name, 1024, std::wstring(wsz, cch).c_str());
+            return upn_name;
+        }
         rc = TranslateNameW(fullname, NameSamCompatible, NameUserPrincipal, buffer, &size); // NameDnsDomain should also work instead of NameSamCompatible
         if (rc) {
             wcscpy_s(upn_name, 1024, buffer);
@@ -1643,13 +1657,15 @@ std::wstring getCleanUsername(const std::wstring username, const std::wstring do
                 if (readKeyValueInMultiOTPRegistry(HKEY_CLASSES_ROOT, L"UPNcache", fullname, &temp, L"") > 1) {
                     // The domain controller is not available but there is a entry in the UPN cache then create upn_name with this cache
                     wcscpy_s(upn_name, 1024, temp);
-                } else {
+                }
+                else {
                     wcscpy_s(upn_name, 1024, username.c_str());
                     wcscat_s(upn_name, 1024, L"@");
                     wcscat_s(upn_name, 1024, pszDomain);
                 }
                 wcscpy_s(fullname, 1024, username.c_str());
-            } else {
+            }
+            else {
                 // The domain controller is not available then create upn_name with the registry
                 wcscpy_s(uname, 1024, username.c_str());
                 wcscat_s(uname, 1024, L"@");

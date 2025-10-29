@@ -4,8 +4,8 @@
  * Extra code provided "as is" for the multiOTP open source project
  *
  * @author    Andre Liechti, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.9.2
- * @date      2025-01-31
+ * @version   5.10.0.1
+ * @date      2025-10-28
  * @since     2013
  * @copyright (c) 2016-2025 SysCo systemes de communication sa
  * @copyright (c) 2015-2016 ArcadeJust ("RDP only" enhancement)
@@ -16,6 +16,7 @@
  *
  *
  * Change Log
+ *   2025-10-22 5.9.9.4 SysCo/yj ENH: New constant MULTIOTP_IS_PUSH_TOKEN in order to manage push tokens
  *   2022-05-20 5.9.0.2 SysCo/yj ENH: Once SMS or EMAIL link is clicked, the link is hidden and a message is displayed to let the user know that the token was sent
  *   2022-05-20 5.9.0.2 SysCo/yj FIX: When active directory server is available UPN username is stored in the registry UPNcache
  *   2020-08-31 5.8.0.0 SysCo/al ENH: Retarget to the last SDK 10.0.19041.1
@@ -42,7 +43,11 @@
 #pragma once
 
 #define MULTIOTP_SUCCESS ((HRESULT)0)
+
+#define MULTIOTP_IS_PUSH_TOKEN ((HRESULT)6)
+#define MULTIOTP_IS_WITH_TOKEN ((HRESULT)7)
 #define MULTIOTP_IS_WITHOUT2FA ((HRESULT)8)
+
 #define MULTIOTP_UNKNOWN_ERROR ((HRESULT)99)
 #define MULTIOTP_CHECK "multiOTP Credential Provider mode" // Special string to check that multiOTP is correctly running
 #define MULTIOTP_DEBUG_LOGFILE_NAME "C:\\multiotp-credential-provider-debug.log"

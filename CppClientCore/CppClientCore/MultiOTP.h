@@ -2,8 +2,8 @@
  * multiOTP Credential Provider, extends privacyIdea
  *
  * @author    Yann Jeanrenaud, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.9.2
- * @date      2025-01-31
+ * @version   5.10.0.1
+ * @date      2025-10-28
  * @since     2021
  * @copyright (c) 2016-2025 SysCo systemes de communication sa
  * @copyright (c) 2015-2016 ArcadeJust ("RDP only" enhancement)
@@ -13,6 +13,7 @@
  *
  * Change Log
  *
+ *	 2025-10-22 5.9.9.4 SysCo/yj  ENH: Tranforming isWithout2FA in userTokenType in order to manage push token.
  *   2021-03-24 1.0.0.0 SysCo/yj New implementation from scratch
  *
  *********************************************************************/
@@ -40,7 +41,7 @@ public:
 	// 1. Offline otp data, 2. Triggered challenges, 3. Authentication success
 	// <returns> PI_AUTH_SUCCESS, PI_TRIGGERED_CHALLENGE, PI_AUTH_FAILURE, PI_AUTH_ERROR, PI_ENDPOINT_SETUP_ERROR, PI_WRONG_OFFLINE_SERVER_UNAVAILABLE </returns>
 	HRESULT validateCheck(const std::wstring& username, const std::wstring& domain, const SecureWString& otp, const std::string& transaction_id, HRESULT& error_code, const std::wstring& usersid);
-	bool MultiOTP::isWithout2FA(const std::wstring& username, const std::wstring& domain, const std::wstring& usersid);
+	HRESULT MultiOTP::userTokenType(const std::wstring& username, const std::wstring& domain, const std::wstring& usersid);
 
 private:
 

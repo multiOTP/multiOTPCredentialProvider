@@ -17,10 +17,10 @@ C:\data\projects\multiotp\multiOTPCredentialProviderPrivacyIdea\CppClientCore\Cp
   RegistryReader.cpp
   guid.cpp
   MultiOTP.cpp
-C:\data\projects\multiotp\multiOTPCredentialProviderPrivacyIdea\CppClientCore\CppClientCore\MultiOTP.cpp(40,136): warning C4100: 'transaction_id' : paramètre formel non référencé
+C:\data\projects\multiotp\multiOTPCredentialProviderPrivacyIdea\CppClientCore\CppClientCore\MultiOTP.cpp(41,136): warning C4100: 'transaction_id' : paramètre formel non référencé
   MultiotpHelpers.cpp
-C:\data\projects\multiotp\multiOTPCredentialProviderPrivacyIdea\CppClientCore\CppClientCore\MultiotpHelpers.cpp(1521,13): warning C4101: 'otp_name' : variable locale non référencée
-C:\data\projects\multiotp\multiOTPCredentialProviderPrivacyIdea\CppClientCore\CppClientCore\MultiotpHelpers.cpp(1719,19): warning C4244: 'return' : conversion de 'time_t' en 'int', perte possible de données
+C:\data\projects\multiotp\multiOTPCredentialProviderPrivacyIdea\CppClientCore\CppClientCore\MultiotpHelpers.cpp(1524,13): warning C4101: 'otp_name' : variable locale non référencée
+C:\data\projects\multiotp\multiOTPCredentialProviderPrivacyIdea\CppClientCore\CppClientCore\MultiotpHelpers.cpp(1735,19): warning C4244: 'return' : conversion de 'time_t' en 'int', perte possible de données
   MultiotpRegistry.cpp
 C:\data\projects\multiotp\multiOTPCredentialProviderPrivacyIdea\CppClientCore\CppClientCore\MultiotpRegistry.cpp(50,21): warning C4130: '!=' : opération logique sur l'adresse d'une constante de chaîne
 C:\data\projects\multiotp\multiOTPCredentialProviderPrivacyIdea\CppClientCore\CppClientCore\MultiotpRegistry.cpp(125,21): warning C4130: '!=' : opération logique sur l'adresse d'une constante de chaîne

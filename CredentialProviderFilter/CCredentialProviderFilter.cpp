@@ -82,7 +82,6 @@ HRESULT CCredentialProviderFilter::Filter(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpu
 	included_providers_id = rr.getRegistry(L"included_providers_id");
 
 	OLECHAR* guidString;
-	Logger::Get().releaseLog = true;
 	for (DWORD i = 0; i < cProviders; i++)
 	{
 		StringFromCLSID(rgclsidProviders[i], &guidString);

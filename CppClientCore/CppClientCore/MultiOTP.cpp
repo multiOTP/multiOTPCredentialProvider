@@ -2,8 +2,8 @@
  * multiOTP Credential Provider, extends privacyIdea
  *
  * @author    Yann Jeanrenaud, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.9.9.2
- * @date      2025-01-31
+ * @version   5.10.0.1
+ * @date      2025-10-28
  * @since     2021
  * @copyright (c) 2016-2025 SysCo systemes de communication sa
  * @copyright (c) 2015-2016 ArcadeJust ("RDP only" enhancement)
@@ -13,6 +13,7 @@
  *
  * Change Log
  *
+ *	 2025-10-22 5.9.9.4 SysCo/yj ENH: Tranforming isWithout2FA in userTokenType in order to manage push token.
  *   2021-03-24 1.0.0.0 SysCo/yj New implementation from scratch
  *
  *********************************************************************/
@@ -54,16 +55,31 @@ HRESULT MultiOTP::validateCheck(const std::wstring& username, const std::wstring
 	}
 }
 
-bool MultiOTP::isWithout2FA(const std::wstring& username, const std::wstring& domain, const std::wstring& usersid)
+/**
+Return user token type :
+	6: push token
+	7: with token
+	8: without2FA
+	21: User doesn't exists
+	38: User disabled
+	81: Cache too old
+	99: error
+*/
+HRESULT MultiOTP::userTokenType(const std::wstring& username, const std::wstring& domain, const std::wstring& usersid)
 {
 	HRESULT hr = E_UNEXPECTED;
 	hr = multiotp_request_command(L"-iswithout2fa", L"\""+getCleanUsername(username, domain)+ L"\"", usersid);
-	if ((hr == MULTIOTP_IS_WITHOUT2FA)) {
-		if (DEVELOP_MODE) PrintLn("MultiotpCredential::multiOTP user is without2FA", hr);
-		return true;
+	if (DEVELOP_MODE) {
+		if (hr == MULTIOTP_IS_WITHOUT2FA) {
+			PrintLn("MultiotpCredential::multiOTP user is without2FA", hr);
+		}
+		else if (hr == MULTIOTP_IS_PUSH_TOKEN) {
+			PrintLn("MultiotpCredential::multiOTP user is push token", hr);
+		}
+		else {
+			PrintLn("MultiotpCredential::multiOTP user is not without2fa, nor push token ", hr);
+		}
 	}
-	else {
-		if (DEVELOP_MODE) PrintLn("MultiotpCredential::multiOTP user is not without2fa ", hr);
-	}
-	return false;
+
+	return hr;
 }

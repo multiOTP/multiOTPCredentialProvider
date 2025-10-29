@@ -7,7 +7,7 @@ multiOTP Credential Provider for multiOTP is a free and open source implementati
 (c) 2015-2016 ArcadeJust ("RDP only" enhancement)  
 (c) 2013-2015 Last Squirrel IT  
 
-Current build: 5.9.9.2 (2025-01-31)  
+Current build: 5.10.0.1 (2025-10-28)  
 
 The binary download page is available here : https://download.multiotp.net/credential-provider/ (download link are at the bottom of the page)
 
@@ -29,9 +29,9 @@ multiOTP Credential Provider for multiOTP supporting Windows 7/8/8.1/10/2012(R2)
 
 PREREQUISITES
 =============
-- For x64 edition: last x64 MSVC++ redistribuable installed (Microsoft Visual C++ Redistributable for Visual Studio 2015, 2017, 2019 and 2022)
+- For x64 edition: last x64 MSVC++ redistribuable installed (Microsoft Visual C++ Redistributable 2015-2022)
   https://aka.ms/vs/17/release/vc_redist.x64.exe
-- For x86 edition: last x86 MSVC++ redistribuable installed (Microsoft Visual C++ Redistributable for Visual Studio 2015, 2017, 2019 and 2022)
+- For x86 edition: last x86 MSVC++ redistribuable installed (Microsoft Visual C++ Redistributable 2015-2022)
   https://aka.ms/vs/17/release/vc_redist.x86.exe
 - installed multiOTP server(s) (or select local use during install)
 - configured multiOTP user (multiOTP username = [domain user name] or [windows local account name] or [microsoft account name])
@@ -48,8 +48,7 @@ Which Authentication Mode should I choose?
 
 MSI DEPLOYMENT
 ==============
-Be sure that last MSVC++ redistribuable are installed.
-If it's not the case, you can deploy them automatically using the four MSI provided in the VC++_MSI_Deployment folder
+Be sure that the last Microsoft Visual C++ redistribuable distribution is installed on the computer.
 
 Using Orca, you can create Transform files in order to set the settings of the credential provider.
 The following properties can be set :
@@ -190,6 +189,9 @@ Report if you have any problems or questions regarding this app.
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
+2025-10-28 5.10.0.1 FIX: Loop in CredUI when using wrong password
+                    ENH: Push token support
+                    ENH: Embedded Windows PHP edition updated to version 8.4.13
 2025-01-31 5.9.9.2 FIX: Support CPUSCREDUI with right restriction on multiOTP system folders
                    FIX: Clear OTP field on error
                    ENH: OTP field is in clear mode. Code is displayed while typing

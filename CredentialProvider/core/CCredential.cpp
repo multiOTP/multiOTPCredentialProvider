@@ -21,6 +21,7 @@
 **    limitations under the License.
 * 
 * Change Log
+*   2025-10-22 5.9.9.4 SysCo/yj ENH: push token support
 *   2023-01-27 5.9.2.2 SysCo/yj ENH: unlock timeout, activate numlock
 *   2022-08-10 5.9.2.1 SysCo/yj ENH: unlock timeout, iswithout2fa, display last authenticated user
 *   2022-05-26 5.9.0.3 SysCo/al-yj ENH: UPN cache, Legacy cache
@@ -971,6 +972,7 @@ HRESULT CCredential::Connect(__in IQueryContinueWithStatus* pqcws)
 		NetApiBufferFree(lpNameBuffer);
 		
 	}
+	
 	if (_config->bypassPrivacyIDEA)
 	{
 		DebugPrint("Bypassing privacyIDEA...");
@@ -984,76 +986,84 @@ HRESULT CCredential::Connect(__in IQueryContinueWithStatus* pqcws)
 
 	// Is multiOTP unlock timeout activated ?
 	if (_config->multiOTPTimeoutUnlock > 0) {
-		DebugPrint("multiOTP timeout Unlock is configured on : "+ std::to_string(_config->multiOTPTimeoutUnlock) + " minutes");
-		
+		ReleaseDebugPrint("multiOTP timeout Unlock is configured on : "+ std::to_string(_config->multiOTPTimeoutUnlock) + " minutes");
+		ReleaseDebugPrint(L"User SID is : " + (std::wstring)userSID);
+
 		// Check the registry. Has this user logged in recently ?
 		if (userSID != NULL && hasloggedInRecently(userSID))
 		{
-			DebugPrint("The user has logged in recently");
+			ReleaseDebugPrint("The user has logged in recently");
 			WTS_SESSION_INFOW* pSessionInfo = NULL;
 			DWORD count;
 			// Look for the user in the current computer sessions
 			if (0 != WTSEnumerateSessions(WTS_CURRENT_SERVER_HANDLE, 0, 1, &pSessionInfo, &count))
 			{
-				DebugPrint("Number of active sessions:" + std::to_string(count));
+				ReleaseDebugPrint("Number of active sessions:" + std::to_string(count));
 
 				// For each session
 				for (int index = 0; index < count; index++) {
-					DebugPrint("Session number:   " + std::to_string(index));
-					DebugPrint("        id:       " + std::to_string(pSessionInfo[index].SessionId));
-					DebugPrint("        state:    " + std::to_string(pSessionInfo[index].State));
+					ReleaseDebugPrint("Session number:   " + std::to_string(index));
+					ReleaseDebugPrint("        id:       " + std::to_string(pSessionInfo[index].SessionId));
+					ReleaseDebugPrint("        state:    " + std::to_string(pSessionInfo[index].State));
 
 					LPWSTR name;
 					DWORD nameSize;
 					WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, pSessionInfo[index].SessionId, _WTS_INFO_CLASS::WTSUserName, &name, &nameSize);
-					DebugPrint(L"        username: " + (wstring)name);
+					ReleaseDebugPrint(L"        username: " + (wstring)name);
 
 					PSID pSessionUserSid = NULL;
 					HRESULT hr = MQ_OK;
 					hr = CCredential::getSid(name, &pSessionUserSid);
 					if (FAILED(hr)) {
-						DebugPrint("FAILED to find the SID");
+						ReleaseDebugPrint("FAILED to find the SID");
 					}
 					else {
 						LPTSTR sessionSidAsString = NULL;
 						ConvertSidToStringSid(pSessionUserSid, &sessionSidAsString);
 
-						DebugPrint(L"        sid:      " + (wstring)sessionSidAsString);
+						ReleaseDebugPrint(L"        sid:      " + (wstring)sessionSidAsString);
 							
 						// Is the session linked to the user trying to connect ?
 						if (pSessionInfo[index].State == WTS_CONNECTSTATE_CLASS::WTSActive && wcscmp(userSID, sessionSidAsString)==0) {
-							DebugPrint("Found a session for the user trying to connect");
+							ReleaseDebugPrint("Found a session for the user trying to connect");
 							_piStatus = PI_AUTH_SUCCESS; // Ne pas stocker l'heure de login sinon cela prolongerait le timeout
 							return S_OK;
 						}
 					}
 				}
-				DebugPrint("No session found");
+				ReleaseDebugPrint("No session found");
 			}
 		}
 		else {
-			DebugPrint("The user has NOT logged in recently");
+			ReleaseDebugPrint("The user has NOT logged in recently");
 		}
 	}
 
-
-	/*Logger::Get().releaseLog = true;
-	ReleaseDebugPrint(_config->credential.username);
-	ReleaseDebugPrint(_config->credential.domain);
-	ReleaseDebugPrint(_config->credential.username);
-	ReleaseDebugPrint(_config->credential.username);
-	Logger::Get().releaseLog = false;*/
-
-
 	// The user is without2fa no need to go further
-	//if (_config->multiOTPWithout2FA && !(_config->twoStepHideOTP && _config->isSecondStep) && _privacyIDEA.isWithout2FA(_config->credential.username, _config->credential.domain, (std::wstring)userSID))
-	if (_config->multiOTPWithout2FA && _privacyIDEA.isWithout2FA(_config->credential.username, _config->credential.domain, (std::wstring)userSID))
+	HRESULT tokenType = _privacyIDEA.userTokenType(_config->credential.username, _config->credential.domain, (std::wstring)userSID);
+
+	if (_config->multiOTPWithout2FA && tokenType == MULTIOTP_IS_WITHOUT2FA)
 	{
 		_piStatus = PI_AUTH_SUCCESS;
 		storeLastConnectedUserIfNeeded(); 
 		return S_OK;
 	}
+
 	HRESULT error_code;
+
+	if (tokenType == MULTIOTP_IS_PUSH_TOKEN && !_config->isSecondStep) {
+		// Send the push notification request and wait for the response
+		_piStatus = _privacyIDEA.validateCheck(
+			_config->credential.username,
+			_config->credential.domain,
+			SecureWString(L"push"),
+			"", error_code, (std::wstring)userSID);
+		if (_piStatus == PI_AUTH_SUCCESS)
+		{
+			storeLastConnectedUserIfNeeded();
+			return S_OK;
+		}
+	}
 
 	if (_config->twoStepHideOTP && !_config->isSecondStep)
 	{
@@ -1434,9 +1444,9 @@ bool CCredential::hasloggedInRecently(LPTSTR userId) {
 	if (_config->multiOTPTimeoutUnlock > 0) {
 		// Search if the key exists
 		lastLoggedInTime = readKeyValueInMultiOTPRegistryInteger(HKEY_CLASSES_ROOT, L"history", userId, 0);
-
-		DebugPrint(L"LAST LOGGED IN TIME FOR USER: "+ (std::wstring)userId );		
-		DebugPrint(lastLoggedInTime);
+		
+		ReleaseDebugPrint(L"LAST LOGGED IN TIME FOR USER: "+ (std::wstring)userId );
+		ReleaseDebugPrint(lastLoggedInTime);
 
 		const int timestamp = minutesSinceEpoch();
 
