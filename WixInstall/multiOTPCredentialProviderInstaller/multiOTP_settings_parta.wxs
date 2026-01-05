@@ -3,7 +3,7 @@
 	<Fragment>
     <UI>
       <TextStyle Id="WixUI_Font_Normal_Italic" FaceName="Tahoma" Size="8" Italic="yes" />
-      <Dialog Id="multiOTPSettingsa" Width="370" Height="270" Title="[ProductName] Setup" NoMinimize="yes">
+      <Dialog Id="multiOTPSettingsa" Width="370" Height="288" Title="[ProductName] Setup" NoMinimize="yes">
         <Control Id="LoginTitleLabel" Type="Text" X="20" Y="63" Width="350" Height="15" TabSkip="no" Text="{\WixUI_Font_Title}multiOTP Login Title"/>
         <Control Id="LoginTitle" Type="Edit" X="20" Y="75" Width="300" Height="18" Property="MULTIOTP_LOGINTEXT" Text="{80}" />
         <Control Id="multiOTPUrlLabel" Type="Text" X="20" Y="100" Width="350" Height="15" TabSkip="no" Text="{\WixUI_Font_Title}URL of your multiOTP server(s), separated by semi-colons"/>

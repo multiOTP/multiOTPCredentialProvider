@@ -1,7 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * *
 **
 ** Copyright 2020 NetKnights GmbH
-**           2020-2025 SysCo systemes de communication sa
+**           2020-2026 SysCo systemes de communication sa
 ** Author: Nils Behlen
 **         Yann Jeanrenaud, Andre Liechti
 **
@@ -66,16 +66,16 @@ namespace Shared {
 
 		// default - no additional config found
 		if (entry.empty()) return true;
-
+		
 		if (caller == FILTER)
 		{
 			// Check that we don't filter if the CP is not enumerated
-			return (entry == L"0e" || (entry == L"1e" && isRemote) || (entry == L"2e" && !isRemote));
+			return (entry == L"0e" || (entry == L"1e" && isRemote) || (entry == L"2e" && (!isRemote || cpus==CPUS_LOGON || cpus == CPUS_UNLOCK_WORKSTATION)));
 		}
 		else if (caller == PROVIDER)
 		{
 			// 0 means fully enabled, 1-only remote, 2-non-remote, 3-disabled
-			return ((entry.at(0) == L'1' && isRemote) || (entry.at(0) == L'2' && !isRemote) || (entry.at(0) == L'0'));
+			return ((entry.at(0) == L'1' && isRemote) || (entry.at(0) == L'2' && (!isRemote || cpus == CPUS_LOGON || cpus == CPUS_UNLOCK_WORKSTATION)) || (entry.at(0) == L'0'));
 		}
 
 		return false;

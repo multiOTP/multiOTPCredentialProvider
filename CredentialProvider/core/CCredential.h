@@ -2,7 +2,7 @@
 **
 ** Copyright	2012 Dominik Pretzsch
 **				2017 NetKnights GmbH
-**				2020-2025 SysCo systemes de communication sa
+**				2020-2026 SysCo systemes de communication sa
 **
 ** Author		Dominik Pretzsch
 **				Nils Behlen

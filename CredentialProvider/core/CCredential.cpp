@@ -2,7 +2,7 @@
 **
 ** Copyright	2012 Dominik Pretzsch
 **				2017 NetKnights GmbH
-**				2020-2025 SysCo systemes de communication sa
+**				2020-2026 SysCo systemes de communication sa
 **
 ** Author		Dominik Pretzsch
 **				Nils Behlen
@@ -21,12 +21,14 @@
 **    limitations under the License.
 * 
 * Change Log
-*   2025-10-22 5.9.9.4 SysCo/yj ENH: push token support
-*   2023-01-27 5.9.2.2 SysCo/yj ENH: unlock timeout, activate numlock
-*   2022-08-10 5.9.2.1 SysCo/yj ENH: unlock timeout, iswithout2fa, display last authenticated user
-*   2022-05-26 5.9.0.3 SysCo/al-yj ENH: UPN cache, Legacy cache
-    2022-05-20 5.9.0.2 SysCo/yj ENH: Once SMS or EMAIL link is clicked, the link is hidden and a message is displayed to let the user know that the token was sent.
-    2021-11-18 5.8.3.2 SysCo/YJ ENH: Take into account login with user@domain in the excluded account
+*   2026-01-05 5.10.1.2 SysCo/yj ENH: In remote desktop mode, if 2FA disabled then passthrough without asking for the password.
+*                                     New registry config key "multiOTPDisplayUserLocked" to enable message "User locked" or "User delayed" before asking OTP.
+*   2025-10-22 5.9.9.4  SysCo/yj ENH: push token support
+*   2023-01-27 5.9.2.2  SysCo/yj ENH: unlock timeout, activate numlock
+*   2022-08-10 5.9.2.1  SysCo/yj ENH: unlock timeout, iswithout2fa, display last authenticated user
+*   2022-05-26 5.9.0.3  SysCo/al-yj ENH: UPN cache, Legacy cache
+    2022-05-20 5.9.0.2  SysCo/yj ENH: Once SMS or EMAIL link is clicked, the link is hidden and a message is displayed to let the user know that the token was sent.
+    2021-11-18 5.8.3.2  SysCo/YJ ENH: Take into account login with user@domain in the excluded account
 **
 ** * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -52,6 +54,7 @@
 #include "sddl.h" // multiOTP/yj
 #include "credentialprovider.h" // multiOTP/yj
 #include "wtsapi32.h" // multiOTP/yj pour utiliser WTSEnumerateSessions
+#include "Shared.h"
 
 using namespace std;
 
@@ -754,6 +757,12 @@ HRESULT CCredential::GetSerialization(
 				{
 					errorMessage = isGerman ? L"Fehler beim Verbindungsaufbau!" : L"Error while setting up the connection!";
 				}
+				else if (_piStatus == MULTIOTP_USERLOCKED) {
+					errorMessage = L"User locked";
+				}
+				else if (_piStatus == MULTIOTP_USERDELAYED) {
+					errorMessage = L"User is delayed";
+				}
 				ShowErrorMessage(errorMessage, errorCode);
 				_util.ResetScenario(this, _pCredProvCredentialEvents);
 				*pcpgsr = CPGSR_NO_CREDENTIAL_NOT_FINISHED;
@@ -846,14 +855,26 @@ void CCredential::PushAuthenticationCallback(bool success)
 // Connect is called first after the submit button is pressed.
 HRESULT CCredential::Connect(__in IQueryContinueWithStatus* pqcws)
 {
-
 	DebugPrint(__FUNCTION__);
+	
 	UNREFERENCED_PARAMETER(pqcws);
 
 	_config->provider.pCredProvCredential = this;
 	_config->provider.pCredProvCredentialEvents = _pCredProvCredentialEvents;
 	_config->provider.field_strings = _rgFieldStrings;
 	_util.ReadFieldValues();
+
+	const bool isRemote = Shared::IsCurrentSessionRemote();
+
+	// Si c'est 2e et que c'est du login et que c'est en remote desktop
+	if (isRemote) {
+		PWSTR tempStr = L"";
+		readKeyValueInMultiOTPRegistry(HKEY_CLASSES_ROOT, L"", L"cpus_logon", &tempStr, L"");
+		if (wcscmp(tempStr, L"2e") == 0 || wcscmp(tempStr, L"2d") == 0) {// Compar? des chaines ou il y a un pointeur
+			_piStatus = PI_AUTH_SUCCESS;
+			return S_OK;
+		}
+	}
 
 	// Check if the user is the excluded account
 	if (!_config->excludedAccount.empty())
@@ -970,7 +991,7 @@ HRESULT CCredential::Connect(__in IQueryContinueWithStatus* pqcws)
 
 		// clean up
 		NetApiBufferFree(lpNameBuffer);
-		
+
 	}
 	
 	if (_config->bypassPrivacyIDEA)
@@ -981,7 +1002,7 @@ HRESULT CCredential::Connect(__in IQueryContinueWithStatus* pqcws)
 		return S_OK;
 	}
 
-	// R?cup?rer le SID de l'utilisateur
+	// Get user SID
 	LPTSTR userSID = getSidFromUsername(_config->provider.field_strings[FID_USERNAME]);
 
 	// Is multiOTP unlock timeout activated ?
@@ -1046,6 +1067,18 @@ HRESULT CCredential::Connect(__in IQueryContinueWithStatus* pqcws)
 	{
 		_piStatus = PI_AUTH_SUCCESS;
 		storeLastConnectedUserIfNeeded(); 
+		return S_OK;
+	}
+
+	// Is the user locked or delayed ?
+	if ((tokenType == MULTIOTP_IS_LOCKED || tokenType == MULTIOTP_IS_DELAYED) && _config->multiOTPDisplayLockedUser) {
+		if (tokenType == MULTIOTP_IS_LOCKED) {
+			_piStatus = MULTIOTP_USERLOCKED;
+		}
+		else {
+			_piStatus = MULTIOTP_USERDELAYED;
+		}
+		_config->isSecondStep = true; // We force second step to display error message
 		return S_OK;
 	}
 

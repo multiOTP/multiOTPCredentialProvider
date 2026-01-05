@@ -2,7 +2,7 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
 	<Fragment>
     <UI>
-      <Dialog Id="multiOTPSettingsc" Width="370" Height="270" Title="[ProductName] Setup" NoMinimize="yes">
+      <Dialog Id="multiOTPSettingsc" Width="370" Height="288" Title="[ProductName] Setup" NoMinimize="yes">
         <Control Type="Text" Id="Label_Logon" Width="50" Height="15" X="33" Y="63" Text="{\WixUI_Font_Title}Logon" />
         <Control Type="RadioButtonGroup" Property="CPUS_LOGON" Id="RadioButtonGroupCPUSLogon" Width="274" Height="20" X="35" Y="78">
           <RadioButtonGroup Property="CPUS_LOGON">

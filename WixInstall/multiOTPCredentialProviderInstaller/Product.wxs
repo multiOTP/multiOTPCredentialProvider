@@ -2,7 +2,7 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
   <?include $(sys.CURRENTDIR)\Config.wxi?>
   
-  <Product Id="253fdf47-d509-46d4-b8f5-19093ada8210" Name="$(var.ProductName)" Language="1033" Version="$(var.Version)" Manufacturer="$(var.Manufacturer)" UpgradeCode="f63c1c8c-ce58-4add-b7ba-4e2dca872b50">
+  <Product Id="d3e1f604-7bad-45e0-9979-a91535a37d6e" Name="$(var.ProductName)" Language="1033" Version="$(var.Version)" Manufacturer="$(var.Manufacturer)" UpgradeCode="f63c1c8c-ce58-4add-b7ba-4e2dca872b50">
     
     <Package Id='*' InstallerVersion="200" Compressed="yes" InstallScope="perMachine" Description="$(var.BaseProductName) Installer" Platform="$(var.Platform)"/>
 
@@ -172,7 +172,9 @@
     <Property Id="MULTIOTP_WITHOUT2FA">
       <RegistrySearch Id='multiOTPWithout2FaRegistry' Type='raw' Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}' Name='multiOTPWithout2FA' Win64="$(var.Win64)"/>
     </Property>
-    
+    <Property Id="MULTIOTP_DISPLAYUSERLOCKED">
+      <RegistrySearch Id='multiOTPDisplayUserLokedRegistry' Type='raw' Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}' Name='multiOTPDisplayUserLocked' Win64="$(var.Win64)"/>
+    </Property>
 
     <!-- Set default values if not found in the registry -->
     <SetProperty Id="MULTIOTP_LOGINTEXT" After="AppSearch" Action="setLoginTextAction1" Value="multiOTP Login">
@@ -214,6 +216,9 @@
     <SetProperty Id="MULTIOTP_WITHOUT2FA" After="AppSearch" Value="">
       <![CDATA[MULTIOTP_WITHOUT2FA="#0"]]>
     </SetProperty>
+    <SetProperty Id="MULTIOTP_DISPLAYUSERLOCKED" After="AppSearch" Value="">
+      <![CDATA[MULTIOTP_DISPLAYUSERLOCKED="#0"]]>
+    </SetProperty>
     
     <!-- Clean the checkbox value after the UI process, because checkbox value is null-->
     <SetProperty Id="MULTIOTP_CACHE" Value="0" Action="cleanMultiOTPCacheAction" Before="InstallInitialize" Sequence="execute">NOT MULTIOTP_CACHE</SetProperty>
@@ -223,6 +228,7 @@
     <SetProperty Id="MULTIOTP_NUMLOCKON" Value="0" Action="cleanNumlockOnAction" Before="InstallInitialize" Sequence="execute">NOT MULTIOTP_NUMLOCKON</SetProperty>
     <SetProperty Id="MULTIOTP_DISPLAYLASTUSER" Value="0" Action="cleanMultiOTPDisplayLastUserAction" Before="InstallInitialize" Sequence="execute">NOT MULTIOTP_DISPLAYLASTUSER</SetProperty>
     <SetProperty Id="MULTIOTP_WITHOUT2FA" Value="0" Action="cleanMultiOTPWithout2FAAction" Before="InstallInitialize" Sequence="execute">NOT MULTIOTP_WITHOUT2FA</SetProperty>
+    <SetProperty Id="MULTIOTP_DISPLAYUSERLOCKED" Value="0" Action="cleanMultiOTPDisplayUserLockedAction" Before="InstallInitialize" Sequence="execute">NOT MULTIOTP_DISPLAYUSERLOCKED</SetProperty>
     
     
     <!-- Directory definitions -->   
@@ -312,6 +318,7 @@
           <RegistryValue Type='integer' Name='multiOTPTimeoutUnlock' Value='[MULTIOTP_TIMEOUTUNLOCK]'/>
           <RegistryValue Type='integer' Name='multiOTPDisplayLastUser' Value='[MULTIOTP_DISPLAYLASTUSER]'/>
           <RegistryValue Type='integer' Name='multiOTPWithout2FA' Value='[MULTIOTP_WITHOUT2FA]'/>
+          <RegistryValue Type='integer' Name='multiOTPDisplayUserLocked' Value='[MULTIOTP_DISPLAYUSERLOCKED]'/>
           <RegistryValue Type='integer' Name='numlockOn' Value='[MULTIOTP_NUMLOCKON]'/>
         </RegistryKey>
         <RegistryKey Root='HKCR' Key='CLSID\{FCEFDFAB-B0A1-4C4D-8B2B-4FF4E0A3D978}\LEGACYcache' ForceCreateOnInstall='yes' />
@@ -372,6 +379,7 @@
         Session.Property("MULTIOTP_TIMEOUTUNLOCK") = Replace(Session.Property("MULTIOTP_TIMEOUTUNLOCK"), "#", "")
         Session.Property("MULTIOTP_DISPLAYLASTUSER") = Replace(Session.Property("MULTIOTP_DISPLAYLASTUSER"), "#", "")
         Session.Property("MULTIOTP_WITHOUT2FA") = Replace(Session.Property("MULTIOTP_WITHOUT2FA"), "#", "")
+        Session.Property("MULTIOTP_DISPLAYUSERLOCKED") = Replace(Session.Property("MULTIOTP_DISPLAYUSERLOCKED"), "#", "")
       ]]>
     </CustomAction>
 

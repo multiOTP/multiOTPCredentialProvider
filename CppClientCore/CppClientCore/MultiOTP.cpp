@@ -2,10 +2,10 @@
  * multiOTP Credential Provider, extends privacyIdea
  *
  * @author    Yann Jeanrenaud, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.10.0.1
- * @date      2025-10-28
+ * @version   5.10.1.2
+ * @date      2026-01-05
  * @since     2021
- * @copyright (c) 2016-2025 SysCo systemes de communication sa
+ * @copyright (c) 2016-2026 SysCo systemes de communication sa
  * @copyright (c) 2015-2016 ArcadeJust ("RDP only" enhancement)
  * @copyright (c) 2013-2015 Last Squirrel IT
  * @copyright Apache License, Version 2.0
@@ -61,6 +61,8 @@ Return user token type :
 	7: with token
 	8: without2FA
 	21: User doesn't exists
+	24: userlocked
+	25: delayed
 	38: User disabled
 	81: Cache too old
 	99: error

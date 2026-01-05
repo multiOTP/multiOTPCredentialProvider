@@ -62,3 +62,6 @@
 // Use only those for now, since there is no need for the code to differentiate the error further
 // The "real" cause is logged right after the error occurs in the endpoint
 #define PI_ENDPOINT_SERVER_UNAVAILABLE				((HRESULT)0x88809041)
+
+#define MULTIOTP_USERLOCKED							((HRESULT)0x88809042)
+#define MULTIOTP_USERDELAYED						((HRESULT)0x88809043)

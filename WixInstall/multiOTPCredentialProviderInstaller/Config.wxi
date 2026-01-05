@@ -7,7 +7,7 @@
 <Include>
 
 
-  <?define Version="5.10.0.1" ?>
+  <?define Version="5.10.1.2" ?>
   <?define Manufacturer = "SysCo" ?>
   <?define BaseProductName = "multiOTP Credential Provider" ?>
 
