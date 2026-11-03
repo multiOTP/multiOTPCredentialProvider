@@ -7,9 +7,11 @@ multiOTP Credential Provider for multiOTP is a free and open source implementati
 (c) 2015-2016 ArcadeJust ("RDP only" enhancement)  
 (c) 2013-2015 Last Squirrel IT  
 
-Current build: 5.10.2.2 (2026-04-03)  
+Current build: 5.10.4.1 (2026-10-30)  
 
 The binary download page is available here : https://download.multiotp.net/credential-provider/ (download link are at the bottom of the page)
+
+Please note that the included PHP operates in CLI mode only, without any web server or HTTP(S) flow.
 
 [![Donate via PayPal](https://img.shields.io/badge/donate-paypal-87ceeb.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&currency_code=USD&business=paypal@sysco.ch&item_name=Donation%20for%20multiOTP%20project)
 *Please consider supporting this project by making a donation via [PayPal](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&currency_code=USD&business=paypal@sysco.ch&item_name=Donation%20for%20multiOTP%20project)*
@@ -191,6 +193,7 @@ Report if you have any problems or questions regarding this app.
 CHANGE LOG OF RELEASED VERSIONS
 ===============================
 ```
+2026-10-30 5.10.4.1 ENH: Embedded Windows PHP edition updated to version 8.5.12
 2026-04-03 5.10.2.2 ENH: Embedded Windows PHP edition updated to version 8.5.4
 2026-03-23 5.10.2.1 ENH: Embedded Windows PHP edition updated to version 8.4.16
                     ENH: WMIC dependencies has been removed and replaced by Powershell commands
@@ -287,5 +290,5 @@ CHANGE LOG OF RELEASED VERSIONS
 2017-11-04 5.0.5.6 FIX: Removed digit OTP only check for the OTP field
                    ENH: Friendly name of the second factor field renamed from PIN to OTP
 2017-06-02 5.0.4.6 FIX: Fixed default folder detection for the multiotp.exe file
-2016-11-04 5.0.2.6 ENG: First public release with an installer, based on hard work done by Last Squirrel IT and ArcadeJust
+2016-11-04 5.0.2.6 ENH: First public release with an installer, based on hard work done by Last Squirrel IT and ArcadeJust
 ```

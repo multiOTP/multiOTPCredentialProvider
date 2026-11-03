@@ -2,8 +2,8 @@
  * multiOTP Credential Provider, extends privacyIdea RegistryReader
  *
  * @author    Yann Jeanrenaud, SysCo systemes de communication sa, <info@multiotp.net>
- * @version   5.10.2.2
- * @date      2026-04-03
+ * @version   5.10.4.1
+ * @date      2026-10-30
  * @since     2021
  * @copyright (c) 2016-2026 SysCo systemes de communication sa
  * @copyright (c) 2015-2016 ArcadeJust ("RDP only" enhancement)
